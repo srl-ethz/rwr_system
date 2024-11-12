@@ -15,7 +15,7 @@ To get started with the RWR System, follow these steps:
 2. Clone the repository inside the `src` directory of your ROS 2 workspace:
     ```bash
     cd ~/ros2_ws/src
-    git clone https://github.com/dexterous_dynamous/rwr_system.git
+    git clone git@github.com:DexterousDynamos/rwr_system.git
     ```
 3. Navigate to the project directory:
     ```bash
