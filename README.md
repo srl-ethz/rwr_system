@@ -33,6 +33,8 @@ To get started with the RWR System, follow these steps:
         conda config --env --add channels robostack-staging
         # remove the defaults channel just in case, this might return an error if it is not in the list which is ok
         conda config --env --remove channels defaults
+
+        mamba install ros-humble-desktop
         ```
 
         For more detailed information, follow this guide: [Getting Started with RoboStack](https://robostack.github.io/GettingStarted.html)
