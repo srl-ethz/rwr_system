@@ -22,14 +22,22 @@ To get started with the RWR System, follow these steps:
     cd rwr_system
     ```
 
-    4. Activate your ROS 2 environment (assuming you are using mamba):
+    4. Create and Activate your ROS 2 environment (assuming you are using mamba, to install mamba follow https://github.com/conda-forge/miniforge)
         ```bash
-        mamba activate ros2 
+        mamba create -n rwr_system python=3.10
+        mamba activate rwr_system
+
+        # this adds the conda-forge channel to the new created environment configuration 
+        conda config --env --add channels conda-forge
+        # and the robostack channel
+        conda config --env --add channels robostack-staging
+        # remove the defaults channel just in case, this might return an error if it is not in the list which is ok
+        conda config --env --remove channels defaults
         ```
 
         If you don't have a ROS 2 environment, follow this guide: [Getting Started with RoboStack](https://robostack.github.io/GettingStarted.html)
 
-    5. Install the necessary dependencies:
+    6. Install the necessary dependencies:
         ```bash
         pip install -e .[all]
         ```
