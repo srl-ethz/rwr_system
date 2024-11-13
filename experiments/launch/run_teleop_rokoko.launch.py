@@ -29,7 +29,7 @@ def generate_launch_description():
             
             # RETARGET NODE
             Node(
-                package="retargeter_ros",
+                package="retargeter",
                 executable="retargeter_node.py",
                 name="retargeter_node",
                 output="log",

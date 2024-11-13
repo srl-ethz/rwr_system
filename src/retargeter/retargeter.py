@@ -291,7 +291,7 @@ class Retargeter:
                         ** 2
                     )
 
-            print(f"step: {step} Loss: {loss}")
+            # print(f"step: {step} Loss: {loss}")
             self.scaling_factors_set = True
             self.opt.zero_grad()
             loss.backward()
@@ -322,4 +322,4 @@ class Retargeter:
         if debug_dict is not None:
             debug_dict["normalized_joint_pos"] = normalized_joint_pos
         self.target_angles = self.retarget_finger_mano_joints(normalized_joint_pos)
-        return self.target_angles
+        return self.target_angles, debug_dict

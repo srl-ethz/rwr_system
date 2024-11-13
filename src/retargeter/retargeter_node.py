@@ -17,10 +17,21 @@ class RetargeterNode(Node):
 
         # start retargeter
         self.declare_parameter("retarget/mjcf_filepath", rclpy.Parameter.Type.STRING)
+        self.declare_parameter("retarget/urdf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/hand_scheme", rclpy.Parameter.Type.STRING)
+        self.declare_parameter("debug", rclpy.Parameter.Type.BOOL)
 
-        mjcf_filepath = self.get_parameter("retarget/mjcf_filepath").value
+        try:
+            mjcf_filepath = self.get_parameter("retarget/mjcf_filepath").value
+        except:
+            mjcf_filepath = None
+        
+        try:
+            urdf_filepath = self.get_parameter("retarget/urdf_filepath").value
+        except:
+            urdf_filepath = None
         hand_scheme = self.get_parameter("retarget/hand_scheme").value
+        debug = self.get_parameter("debug").value
         
         # subscribe to ingress topics
         self.ingress_mano_sub = self.create_subscription(
@@ -28,7 +39,7 @@ class RetargeterNode(Node):
         )
         
         self.retargeter = Retargeter(
-            device="cuda", mjcf_filepath=mjcf_filepath, hand_scheme=hand_scheme
+            device="cuda",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
         )
         
         self.joints_pub = self.create_publisher(
@@ -47,24 +58,28 @@ class RetargeterNode(Node):
     
         
     def timer_publish_cb(self):
-        if self.debug:
-            self.mano_hand_visualizer.reset_markers()
+        try:
+            if self.debug:
+                self.mano_hand_visualizer.reset_markers()
 
-        debug_dict = {}
-        joint_angles = self.retargeter.retarget(self.keypoint_positions, debug_dict)
+            debug_dict = {}
+            joint_angles, debug_dict = self.retargeter.retarget(self.keypoint_positions, debug_dict)
 
-        if self.debug:
-            self.mano_hand_visualizer.generate_hand_markers(
-                debug_dict["normalized_joint_pos"],
-                stamp=self.get_clock().now().to_msg(),
+            if self.debug:
+                self.mano_hand_visualizer.generate_hand_markers(
+                    debug_dict["normalized_joint_pos"],
+                    stamp=self.get_clock().now().to_msg(),
+                )
+
+            self.joints_pub.publish(
+                numpy_to_float32_multiarray(np.deg2rad(joint_angles))
             )
 
-        self.joints_pub.publish(
-            numpy_to_float32_multiarray(np.deg2rad(joint_angles))
-        )
-
-        if self.debug:
-            self.mano_hand_visualizer.publish_markers()
+            if self.debug:
+                self.mano_hand_visualizer.publish_markers()
+        except Exception as e:
+            print(f"Error in timer_publish_cb: {e}")
+            pass
 
 
 def main(args=None):

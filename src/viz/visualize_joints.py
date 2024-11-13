@@ -10,10 +10,10 @@ class VisualizeJointsNode(Node):
     def __init__(self):
         super().__init__("visualize_joints_node")
         self.subscription = self.create_subscription(
-            Float32MultiArray, "/faive/policy_output", self.policy_output_callback, 10
+            Float32MultiArray, "/hand/policy_output", self.policy_output_callback, 10
         )
         self.publisher_ = self.create_publisher(JointState, "/joint_states", 10)
-        self.get_logger().info('Subscribing to "/faive/policy_output"')
+        self.get_logger().info('Subscribing to "/hand/policy_output"')
         self.get_logger().info('Publishing to "/joint_states"')
         
         self.declare_parameter('scheme_path', "")

@@ -59,7 +59,8 @@ all = [
     "drake", 
     "cvxopt",
     "mujoco-python-viewer", 
-    "mujoco"
+    "mujoco", 
+    "mediapipe",
 ]
 
 [tool.setuptools]
