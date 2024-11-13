@@ -42,4 +42,10 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    webcam/webcam_mediapipe_ingress.py
+    webcam/mediapipe_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
