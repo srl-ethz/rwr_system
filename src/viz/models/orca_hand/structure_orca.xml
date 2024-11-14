@@ -1,0 +1,142 @@
+<mujoco model="right_orca">
+    <!-- TODO: UPDATE FINGERTP POS AND ORIENTATION + FIX THUMB -->
+
+    
+    <!-- match the initial pose of P0, with the palm facing downwards (-z) and the fingers point +y -->
+    <body name="root" euler="0 0 0" >
+        <!-- so that the base can be colored separately in IsaacGym, make it into its own body -->
+        <!-- <geom mesh="base" rgba="0.2 0.2 0.2 1"/> -->
+        <body name="palm">
+            <!-- So that the contact convex hull can be calculated for each distinct component rather than for the entire fixed base, separate it into separate geoms -->
+            <geom mesh="palm"  pos="-0.00238190957064469 7.700894238483372e-05 0.04535823796707634" quat="0.9961946980917453 5.496135425675145e-18 0.08715574274765797 -1.7282897140538871e-16"/>
+            <!--index components spawn at ring finger with ring finger orientation: quat (index_base_rot*ring_base_rot.inverse) brings it to index finger orientation, and pos to index position (position vector is hardcoded, but approx -MCPA1_ring + MCPA1_index)-->
+            <!-- <geom mesh="index_lm" quat ="0.9909687390921409 -0.019419136351110703 0.11286425148204841 -0.06975325098449901" pos = "0.0470703511  -0.00210067481 0.00667793612"/> -->
+            <!-- <geom mesh="middle_lm"/> -->
+            <!-- <geom mesh="pinky_lm"/> -->
+            <!-- <geom mesh="ring_lm"/> -->
+            <!-- <site name="p01" pos="0.026435 0.018613 0.026355 " size="0.001" rgba="1 0.1 0.1 1"/> -->
+            <!-- <site name="p02" pos="0.032864 0.032727 0.013103 " size="0.001" rgba="0.1 1 0.1 1"/> -->
+            <body name="thumb_base" pos="0.0302924 0.0270814 0.0184038" quat="0.29739387 0.50396621 -0.79122378  0.1775947 ">
+                <joint name="root2thumb_base" pos="0.0175 0 0" axis="0 0 1" range="0 2.25" />
+                <geom mesh="thumb_base"/>
+                <body name="thumb_pp" pos="-0.01626345596729065 1.0512424264419451e-15 0.016263455967290896" quat="0.6532814824381884 0.653281482438197 0.2705980500730959 -0.2705980500730881">
+                    <joint name="thumb_base2pp" pos="0.023 0 0" axis="0 0 1" range="0 1.575" />
+                    <geom mesh="thumb_pp"/>
+                    <body name="thumb_mp" pos="1.2710348209084786e-15 1.901726345105347e-16 9.2922765574284e-16" quat="1.1934897514720433e-15 -0.7660444431189752 -3.3861802251067274e-15 0.6427876096865379">
+                        <joint name="thumb_pp2mp" pos="0 0 0" axis="0 -1 0" range="0 1.4" />
+                        <geom mesh="thumb_mp"/>
+                        <body name="thumb_dp" pos="4.766152750246277e-16 3.7643499428696714e-16 0.030000000000000002" quat="0.4999999999999937 0.5000000000000095 0.4999999999999981 0.4999999999999997">
+                            <joint name="thumb_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.6" />
+                            <geom mesh="thumb_dp"/>
+                            <body name="thumb_fingertip" pos="0 0 0" euler="0 0 0">
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+
+            <!--currently the meshes for index_um and index_pp are hardcoded thorugh mujoco (see yaml_conversion.py)-->
+            <!-- <site name="p11" pos="0.029883 0.085608 -0.001404 " size="0.001" rgba="1 0.1 0.1 1"/> -->
+            <!-- <site name="p12" pos="0.016650 0.087193 0.004395 " size="0.001" rgba="0.1 1 0.1 1"/> -->
+            <!-- <site name="p13" pos="0.016950 0.086741 -0.002082 " size="0.001" rgba="0.1 0.1 0.1 1"/> -->
+            <!-- <site name="p14" pos="0.017674 0.094691 -0.002603 " size="0.001" rgba="0.1 0.1 1 1"/> -->
+            <body name="index_um" pos="-0.011793425899869677 0.0016131128360923437 0.09725201655419126" quat="-0.3535533905932742 -0.4055797876726407 -0.5792279653395715 0.6123724356957955">
+                <joint name="index_abd" pos="0.015 0 0" axis="0 0 1" range="0 0.95"/>
+                <geom mesh="index_um"/>
+                <body name="index_pp" pos="5.150136399827679e-16 -5.3645723691710045e-17 1.7467264640023975e-18" quat="0.7660444431189807 -5.551115123125783e-16 -0.6427876096865364 -3.3306690738754696e-16">
+                    <joint name="root2index_pp" pos="0 0 0" axis="0 -1 0" range="0 1.5"/>
+                    <geom mesh="index_pp"/>
+                    <!-- <body name="index_pp_sens" pos="0 -0.004 0.018"> -->
+                    <!-- </body> -->
+                    <body name="index_mp" pos="-3.382710778154774e-16 3.9898639947466563e-17 0.03999999999999958" quat="0.9999999999999999 4.0245584642661925e-16 -7.424616477180734e-16 -2.220446049250313e-16">
+                        <joint name="index_pp2mp" pos="0 0 0" axis="0 -1 0" range="0 1.95"/>
+                        <geom mesh="index_mp"/>
+                        <body name="index_dp" pos="0.0009999999999998127 -0.00010000000000014511 0.027999999999999386" quat="0.5000000000000014 0.4999999999999982 0.49999999999999734 0.5000000000000033">
+                            <joint name="index_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.6"/>
+                            <geom mesh="index_dp"/>
+                            <body name="index_fingertip" pos="0 0 0" euler="0 0 0">
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+
+
+            <!-- <site name="p21" pos="0.009450 0.082000 -0.003066 " size="0.001" rgba="1 0.1 0.1 1"/> -->
+            <!-- <site name="p22" pos="-0.003550 0.082000 0.003434 " size="0.001" rgba="0.1 1 0.1 1"/> -->
+            <!-- <site name="p23" pos="-0.003550 0.082000 -0.003066 " size="0.001" rgba="0.1 0.1 0.1 1"/> -->
+            <!-- <site name="p24" pos="-0.003550 0.090000 -0.003066 " size="0.001" rgba="0.1 0.1 1 1"/> -->
+            <body name="middle_um" pos="0.011695148844910646 7.700894238483532e-05 0.09568777716547133" quat="-0.3265055756219768 -0.3265055756219776 -0.62721137512625 0.6272113751262504">
+                <joint name="middle_abd" pos="0.015 0 0" axis="0 0 1" range="0 0.95"/>
+                <geom mesh="middle_um"/>            
+                <body name="middle_pp" pos="1.8843021096399572e-16 9.382154005942786e-17 -2.640032290002196e-17" quat="0.7660444431189772 -4.440892098500626e-16 -0.6427876096865388 -6.106226635438361e-16">
+                    <joint name="root2middle_pp" pos="0 0 0" axis="0 -1 0" range="0 1.5"/>
+                    <geom mesh="middle_pp"/>
+                    <!-- <body name="middle_pp_sens" pos="0 -0.004 0.022"> -->
+                    <!-- </body> -->                
+                    <body name="middle_mp" pos="-4.5102810375396984e-17 -8.673617379884035e-19 0.04800000000000042" quat="0.9999999999999979 5.551115123125783e-17 2.706168622523819e-15 1.1102230246251565e-16">
+                        <joint name="middle_pp2mp" pos="0 0 0" axis="0 -1 0" range="0 1.95"/>
+                        <geom mesh="middle_mp"/>                      
+                        <body name="middle_dp" pos="0.0009999999999998526 -0.00010000000000001284 0.02799999999999979" quat="0.5000000000000026 0.5000000000000002 0.49999999999999967 0.5000000000000034">
+                            <joint name="middle_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.65"/>
+                            <geom mesh="middle_dp"/>
+                            <body name="middle_fingertip" pos="0 0 0">
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+
+            <!-- <site name="p31" pos="-0.009673 0.075194 -0.002943 " size="0.001" rgba="1 0.1 0.1 1"/> -->
+            <!-- <site name="p32" pos="-0.021963 0.073609 0.005103 " size="0.001" rgba="0.1 1 0.1 1"/> -->
+            <!-- <site name="p33" pos="-0.022497 0.073385 -0.001371 " size="0.001" rgba="0.1 0.1 0.1 1"/> -->
+            <!-- <site name="p34" pos="-0.023630 0.081302 -0.001552 " size="0.001" rgba="0.1 0.1 1 1"/> -->
+            <body name="ring_um" pos="0.033278448631548725 0.002764430408752333 0.08132977454939135" quat="0.2683258905068151 0.21490326953787697 0.6792523851210241 -0.6484088205237933">
+                <joint name="ring_abd" pos="0.015 0 0" axis="0 0 1" range="0 0.95"/>
+                <geom mesh="ring_um"/>          
+                <body name="ring_pp" pos="-1.1690705480312684e-16 4.3671336227542125e-17 8.630645624194291e-18" quat="0.7660444431189766 3.3306690738754696e-16 -0.6427876096865381 1.1102230246251565e-16">
+                    <joint name="root2ring_pp" pos="0 0 0" axis="0 -1 0" range="0 1.5"/>
+                    <geom mesh="ring_pp"/>
+                    <!-- <body name="ring_pp_sens" pos="0 -0.004 0.018"> -->
+                    <!-- </body> -->                
+                    <body name="ring_mp" pos="1.5612511283791264e-17 -2.0816681711721685e-17 0.048000000000000015" quat="0.9999999999999978 8.326672684688674e-17 3.0808688933348094e-15 -1.6653345369377348e-16">
+                        <joint name="ring_pp2mp" pos="0 0 0" axis="0 -1 0" range="0 1.95"/>
+                        <geom mesh="ring_mp"/>                     
+                        <body name="ring_dp" pos="0.0009999999999998656 -0.00010000000000006011 0.028000000000000084" quat="0.5000000000000037 0.4999999999999992 0.5 0.5000000000000006">
+                            <joint name="ring_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.65"/>
+                            <geom mesh="ring_dp"/>
+                            <body name="ring_fingertip" pos="0 0 0">
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+
+            <!-- <site name="p41" pos="-0.027327 0.067948 0.003204 " size="0.001" rgba="1 0.1 0.1 1"/> -->
+            <!-- <site name="p42" pos="-0.038636 0.063821 0.011348 " size="0.001" rgba="0.1 1 0.1 1"/> -->
+            <!-- <site name="p43" pos="-0.039424 0.063502 0.004904 " size="0.001" rgba="0.1 0.1 0.1 1"/> -->
+            <!-- <site name="p44" pos="-0.042188 0.071009 0.004870 " size="0.001" rgba="0.1 0.1 1 1"/> --> 
+            <body name="pinky_um" pos="0.049468640722696855 0.009761841595827506 0.0634783811871559" quat="0.25026098332500024 0.07641128912197266 0.7209909801985281 -0.6416406795023909">
+                <joint name="pinky_abd" pos="0.015 0 0" axis="0 0 1" range="0 0.95"/>
+                <geom mesh="pinky_um"/>
+                <body name="pinky_pp" pos="3.3689711733889896e-16 4.79020458533684e-17 -5.4767624688648634e-17" quat="0.7660444431189763 -4.440892098500626e-16 -0.6427876096865404 0.0">
+                    <joint name="root2pinky_pp" pos="0 0 0" axis="0 -1 0" range="0 1.5"/>
+                    <geom mesh="pinky_pp" />
+                    <!-- <body name="pinky_pp_sens" pos="0 -0.004 0.015"> -->
+                    <!-- </body> -->                    
+                    <body name="pinky_mp" pos="9.107298248878237e-17 -5.637851296924623e-17 0.029999999999999975" quat="0.9999999999999973 5.828670879282072e-16 4.274358644806853e-15 -4.440892098500626e-16">
+                        <joint name="pinky_pp2mp" pos="0 0 0" axis="0 -1 0" range="0 1.95"/>
+                        <geom mesh="pinky_mp"/>                    
+                        <body name="pinky_dp" pos="0.000999999999999948 -0.00010000000000002542 0.02800000000000011" quat="0.500000000000003 0.49999999999999817 0.5000000000000002 0.5000000000000011">
+                            <joint name="pinky_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.65"/>
+                            <geom mesh="pinky_dp"/>
+                            <body name="pinky_fingertip" pos="0 0 0" >
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+    </body>
+
+</mujoco>
