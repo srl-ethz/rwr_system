@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from webcam_mediapipe_ingress import MediaPipeTracker
-from faive_system.src.common.utils import numpy_to_float32_multiarray
+from utils import numpy_to_float32_multiarray
 
 
 class MediapipeNode(Node):

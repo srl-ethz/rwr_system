@@ -45,6 +45,7 @@ install(PROGRAMS
 install(PROGRAMS
     webcam/webcam_mediapipe_ingress.py
     webcam/mediapipe_node.py
+    webcam/utils.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
