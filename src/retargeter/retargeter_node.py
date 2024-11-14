@@ -6,10 +6,10 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
-from faive_system.src.retargeter import Retargeter
-from faive_system.src.common.utils import numpy_to_float32_multiarray
+from rwr_system.src.retargeter import Retargeter
+from rwr_system.src.common.utils import numpy_to_float32_multiarray
 import os
-from faive_system.src.viz.visualize_mano import ManoHandVisualizer
+from rwr_system.src.viz.visualize_mano import ManoHandVisualizer
 
 class RetargeterNode(Node):
     def __init__(self, debug=False):

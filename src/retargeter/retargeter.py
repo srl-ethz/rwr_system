@@ -47,6 +47,14 @@ class Retargeter:
                 GC_LIMITS_LOWER,
                 GC_LIMITS_UPPER,
             )
+        elif hand_scheme == "orca1":
+            from.hand_cfgs.orca1_cfg import (
+                GC_TENDONS,
+                FINGER_TO_TIP,
+                FINGER_TO_BASE,
+                GC_LIMITS_LOWER,
+                GC_LIMITS_UPPER,
+            )
         else:
             raise ValueError(f"hand_model {hand_scheme} not supported")
 
