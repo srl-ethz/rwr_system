@@ -1,0 +1,56 @@
+<mujoco model="biomimic_finger">
+  <body name="base" euler="0.00 0 0"> <!-- finger base (attached to hand)-->
+    <geom mesh="base"/>
+    <body name="abduct_link_virt"> <!-- virtual body for abduction/adduction link-->
+
+      <joint name="base2abduct_virt" axis="0 1 0" pos="0 0 0" range="-0.1 0.1"/>
+      <joint name="base2adduct_virt" axis="0 -1 0" pos="0 0 0" range="-0.1 0.1"/>
+      <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
+
+      <body name="abduct_link" pos="0 -0.002498 0.011162" xyaxes="0 0 1 1 0 0">
+
+        <joint name="base2abduct" axis="0 0 1" pos="0 0 0" range="-0.1 0.1"/> <!-- why is pos 0.005? -->
+        <joint name="base2adduct" axis="0 0 -1" pos="0 0 0" range="-0.1 0.1"/>
+        <geom mesh="abduct_mesh"/>
+        <!-- attempt to include a new virtual body-->
+        <body name="pp_link_virt">
+          <joint name="abduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
+          <joint name="adduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
+          <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
+          <!-- end-->
+          <body name="pp_link" pos="0.008988 0 0" euler="0 0 0">
+            <joint name="abduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
+            <joint name="adduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
+            <geom mesh="pp_mesh"/>
+            <body name="mp_link_virt"> <!-- dont touch this, pip/dip works -->
+              <!-- Using the radius from the CAD file to find the axes-->
+              <joint name="pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016" range="0 0.96"/>
+              <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
+              <body name="mp_link" pos="0.041 0 -0.0004" euler="0 0 0">
+                <geom mesh="mp_mesh"/>
+                <joint name="pp2mp" axis="0 -1 0" pos="0.006 0 0" range="0 0.96"/>
+                <body name="dp_adapter_virt">
+                  <!-- Using the radius from the CAD file to find the axes-->
+                  <joint name="mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008" range="0 0.96"/>
+                  <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
+                  <body name="dp_adapter" pos="0.0275 0 -.0004" euler="0 0 0">
+                    <joint name="mp2dp" axis="0 -1 0" pos="0.0045 0 0" range="0 0.96"/>
+                    <geom mesh="dp_adapter_mesh"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <!-- <body name="finger_pp_virt"> -->
+    <!--   <joint name="finger_pp_virt_jt" axis="0 1 0" pos="0 0 0" range="0 0.96"/> -->
+    <!--   <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" /> -->
+    <!--   <body name="finger_pp"> -->
+    <!--     <joint name="finger_pp_jt" axis="0 1 0" pos="0 1 0" range="0 0.96"/> -->
+    <!--     <geom mesh="finger_pp"/> -->
+    <!--   </body> -->
+    <!-- </body> -->
+  </body>
+</mujoco>

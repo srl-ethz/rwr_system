@@ -1,0 +1,120 @@
+<mujoco>
+<compiler angle="radian" meshdir="mesh/finger"/>
+  <default>
+      <!-- use same geom params as the Shadow Hand model in IsaacGymEnv for now -->
+      <!-- the density is adjusted so that the total weight of the hand part (not including the base) is the same as the real hand (106g) (therefore the base will have a wrong mass, which shouldn't matter for now) -->
+      <geom rgba="1 1 1 1" type="mesh" density="662" friction="1 0.005 0.001" condim="3" margin="0.0005" contype="1" conaffinity="1"/>
+      <!-- use same joint params as IsaacGymEnv for now -->
+      <!-- TODO: joint damping and position control kp should eventually be set to sysID'ed values -->
+      <joint type="hinge" limited="true" damping="0.05" armature="0.001" margin="0.01" frictionloss="0.001"/>
+      <!-- actuator configuration -->
+      <position ctrllimited="true" forcelimited="true" forcerange="-1 1" kp="2."/>
+      <!-- the tendon which limits the two joints creating the rolling joint should be very limited in its length range -->
+      <tendon limited="true" range="-0.001 0.001"/>
+  </default>
+
+  <asset>
+    <mesh name="base" file="finger_base_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="abduct_mesh" file="finger_link_2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="pp_mesh" file="finger_pp_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mp_mesh" file="finger_mp_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dp_adapter_mesh" file="finger_dp_adapter.stl" scale="0.001 0.001 0.001"/>
+  </asset>
+
+  <contact>
+    <exclude body1="base" body2="abduct_link"/>
+    <exclude body1="abduct_link" body2="pp_link"/>
+    <exclude body1="pp_link" body2="mp_link"/>
+    <exclude body1="mp_link" body2="dp_adapter"/>
+  </contact>
+
+  <sensor>
+    <!-- <jointpos name="root2palm" joint="root2palm"/> -->
+    <!-- <jointpos name="root2thumb_base" joint="root2thumb_base"/> -->
+    <!-- <jointpos name="thumb_base2pp" joint="thumb_base2pp"/> -->
+    <!-- <jointpos name="thumb_pp2mp" joint="thumb_pp2mp"/> -->
+    <!-- <jointpos name="thumb_mp2dp" joint="thumb_mp2dp"/> -->
+
+    <!-- <jointpos name="root2index_pp" joint="root2index_pp"/> -->
+    <!-- <jointpos name="index_pp2mp" joint="index_pp2mp"/> -->
+    <!-- <jointpos name="index_mp2dp" joint="index_mp2dp"/> -->
+
+    <!-- <jointpos name="root2middle_pp" joint="root2middle_pp"/> -->
+    <!-- <jointpos name="middle_pp2mp" joint="middle_pp2mp"/> -->
+    <!-- <jointpos name="middle_mp2dp" joint="middle_mp2dp"/> -->
+
+    <!-- <jointpos name="root2ring_pp" joint="root2ring_pp"/> -->
+    <!-- <jointpos name="ring_pp2mp" joint="ring_pp2mp"/> -->
+    <!-- <jointpos name="ring_mp2dp" joint="ring_mp2dp"/> -->
+
+    <!-- <jointpos name="root2pinky_pp" joint="root2pinky_pp"/> -->
+    <!-- <jointpos name="pinky_pp2mp" joint="pinky_pp2mp"/> -->
+    <!-- <jointpos name="pinky_mp2dp" joint="pinky_mp2dp"/> -->
+  </sensor>
+
+  <actuator>
+      <!-- 
+    For this version of the Faive Hand, the first two joints aren't rolling contact joints.
+    This means those fingers move 0.5x as much as the rolling contact joints with the same joint angle goal.
+    Thus, set kp for these joints to be half the default value of 2, to effectively achieve the same joint stiffness.
+    The actuators for the distal joints are set to have a kp twice the default value, since they must move two joints.
+    
+    The joints with rolling contacts bend twice as much as the commanded joint angle. This is different from the implementation in GripperController, which receive the total joint angle as input.
+    i.e. if 0.1 is sent to a rolling contact joint in mujoco, the joint bends 0.2 in total, achieving the same result as sending 0.2 in GripperController.
+    
+    note: the "gear" attribute allows a scaling to be applied from the actuator dimensions to the joint dimensions, but it seems not to be completely supported in IsaacGym so don't use it.
+    -->
+    <position name="base2abduct" joint="base2abduct" ctrlrange="-0.96 0.96"/>
+    <position name="base2adduct" joint="base2adduct" ctrlrange="-0.96 0.96"/> 
+
+    <position name="pp2mp" joint="pp2mp" ctrlrange="0 0.96"/>
+    <!-- <position name="abduct2pp" joint="abduct2pp" ctrlrange="0 0.96"/> -->
+    <!-- <position name="adduct2pp" joint="adduct2pp" ctrlrange="0 0.96"/> -->
+    <!-- <position name="ring_pp2mp" joint="ring_pp2mp" ctrlrange="0 0.96" kp="4"/> -->
+
+    <!-- <position name="root2pinky_pp" joint="root2pinky_pp" ctrlrange="0 0.83"/> -->
+    <!-- <position name="pinky_pp2mp" joint="pinky_pp2mp" ctrlrange="0 0.96" kp="4"/> -->
+  </actuator>
+
+  <tendon>
+    <fixed name="base2abduct">
+      <joint joint="base2abduct_virt" coef="1"/>
+      <joint joint="base2abduct" coef="-1"/>
+    </fixed>
+    <fixed name="base2adduct">
+      <joint joint="base2adduct_virt" coef="1"/>
+      <joint joint="base2adduct" coef="-1"/>
+    </fixed>
+    <!-- The relation here is that it's a linear combination. We're actuating the abduct/adduct 
+    motors and basde on that, there's a scaled amount of movement in the pp joint.
+    TODO: Measure practically the ranges of motion for both the joints and adjust the control ranges and this equation-->
+    <fixed name="abduct2pp">
+      <joint joint="base2abduct_virt" coef="5"/>
+      <joint joint="abduct2pp" coef="-1"/>
+    </fixed>
+    <fixed name="adduct2pp">
+      <joint joint="base2adduct_virt" coef="5"/>
+      <joint joint="adduct2pp" coef="-1"/>
+    </fixed>
+    <fixed name="pp2mp_virt">
+      <joint joint="abduct2pp_virt" coef="1"/>
+      <joint joint="abduct2pp" coef="-1"/>
+    </fixed>
+    <fixed name="pp2mp_virt_2">
+      <joint joint="adduct2pp_virt" coef="1"/>
+      <joint joint="adduct2pp" coef="-1"/>
+    </fixed>
+    <fixed name="pp2mp">
+      <joint joint="pp2mp_virt" coef="1"/>
+      <joint joint="pp2mp" coef="-1"/>
+    </fixed>
+    <fixed name="pp2dp">
+      <joint joint="pp2mp" coef="0.71"/>
+      <joint joint="mp2dp_virt" coef="-1"/>
+    </fixed>
+    <fixed name="mp2dp_passive">
+      <joint joint="mp2dp_virt" coef="1"/>
+      <joint joint="mp2dp" coef="-1"/>
+    </fixed>
+  </tendon>
+</mujoco>
