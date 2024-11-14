@@ -27,7 +27,7 @@ class RokokoNode(Node):
         ingress_period = 0.005  # Timer period in seconds
         self.timer = self.create_timer(ingress_period, self.timer_publish_cb)
 
-        self.ingress_mano_pub = self.create_publisher(
+        self.ingress_mano_pub = self.crearte_publisher(
             Float32MultiArray, "/ingress/mano", 10
         )
         self.ingress_wrist_pub = self.create_publisher(

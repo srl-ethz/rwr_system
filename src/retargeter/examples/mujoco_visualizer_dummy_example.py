@@ -4,7 +4,7 @@ import os
 import time
 from mujoco_visualizer import GripperVisualizer
 
-gv = GripperVisualizer()
+gv = GripperVisualizer(sim_model="/home/ccc/dev/03_RWR/mujoco/xml/model.xml")
 i = 0
 while True:
     # give sinusoidal joint angle commands
