@@ -21,7 +21,7 @@ class Retargeter:
         mjcf_filepath: str = None,
         sdf_filepath: str = None,
         hand_scheme: str = "p4",
-        device: str = "cuda",
+        device: str = "cpu",
         lr: float = 2.5,
         use_scalar_distance_palm: bool = False,
     ) -> None:
@@ -41,6 +41,14 @@ class Retargeter:
             )
         elif hand_scheme == "p4":
             from .hand_cfgs.p4_cfg import (
+                GC_TENDONS,
+                FINGER_TO_TIP,
+                FINGER_TO_BASE,
+                GC_LIMITS_LOWER,
+                GC_LIMITS_UPPER,
+            )
+        elif hand_scheme == "biomimic":
+            from .hand_cfgs.biomimic_hand_cfg import (
                 GC_TENDONS,
                 FINGER_TO_TIP,
                 FINGER_TO_BASE,

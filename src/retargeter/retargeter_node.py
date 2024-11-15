@@ -25,23 +25,23 @@ class RetargeterNode(Node):
             mjcf_filepath = self.get_parameter("retarget/mjcf_filepath").value
         except:
             mjcf_filepath = None
-        
+
         try:
             urdf_filepath = self.get_parameter("retarget/urdf_filepath").value
         except:
             urdf_filepath = None
         hand_scheme = self.get_parameter("retarget/hand_scheme").value
         debug = self.get_parameter("debug").value
-        
+
         # subscribe to ingress topics
         self.ingress_mano_sub = self.create_subscription(
             Float32MultiArray, "/ingress/mano", self.ingress_mano_cb, 10
         )
-        
+
         self.retargeter = Retargeter(
-            device="cuda",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
+            device="cpu",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
         )
-        
+
         self.joints_pub = self.create_publisher(
             Float32MultiArray, "/hand/policy_output", 10
         )
@@ -49,14 +49,14 @@ class RetargeterNode(Node):
         if self.debug:
             self.rviz_pub = self.create_publisher(MarkerArray, 'retarget/normalized_mano_points', 10)
             self.mano_hand_visualizer = ManoHandVisualizer(self.rviz_pub)
-            
-        
+
+
         self.timer = self.create_timer(0.005, self.timer_publish_cb)
-    
+
     def ingress_mano_cb(self, msg):
         self.keypoint_positions = np.array(msg.data).reshape(-1, 3)
-    
-        
+
+
     def timer_publish_cb(self):
         try:
             if self.debug:
