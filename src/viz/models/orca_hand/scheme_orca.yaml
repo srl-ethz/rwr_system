@@ -1,0 +1,24 @@
+gc_tendons:
+  'root2thumb_base': {}
+  'thumb_base2pp': {}
+  'thumb_pp2mp': {}
+  'thumb_mp2dp': {}
+  'index_abd': {}
+  'root2index_pp': {}
+  'index_pp2mp': {'index_mp2dp': 0.58333}
+  'middle_abd': {}
+  'root2middle_pp': {}
+  'middle_pp2mp': {'middle_mp2dp': 0.58333}
+  'ring_abd': {}
+  'root2ring_pp': {}
+  'ring_pp2mp': {'ring_mp2dp': 0.58333}
+  'pinky_abd': {}
+  'root2pinky_pp': {}
+  'pinky_pp2mp': {'pinky_mp2dp': 0.58333}
+
+finger_to_tip:
+  'thumb': 'thumb_fingertip'
+  'index': 'index_fingertip'
+  'middle': 'middle_fingertip'
+  'ring': 'ring_fingertip'
+  'pinky': 'pinky_fingertip'
