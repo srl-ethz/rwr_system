@@ -56,7 +56,7 @@ all = [
     "opencv-python",
     "mujoco", 
     "cv_bridge", 
-    "drake", 
+    #"drake", 
     "cvxopt",
     "mujoco-python-viewer", 
     "mujoco", 
