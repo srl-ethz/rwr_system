@@ -29,6 +29,14 @@ class VisualizeJointsNode(Node):
         self.joint_names = []
         for i, (tendon_name, joints) in enumerate(self.tendons.items()):
             self.joint_names.append(tendon_name)
+
+            # # For a tendon associated with pin joints:
+            # pin_joint_contact_factor = 1.0  # No scaling, ideal pin joint behavior
+            # self.jacobian_list.append((i, pin_joint_contact_factor))  # No change in factor
+            # for joint_name, factor in joints.items():
+            #     self.joint_names.append(joint_name)
+            #     self.jacobian_list.append((i, factor * pin_joint_contact_factor))  # The factor remains the same
+
             rolling_contact_factor = 0.5 if len(joints)>0 else 1.0
             self.jacobian_list.append((i, rolling_contact_factor))
             for joint_name, factor in joints.items():
