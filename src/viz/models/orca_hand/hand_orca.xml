@@ -1,7 +1,0 @@
-<mujoco model="right_orca_modular">
-    <compiler angle="radian"/>
-    <include file="metadata_orca.xml"/>
-    <worldbody>
-        <include file="structure_orca.xml"/>
-    </worldbody>
-</mujoco>

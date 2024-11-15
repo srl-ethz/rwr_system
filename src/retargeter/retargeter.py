@@ -20,8 +20,8 @@ class Retargeter:
         urdf_filepath: str = None,
         mjcf_filepath: str = None,
         sdf_filepath: str = None,
-        hand_scheme: str = "p4",
-        device: str = "cuda",
+        hand_scheme: str = "orca1",
+        device: str = "cpu",
         lr: float = 2.5,
         use_scalar_distance_palm: bool = False,
     ) -> None:
@@ -60,6 +60,7 @@ class Retargeter:
 
         self.target_angles = None
 
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
 
         self.gc_limits_lower = GC_LIMITS_LOWER
@@ -113,7 +114,7 @@ class Retargeter:
             joint_parameter_names
         ), "Joint names mismatch, please double check hand_scheme"
 
-        self.gc_joints = torch.ones(self.n_tendons).to(self.device) * 15.0
+        self.gc_joints = torch.ones(self.n_tendons).to(self.device) * 16.0
         self.gc_joints.requires_grad_()
 
         self.lr = lr
@@ -229,7 +230,7 @@ class Retargeter:
 
         start_time = time.time()
         if not warm:
-            self.gc_joints = torch.ones(self.n_joints).to(self.device) * 15.0
+            self.gc_joints = torch.ones(self.n_joints).to(self.device) * 16.0
             self.gc_joints.requires_grad_()
 
         assert joints.shape == (

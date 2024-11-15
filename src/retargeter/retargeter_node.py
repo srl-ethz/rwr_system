@@ -6,10 +6,11 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
-from rwr_system.src.retargeter import Retargeter
-from rwr_system.src.common.utils import numpy_to_float32_multiarray
+from src.retargeter import Retargeter
+from src.common.utils import numpy_to_float32_multiarray
 import os
-from rwr_system.src.viz.visualize_mano import ManoHandVisualizer
+from src.viz.visualize_mano import ManoHandVisualizer
+import torch
 
 class RetargeterNode(Node):
     def __init__(self, debug=False):
@@ -32,6 +33,8 @@ class RetargeterNode(Node):
             urdf_filepath = None
         hand_scheme = self.get_parameter("retarget/hand_scheme").value
         debug = self.get_parameter("debug").value
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
         
         # subscribe to ingress topics
         self.ingress_mano_sub = self.create_subscription(
@@ -39,7 +42,7 @@ class RetargeterNode(Node):
         )
         
         self.retargeter = Retargeter(
-            device="cuda",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
+            device=device,  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
         )
         
         self.joints_pub = self.create_publisher(

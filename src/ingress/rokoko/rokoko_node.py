@@ -5,8 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from rokoko_ingress import RokokoTracker
-from faive_system.src.common.utils import numpy_to_float32_multiarray    
-
+from src.common.utils import numpy_to_float32_multiarray    
 
 class RokokoNode(Node):
     def __init__(self, debug=False):
@@ -27,7 +26,7 @@ class RokokoNode(Node):
         ingress_period = 0.005  # Timer period in seconds
         self.timer = self.create_timer(ingress_period, self.timer_publish_cb)
 
-        self.ingress_mano_pub = self.crearte_publisher(
+        self.ingress_mano_pub = self.create_publisher(
             Float32MultiArray, "/ingress/mano", 10
         )
         self.ingress_wrist_pub = self.create_publisher(

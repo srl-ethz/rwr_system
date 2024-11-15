@@ -47,14 +47,14 @@ def simulation(simulation_conn, sim_model):
     viewer = mujoco_viewer.MujocoViewer(model, data, mode=mode)
 
     # Scaling factor for the joint commands
-    command_scaling = np.ones(15)
-    command_scaling[1:] = 0.5 
+    command_scaling = np.ones(16)
+    command_scaling[1:] = 1.0
 
     # Create a thread to listen for commands from the controller
     def command_listener():
         while True:
-            joint_angles = simulation_conn.recv()
-            hand_joint_num = 15
+            joint_angles, _ = simulation_conn.recv()
+            hand_joint_num = 16
             assert len(joint_angles) == hand_joint_num, f"Expected {hand_joint_num} joint angles, got {len(joint_angles)}"
             data.ctrl[-len(joint_angles):] = np.deg2rad(joint_angles) * command_scaling
             
