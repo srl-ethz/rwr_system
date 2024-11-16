@@ -5,7 +5,7 @@ Welcome to the RWR System repository. This repository contains the code and reso
 
 # Our Code Implemenations
 
-1. Retargeting Visualization of Rokoko Rosbag Recordings
+1. Retargeting Visualization for Rokoko rosbag recordings
     ```bash
    ros2 launch experiments rosbag_retargeting_rviz_orca.launch.py 
     ```
