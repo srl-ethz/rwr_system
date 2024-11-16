@@ -15,7 +15,6 @@ Welcome to the RWR System repository. This repository contains the code and reso
    ros2 launch experiments retargeting_rviz_orca.launch.py
     ```
 
-**Disclaimer:** This repository is a work in progress and will be constantly updated and fixed. For any issues or questions, please use Slack to communicate or submit an issue on GitHub.
 
 ## Getting Started
 
