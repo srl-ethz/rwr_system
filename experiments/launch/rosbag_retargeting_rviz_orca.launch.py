@@ -2,39 +2,37 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
+from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "faive_hand_p4",
+    "orca1_hand",
     "urdf",
-    "p4.urdf")
+    "orca1.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
-        
+
     return LaunchDescription(
         [
-            
-            # Node(
-            #     package="ingress",
-            #     executable="mediapipe_node.py",
-            #     name="mediapipe_node",
-            #     output="log",
-            # ),
-
-            
+    
             Node(
-                package="ingress",
-                executable="rokoko_node.py",
-                name="rokoko_node",
-                output="log",
+                package="ingress",  # Replace with your package name
+                executable="rosbag_node.py",  # Replace with your script's entry point (name set in setup.py)
+                name="rosbag_node",
+                output="screen",
                 parameters=[
-                    {"rokoko_tracker/ip": "0.0.0.0"},
-                    {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": True}
+                    {
+                         "rosbag_path": os.path.join(
+                            get_package_share_directory('viz'),
+                            "rosbag",
+                            "recordings",
+                            "recording_2024-11-14_17-46-39/",
+                        )
+                    },
                 ],
             ),
 
@@ -58,12 +56,12 @@ def generate_launch_description():
                         "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
+                            "orca1_hand",
                             "urdf",
-                            "p4.urdf",
+                            "orca1.urdf",
                         )
                     },
-                    {"retarget/hand_scheme": "p4"},
+                    {"retarget/hand_scheme": "orca1"},
                     {"debug": True},
                 ],
             ),
@@ -78,8 +76,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
-                            "scheme_p4.yaml",
+                            "orca1_hand",
+                            "scheme_orca1.yaml",
                         )
                     }
                 ],
@@ -100,7 +98,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca1.rviz')],
                 ),
 
         ]

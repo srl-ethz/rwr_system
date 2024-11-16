@@ -1,13 +1,13 @@
 <mujoco model="right_orca1">
     <!-- TODO: UPDATE FINGERTP POS AND ORIENTATION + FIX THUMB -->
 
-    
+    <body name="root" euler="0 0 0" >
     <!-- match the initial pose of P0, with the palm facing downwards (-z) and the fingers point +y -->
         <!-- so that the base can be colored separately in IsaacGym, make it into its own body -->
         <!-- <geom mesh="base" rgba="0.2 0.2 0.2 1"/> -->
         <body name="palm">
             <!-- So that the contact convex hull can be calculated for each distinct component rather than for the entire fixed base, separate it into separate geoms -->
-            <geom mesh="palm"  pos="-0.00238190957064469 7.700894238483372e-05 0.04535823796707634" quat="0.9961946980917453 5.496135425675145e-18 0.08715574274765797 -1.7282897140538871e-16"/>
+            <geom mesh="palm_tower"  pos="-0.00238190957064469 7.700894238483372e-05 0.04535823796707634" quat="0.9961946980917453 5.496135425675145e-18 0.08715574274765797 -1.7282897140538871e-16"/>
             <!--index components spawn at ring finger with ring finger orientation: quat (index_base_rot*ring_base_rot.inverse) brings it to index finger orientation, and pos to index position (position vector is hardcoded, but approx -MCPA1_ring + MCPA1_index)-->
             <!-- <geom mesh="index_lm" quat ="0.9909687390921409 -0.019419136351110703 0.11286425148204841 -0.06975325098449901" pos = "0.0470703511  -0.00210067481 0.00667793612"/> -->
             <!-- <geom mesh="middle_lm"/> -->
@@ -27,7 +27,7 @@
                         <body name="thumb_dp" pos="4.766152750246277e-16 3.7643499428696714e-16 0.030000000000000002" quat="0.4999999999999937 0.5000000000000095 0.4999999999999981 0.4999999999999997">
                             <joint name="thumb_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.6" />
                             <geom mesh="thumb_dp"/>
-                            <body name="thumb_fingertip" pos="0 0 0" euler="0 0 0">
+                            <body name="thumb_fingertip" pos="0 0.02425 -0.001189" euler="0 0 0">
                             </body>
                         </body>
                     </body>
@@ -53,7 +53,7 @@
                         <body name="index_dp" pos="0.0009999999999998127 -0.00010000000000014511 0.027999999999999386" quat="0.5000000000000014 0.4999999999999982 0.49999999999999734 0.5000000000000033">
                             <joint name="index_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.6"/>
                             <geom mesh="index_dp"/>
-                            <body name="index_fingertip" pos="0 0 0" euler="0 0 0">
+                            <body name="index_fingertip" pos="0 0.020 -0.001306" euler="0 0 0">
                             </body>
                         </body>
                     </body>
@@ -79,7 +79,7 @@
                         <body name="middle_dp" pos="0.0009999999999998526 -0.00010000000000001284 0.02799999999999979" quat="0.5000000000000026 0.5000000000000002 0.49999999999999967 0.5000000000000034">
                             <joint name="middle_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.65"/>
                             <geom mesh="middle_dp"/>
-                            <body name="middle_fingertip" pos="0 0 0">
+                            <body name="middle_fingertip" pos="0 0.020 -0.001306">
                             </body>
                         </body>
                     </body>
@@ -104,7 +104,7 @@
                         <body name="ring_dp" pos="0.0009999999999998656 -0.00010000000000006011 0.028000000000000084" quat="0.5000000000000037 0.4999999999999992 0.5 0.5000000000000006">
                             <joint name="ring_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.65"/>
                             <geom mesh="ring_dp"/>
-                            <body name="ring_fingertip" pos="0 0 0">
+                            <body name="ring_fingertip" pos="0 0.020 -0.001306">
                             </body>
                         </body>
                     </body>
@@ -129,12 +129,13 @@
                         <body name="pinky_dp" pos="0.000999999999999948 -0.00010000000000002542 0.02800000000000011" quat="0.500000000000003 0.49999999999999817 0.5000000000000002 0.5000000000000011">
                             <joint name="pinky_mp2dp" pos="0 0 0" axis="-1 0 0" range="0 1.65"/>
                             <geom mesh="pinky_dp"/>
-                            <body name="pinky_fingertip" pos="0 0 0" >
+                            <body name="pinky_fingertip" pos="0 0.020 -0.001306" >
                             </body>
                         </body>
                     </body>
                 </body>
             </body>
         </body>
+    </body>
 
 </mujoco>

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <robot name="converted_robot">
-   <link name="world">
+   <link name="hand_root">
       <inertial>
          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
@@ -13,28 +13,28 @@
          <mass value="0.1627307654665299"/>
          <inertia ixx="0.00012379139272175162" iyy="8.945841470861254e-05" izz="4.164189547505e-05" ixy="0" ixz="0" iyz="0"/>
       </inertial>
-      <visual name="palm">
+      <visual name="palm_tower">
          <origin xyz="-0.0021553182979257156 -0.00042090310265376757 0.030237857188662218" rpy="0.2983531030986827 0.0066384412758355715 1.5568109263125627"/>
          <geometry>
-            <mesh filename="converted_palm.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_palm_tower.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
    </link>
-   <link name="world2palm_fixed_jointbody">
+   <link name="root2palm_fixed_jointbody">
       <inertial>
          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
          <mass value="0.001"/>
          <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
       </inertial>
    </link>
-   <joint type="fixed" name="world2palm_fixed">
-      <parent link="world"/>
-      <child link="world2palm_fixed_jointbody"/>
+   <joint type="fixed" name="root2palm_fixed">
+      <parent link="hand_root"/>
+      <child link="root2palm_fixed_jointbody"/>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
    </joint>
-   <joint type="fixed" name="world2palm_fixed_offset">
-      <parent link="world2palm_fixed_jointbody"/>
+   <joint type="fixed" name="root2palm_fixed_offset">
+      <parent link="root2palm_fixed_jointbody"/>
       <child link="palm"/>
       <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
    </joint>
@@ -47,7 +47,7 @@
       <visual name="thumb_base">
          <origin xyz="0.009497914232204393 5.5541204706067244e-05 -5.27491449757927e-05" rpy="-3.0334401416794603 -1.563616303336467 -0.09108462930511196"/>
          <geometry>
-            <mesh filename="converted_thumb_base.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_thumb_base.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -80,7 +80,7 @@
       <visual name="thumb_pp">
          <origin xyz="0.011052064663332051 1.6203312209423124e-05 3.4258699652190326e-05" rpy="0.033962151123505535 -1.5659078669478592 3.1116960805879503"/>
          <geometry>
-            <mesh filename="converted_thumb_pp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_thumb_pp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -113,7 +113,7 @@
       <visual name="thumb_mp">
          <origin xyz="0.0008724539758762056 2.4727438746056388e-05 0.014659312447177586" rpy="-0.0003364028998661733 -0.01711516449902417 0.008877420129339876"/>
          <geometry>
-            <mesh filename="converted_thumb_mp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_thumb_mp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -146,7 +146,7 @@
       <visual name="thumb_dp">
          <origin xyz="1.0065826614441387e-05 0.006272335517680365 -0.00010113404865312324" rpy="1.4779757020900601 0.03179381852807506 -0.0019765844728094617"/>
          <geometry>
-            <mesh filename="converted_thumb_dp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_thumb_dp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -172,7 +172,7 @@
    </joint>
    <link name="thumb_fingertip">
       <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <origin xyz="0.0 0.02425 -0.001189" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
          <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
       </inertial>
@@ -187,7 +187,7 @@
    <joint type="fixed" name="thumb_dp2thumb_fingertip_fixed">
       <parent link="thumb_dp"/>
       <child link="thumb_dp2thumb_fingertip_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.02425 -0.001189" rpy="0.0 0.0 0.0"/>
    </joint>
    <joint type="fixed" name="thumb_dp2thumb_fingertip_fixed_offset">
       <parent link="thumb_dp2thumb_fingertip_fixed_jointbody"/>
@@ -203,7 +203,7 @@
       <visual name="index_um">
          <origin xyz="0.007051357171005548 5.183050576386117e-06 7.166561987858151e-06" rpy="-0.03450058323670646 -1.568978192503061 -3.104501393495336"/>
          <geometry>
-            <mesh filename="converted_index_um.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_index_um.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -236,7 +236,7 @@
       <visual name="index_pp">
          <origin xyz="0.0008687401920092231 -2.4862054760042404e-05 0.022247108199277357" rpy="-0.0011307138458011082 -0.012433056943532472 0.0237556697838349"/>
          <geometry>
-            <mesh filename="converted_index_pp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_index_pp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -269,7 +269,7 @@
       <visual name="index_mp">
          <origin xyz="0.0013563262901469591 0.00015284544953717659 0.015924633953679476" rpy="0.03262299051489555 0.009088104092281446 0.14320456986155244"/>
          <geometry>
-            <mesh filename="converted_index_mp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_index_mp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -302,7 +302,7 @@
       <visual name="index_dp">
          <origin xyz="-1.508277681214744e-05 0.0051661185082592445 -0.000207522490773792" rpy="1.459594397655209 -0.01634013647888155 0.00022775166685629067"/>
          <geometry>
-            <mesh filename="converted_index_dp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_index_dp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -328,7 +328,7 @@
    </joint>
    <link name="index_fingertip">
       <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
          <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
       </inertial>
@@ -343,7 +343,7 @@
    <joint type="fixed" name="index_dp2index_fingertip_fixed">
       <parent link="index_dp"/>
       <child link="index_dp2index_fingertip_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
    </joint>
    <joint type="fixed" name="index_dp2index_fingertip_fixed_offset">
       <parent link="index_dp2index_fingertip_fixed_jointbody"/>
@@ -359,7 +359,7 @@
       <visual name="middle_um">
          <origin xyz="0.007051357171005548 5.183050576386117e-06 7.166561987858151e-06" rpy="-0.03450058323670646 -1.568978192503061 -3.104501393495336"/>
          <geometry>
-            <mesh filename="converted_middle_um.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_middle_um.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -392,7 +392,7 @@
       <visual name="middle_pp">
          <origin xyz="0.0008879048431632835 -2.537949357785257e-05 0.026668810452510044" rpy="-0.0011314495857910837 -0.009859569454313544 0.029169093210231874"/>
          <geometry>
-            <mesh filename="converted_middle_pp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_middle_pp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -425,7 +425,7 @@
       <visual name="middle_mp">
          <origin xyz="0.0013563262901469591 0.00015284544953717659 0.015924633953679476" rpy="0.03262299051489555 0.009088104092281446 0.14320456986155244"/>
          <geometry>
-            <mesh filename="converted_middle_mp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_middle_mp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -458,7 +458,7 @@
       <visual name="middle_dp">
          <origin xyz="-1.508277681214744e-05 0.0051661185082592445 -0.000207522490773792" rpy="1.459594397655209 -0.01634013647888155 0.00022775166685629067"/>
          <geometry>
-            <mesh filename="converted_middle_dp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_middle_dp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -484,7 +484,7 @@
    </joint>
    <link name="middle_fingertip">
       <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
          <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
       </inertial>
@@ -499,7 +499,7 @@
    <joint type="fixed" name="middle_dp2middle_fingertip_fixed">
       <parent link="middle_dp"/>
       <child link="middle_dp2middle_fingertip_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
    </joint>
    <joint type="fixed" name="middle_dp2middle_fingertip_fixed_offset">
       <parent link="middle_dp2middle_fingertip_fixed_jointbody"/>
@@ -515,7 +515,7 @@
       <visual name="ring_um">
          <origin xyz="0.007051357171005548 5.183050576386117e-06 7.166561987858151e-06" rpy="-0.03450058323670646 -1.568978192503061 -3.104501393495336"/>
          <geometry>
-            <mesh filename="converted_ring_um.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_ring_um.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -548,7 +548,7 @@
       <visual name="ring_pp">
          <origin xyz="0.0008879048431632835 -2.537949357785257e-05 0.026668810452510044" rpy="-0.0011314495857910837 -0.009859569454313544 0.029169093210231874"/>
          <geometry>
-            <mesh filename="converted_ring_pp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_ring_pp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -581,7 +581,7 @@
       <visual name="ring_mp">
          <origin xyz="0.0013563262901469591 0.00015284544953717659 0.015924633953679476" rpy="0.03262299051489555 0.009088104092281446 0.14320456986155244"/>
          <geometry>
-            <mesh filename="converted_ring_mp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_ring_mp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -614,7 +614,7 @@
       <visual name="ring_dp">
          <origin xyz="-1.508277681214744e-05 0.0051661185082592445 -0.000207522490773792" rpy="1.459594397655209 -0.01634013647888155 0.00022775166685629067"/>
          <geometry>
-            <mesh filename="converted_ring_dp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_ring_dp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -640,7 +640,7 @@
    </joint>
    <link name="ring_fingertip">
       <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
          <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
       </inertial>
@@ -655,7 +655,7 @@
    <joint type="fixed" name="ring_dp2ring_fingertip_fixed">
       <parent link="ring_dp"/>
       <child link="ring_dp2ring_fingertip_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
    </joint>
    <joint type="fixed" name="ring_dp2ring_fingertip_fixed_offset">
       <parent link="ring_dp2ring_fingertip_fixed_jointbody"/>
@@ -671,7 +671,7 @@
       <visual name="pinky_um">
          <origin xyz="0.007051357171005548 5.183050576386117e-06 7.166561987858151e-06" rpy="-0.03450058323670646 -1.568978192503061 -3.104501393495336"/>
          <geometry>
-            <mesh filename="converted_pinky_um.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_pinky_um.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -704,7 +704,7 @@
       <visual name="pinky_pp">
          <origin xyz="0.0008258154520941577 -2.2222565756841063e-05 0.016729787379917885" rpy="-0.0012233283283072625 -0.019834837027373764 0.012268708074692703"/>
          <geometry>
-            <mesh filename="converted_pinky_pp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_pinky_pp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -737,7 +737,7 @@
       <visual name="pinky_mp">
          <origin xyz="0.0013563262901469591 0.00015284544953717659 0.015924633953679476" rpy="0.03262299051489555 0.009088104092281446 0.14320456986155244"/>
          <geometry>
-            <mesh filename="converted_pinky_mp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_pinky_mp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -770,7 +770,7 @@
       <visual name="pinky_dp">
          <origin xyz="-1.508277681214744e-05 0.0051661185082592445 -0.000207522490773792" rpy="1.459594397655209 -0.01634013647888155 0.00022775166685629067"/>
          <geometry>
-            <mesh filename="converted_pinky_dp.stl"/>
+            <mesh filename="package://viz/models/orca1_hand/urdf/converted_pinky_dp.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -796,7 +796,7 @@
    </joint>
    <link name="pinky_fingertip">
       <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
          <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
       </inertial>
@@ -811,7 +811,7 @@
    <joint type="fixed" name="pinky_dp2pinky_fingertip_fixed">
       <parent link="pinky_dp"/>
       <child link="pinky_dp2pinky_fingertip_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.020 -0.001306" rpy="0.0 0.0 0.0"/>
    </joint>
    <joint type="fixed" name="pinky_dp2pinky_fingertip_fixed_offset">
       <parent link="pinky_dp2pinky_fingertip_fixed_jointbody"/>

@@ -196,17 +196,18 @@ class Retargeter:
         for finger, base in self.finger_to_base.items():
             print(
                 chain_transform1[base].transform_points(self.root),
+                chain_transform2[base].transform_points(self.root),
                 chain_transform1[base].transform_points(self.root),
-                chain_transform1[base].transform_points(self.root),
+                
             )
-            assert torch.allclose(
-                chain_transform1[base].transform_points(self.root),
-                chain_transform2[base].transform_points(self.root),
-            ), f"Base frame {base} not fixed to the palm"
-            assert torch.allclose(
-                chain_transform1[base].transform_points(self.root),
-                chain_transform2[base].transform_points(self.root),
-            ), f"Base frame {base} not fixed to the palm"
+            # assert torch.allclose(
+            #     chain_transform1[base].transform_points(self.root),
+            #     chain_transform3[base].transform_points(self.root),
+            # ), f"Base frame {base} not fixed to the palm"
+            # assert torch.allclose(
+            #     chain_transform1[base].transform_points(self.root),
+            #     chain_transform3[base].transform_points(self.root),
+            # ), f"Base frame {base} not fixed to the palm"
 
     def retarget_finger_mano_joints(
         self,

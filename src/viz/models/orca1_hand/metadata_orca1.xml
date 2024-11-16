@@ -14,7 +14,7 @@
         <!-- IsaacGym somehow does not respect the default mesh scale so set each of them manually here... -->
         <!-- <mesh name="palm_tower" file="mesh_orca/palm_tower.stl" scale = "0.001 0.001 0.001"/> -->
         <!-- <mesh name="base" file="mesh_orca/base.stl" scale = "0.001 0.001 0.001"/> -->
-        <mesh name="palm" file="mesh_orca/Carpals.stl" scale = "0.001 0.001 0.001"/>
+        <mesh name="palm_tower" file="mesh_orca/Carpals.stl" scale = "0.001 0.001 0.001"/>
         <!-- <mesh name="index_lm" file="mesh_orca/index_lm.stl" scale = "0.001 0.001 0.001"/>
         <mesh name="middle_lm" file="mesh_orca/middle_lm.stl" scale = "0.001 0.001 0.001" />
         <mesh name="ring_lm" file="mesh_orca/index_lm.stl" scale = "0.001 0.001 0.001"/>

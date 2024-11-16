@@ -39,6 +39,7 @@ install(PROGRAMS
 install(PROGRAMS
     rokoko/rokoko_node.py
     rokoko/rokoko_ingress.py
+    rokoko/rosbag_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

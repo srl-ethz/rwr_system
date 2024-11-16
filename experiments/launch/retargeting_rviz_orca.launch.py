@@ -8,12 +8,13 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "faive_hand_p4",
+    "orca1_hand",
     "urdf",
-    "p4.urdf")
+    "orca1.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
+
         
     return LaunchDescription(
         [
@@ -24,8 +25,6 @@ def generate_launch_description():
             #     name="mediapipe_node",
             #     output="log",
             # ),
-
-            
             Node(
                 package="ingress",
                 executable="rokoko_node.py",
@@ -58,12 +57,12 @@ def generate_launch_description():
                         "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
+                            "orca1_hand",
                             "urdf",
-                            "p4.urdf",
+                            "orca1.urdf",
                         )
                     },
-                    {"retarget/hand_scheme": "p4"},
+                    {"retarget/hand_scheme": "orca1"},
                     {"debug": True},
                 ],
             ),
@@ -78,8 +77,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
-                            "scheme_p4.yaml",
+                            "orca1_hand",
+                            "scheme_orca1.yaml",
                         )
                     }
                 ],
@@ -100,7 +99,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca1.rviz')],
                 ),
 
         ]

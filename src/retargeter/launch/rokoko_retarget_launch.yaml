@@ -12,6 +12,6 @@ launch:
         - name: "rokoko_tracker/use_coil"
           value: true
         - name: "retarget/mjcf_filepath"
-          value: "$(find-pkg-share viz)/models/faive_hand_p4/hand_p4.xml"
+          value: "$(find-pkg-share viz)/models/orca1_hand/hand_orca1.xml"
         - name: "retarget/hand_scheme"
-          value: "p4"
+          value: "orca1"
