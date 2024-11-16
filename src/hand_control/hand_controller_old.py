@@ -42,6 +42,7 @@ class HandControllerOld:
         self._cmd_joint_angles = np.zeros(self.joint_nr)
 
         # initialize and connect dynamixels
+        
         self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
         self.connect_to_dynamixels()
 
@@ -248,7 +249,7 @@ class HandControllerOld:
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
             self.write_desired_motor_pos(self.motor_id2init_pos)
             time.sleep(0.01)   
-            self.wait_for_motion()
+            # self.wait_for_motion()
 
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
 
@@ -281,7 +282,7 @@ class HandControllerOld:
         Command joint angles in deg
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
         """
-        ranges = [(-10, 10), (0, 30), (0, 30), (0, 0)]
+        ranges = [(0, 40), (0, 90), (0, 80), (0, 0)]
 
         # Clip the 7th, 8th, and 9th values (indices 6, 7, and 8 in 0-based indexing)
         print("=========Before Clipping=============================")

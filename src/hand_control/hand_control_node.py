@@ -10,21 +10,27 @@ from faive_system.src.hand_control.hand_controller_old import HandControllerOld
 class HandControllerNode(Node):
     def __init__(self, debug=False):
         super().__init__("hand_controller_node")
-        print("HAND CONTROL NODE =====================")
+        self.get_logger().info("Hand Controller Node Started")
 
         # start tracker
         self.declare_parameter("hand_controller/port", "/dev/ttyUSB0")
         self.declare_parameter("hand_controller/baudrate", 3000000)
 
+
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
 
+
+        self.get_logger().info("PORT = {}".format(port))
+
         # self._hc = HandController(port=port, baudrate=baudrate)
+        self.get_logger().info("Hand Controller Before CLASS =========================")
 
         self._hc = HandControllerOld(port=port)
-        print("Befor Init =====================")
+        self.get_logger().info("Hand Controller Before INIT =========================")
+
         self._hc.init_joints(calibrate=False)
-        print("After Init =====================")
+        self.get_logger().info("Hand Controller After INIT =========================")
         
         self.joint_angle_sub = self.create_subscription(
             Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10
