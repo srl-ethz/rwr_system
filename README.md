@@ -1,6 +1,19 @@
 # RWR System
 
+
 Welcome to the RWR System repository. This repository contains the code and resources for the RWR class. Please note that there are several TODOs throughout the codebase that need to be addressed. Additionally, some configurations and settings may need to be adjusted to work with your specific setup.
+
+# Our Code Implemenations
+
+1. Retargeting Visualization of Rokoko Rosbag Recordings
+    ```bash
+   ros2 launch experiments rosbag_retargeting_rviz_orca.launch.py 
+    ```
+
+2. Live Retargeting Visualization of Rokoko or MediaPipe
+    ```bash
+   ros2 launch experiments retargeting_rviz_orca.launch.py
+    ```
 
 **Disclaimer:** This repository is a work in progress and will be constantly updated and fixed. For any issues or questions, please use Slack to communicate or submit an issue on GitHub.
 
