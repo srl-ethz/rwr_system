@@ -4,11 +4,11 @@ from click import getchar
 import yaml
 import os
 import cvxopt
-import rwr_system.src.hand_control.simplified_finger_kinematics as fk
+import faive_system.src.hand_control.simplified_finger_kinematics as fk
 import sympy as sym
 from threading import Thread, RLock, Event
 from .joint_ekf import EKF
-from rwr_system.src.common.utils import get_datetime_str
+from faive_system.src.common.utils import get_datetime_str
 from .dynamixel_client import *
 
 np.set_printoptions(precision=3, suppress=True)
@@ -46,10 +46,6 @@ class MuscleGroup:
             mid_pos = (low_lim + up_lim) / 2
             full_range = up_lim - low_lim
 
-            # double the range
-            low_lim = mid_pos - full_range / 2
-            up_lim = mid_pos + full_range / 2
-            joint_ranges[idx] = [low_lim, up_lim]
         print(
             f"Created muscle group {name} with joint ids {self.joint_ids}, motor ids {self.motor_ids} and spool_rad {self.spool_rad}"
         )

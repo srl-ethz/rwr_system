@@ -227,7 +227,7 @@ class Retargeter:
         17-20: pinky
         """
 
-        print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
+        # print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
 
         start_time = time.time()
         if not warm:
@@ -315,7 +315,7 @@ class Retargeter:
 
         finger_joint_angles = self.gc_joints.detach().cpu().numpy()
 
-        print(f"Retarget time: {(time.time() - start_time) * 1000} ms")
+        # print(f"Retarget time: {(time.time() - start_time) * 1000} ms")
 
         return finger_joint_angles
 
