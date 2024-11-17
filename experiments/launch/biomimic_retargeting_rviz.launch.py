@@ -8,16 +8,16 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "biomimic_hand",
+    "faive_hand_p4",
     "urdf",
     "p4.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
-        
+
     return LaunchDescription(
         [
-            
+
             Node(
                 package="ingress",
                 executable="mediapipe_node.py",
@@ -33,28 +33,36 @@ def generate_launch_description():
                 output="screen",
                 # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
-                    # {
-                    #     "retarget/mjcf_filepath": os.path.join(
-                    #         get_package_share_directory("viz"),
-                    #         "models",
-                    #         "faive_hand_p4",
-                    #         "hand_p4.xml",
-                    #     )
-                    # },
                     {
-                        "retarget/urdf_filepath": os.path.join(
+                        "retarget/mjcf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
                             "biomimic_hand",
-                            "urdf",
-                            "p4.urdf",
+                            "Biomimic_hand_job.xml",
                         )
                     },
+                    # {
+                    #     "retarget/urdf_filepath": os.path.join(
+                    #         get_package_share_directory("viz"),
+                    #         "models",
+                    #         "biomimic_hand",
+                    #         "urdf",
+                    #         "biomimic_hand.urdf",
+                    #     )
+                    # },
                     {"retarget/hand_scheme": "biomimic"},
                     {"debug": True},
                 ],
             ),
-            
+
+            # PLOTTING NODE
+            Node(
+                package="retargeter",
+                executable="plot_target_joint_angles.py",
+                name="plot_joints",
+                output="screen",
+            ),
+
             # VISUALIZATION NODE
             Node(
                 package="viz",
@@ -72,8 +80,8 @@ def generate_launch_description():
                 ],
                 output="screen",
             ),
-            
-                        
+
+
             Node(
                 package='robot_state_publisher',
                 executable='robot_state_publisher',
@@ -81,12 +89,12 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{'robot_description': robot_desc,}],
                 arguments=[urdf]),
-            
+
             Node(
                 package='rviz2',
                 executable='rviz2',
                 name='rviz2',
-                output='screen', 
+                output='screen',
                 arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
                 ),
 
