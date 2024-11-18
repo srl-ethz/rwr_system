@@ -9,8 +9,8 @@ def generate_launch_description():
     # Declare launch arguments with default values
     policy_ckpt_arg = DeclareLaunchArgument(
         'policy_ckpt_path',
-        default_value='my_node',
-        description='Name of the node'
+        default_value='someckpt',
+        description='The ckpt path of the model to load. There should be `config.yaml` in its directory or parent directory'
     )
 
     # Use LaunchConfiguration to capture the values passed via command line
@@ -24,7 +24,10 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'camera_topics': [
-                ("/oakd_front_view/color", "oakd_front_view_images")
+                "/oakd_front_view/color"
+            ],
+            'camera_names': [
+                "oakd_front_view_images"
             ],
             "policy_ckpt_path": policy_ckpt_path
          }]

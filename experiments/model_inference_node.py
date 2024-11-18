@@ -40,9 +40,11 @@ class PolicyPlayerAgent(Node):
     def __init__(self):
         super().__init__("policy_publisher")
         
-        self.declare_parameter("camera_topics", [])
+        self.declare_parameter("camera_topics", rclpy.Parameter.Type.STRING_ARRAY)
+        self.declare_parameter("camera_names", rclpy.Parameter.Type.STRING_ARRAY)
         self.declare_parameter("policy_ckpt_path", "")   # assume the policy ckpt is saved with its config
-        self.camera_topics = self.get_parameter("camera_topics").value # tuples (topics, names)
+        self.camera_topics = self.get_parameter("camera_topics").value
+        self.camera_names = self.get_parameter("camera_names").value
         self.policy_ckpt_path = self.get_parameter("policy_ckpt_path").value
         
         self.lock = Lock()
@@ -62,7 +64,8 @@ class PolicyPlayerAgent(Node):
         )
 
         self.camera_listeners = [
-            CameraListener(camera_topic, camera_name, self) for camera_topic, camera_name in self.camera_topics
+            CameraListener(camera_topic, camera_name, self) 
+            for camera_topic, camera_name in zip(self.camera_topics, self.camera_names)
         ]
         
         self.bridge = CvBridge()
