@@ -1,0 +1,10 @@
+<!-- 
+IDEA: Take .xml files from the faive hand and change them to use our CAD files (stored in the mesh directory)
+-->
+<mujoco model="biomimic_bots_hand">
+    <compiler angle="radian"/>
+    <include file="Biomimic_metadata.xml"/>
+    <worldbody>
+        <include file="Biomimic_structure.xml"/>
+    </worldbody>
+</mujoco>

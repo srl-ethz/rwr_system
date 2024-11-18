@@ -1,0 +1,23 @@
+gc_tendons:
+  'root2thumb_base': {}
+  'thumb_base2pp': {}
+  'thumb_pp2mp_virt': {'thumb_pp2mp': 1, 'thumb_mp2dp_virt': 0.71, 'thumb_mp2dp': 0.71}
+  'index_base2adb_virt': {'index_base2adb': 1}
+  'index_adb2pp_virt': {'index_adb2pp': 1}
+  'index_pp2mp_virt': {'index_pp2mp': 1, 'index_mp2dp_virt': 0.71, 'index_mp2dp': 0.71}
+  'middle_base2adb_virt': {'middle_base2adb': 1}
+  'middle_adb2pp_virt': {'middle_adb2pp': 1}
+  'middle_pp2mp_virt': {'middle_pp2mp': 1, 'middle_mp2dp_virt': 0.71, 'middle_mp2dp': 0.71}
+  'ring_base2adb_virt': {'ring_base2adb': 1}
+  'ring_adb2pp_virt': {'ring_adb2pp': 1}
+  'ring_pp2mp_virt': {'ring_pp2mp': 1, 'ring_mp2dp_virt': 0.71, 'ring_mp2dp': 0.71}
+  'pinky_base2adb_virt': {'pinky_base2adb': 1}
+  'pinky_adb2pp_virt': {'pinky_adb2pp': 1}
+  'pinky_pp2mp_virt': {'pinky_pp2mp': 1, 'pinky_mp2dp_virt': 0.71, 'pinky_mp2dp': 0.71}
+
+finger_to_tip:
+  'thumb': 'thumb_fingertip'
+  'index': 'index_fingertip'
+  'middle': 'middle_fingertip'
+  'ring': 'ring_fingertip'
+  'pinky': 'pinky_fingertip'
