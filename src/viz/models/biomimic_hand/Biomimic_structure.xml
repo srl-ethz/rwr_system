@@ -1,10 +1,8 @@
 <!-- 
-IDEA: Take .xml files from the faive hand and change them to use our CAD files (stored in the mesh directory)
 This file: kinematic and dynamic strucure data
-TODO: Update all filenames, axis, positions, masses and inertias (maybe some dont have to be updated?)
+TODO: Update all masses and inertias
 -->
 <mujoco model="biomimic_bots_hand">
-<!--continue with changes  from here -->
     <body name="root">
         <!-- so that the base can be colored separately in IsaacGym, make it into its own body 
         Note on mujoco axis:  The frame rendering is red for x, green for y, blue for z. The hand model has the y axis in the direction of the fingers and the x-axis as the rotation axis for the wrist-->
@@ -16,29 +14,24 @@ TODO: Update all filenames, axis, positions, masses and inertias (maybe some don
             <joint name="root2palm" axis="1 0 0" pos="0 0.026 0" range="-0.75 0.75"/>
             <geom mesh="wrist_counterpart_v2" pos="0 0.026 0"/>
             <geom mesh="palm_n" />
-            <!-- <geom mesh="index_meta"/>
-            <geom mesh="middle_meta"/>
-            <geom mesh="ring_meta"/>
-            <geom mesh="pinky_meta"/>-->
             
             <body name="thumb_base">
-                <!--<joint name="root2thumb_base" axis="0.297249628842018  -0.700414486434294  -0.648893061564281" pos="-0.029450000000000   0.061590000000000  -0.006270000000000" range="0 2.27"/>-->
-                <joint name="root2thumb_base" axis="-0.42261826174  0.90630778704  0" pos="-0.0207220000000   0.0662890000000000  0.000509000000000" range="-1.4 0"/>
+                <joint name="root2thumb_base" axis="-0.42261826174  0.90630778704  0" pos="-0.0207220000000   0.0662890000000000  0.000509000000000"/>
                 <geom mesh="thumb_base_n"/>
                 <body name="thumb_pp" pos="-0.042892 0.068639 0.000509" euler="0 0 0.436332">
                     <joint name="thumb_base2pp" axis="0 0 1" pos="0 0 0" range="-0.785398 0.785398"/>
                     <geom mesh="thumb_pp"/>
                     <body name="thumb_mp_virt">
-                        <joint name="thumb_pp2mp_virt" axis="0 1 0" pos="-0.013 0 0.0025" range="-0.96 0"/>
+                        <joint name="thumb_pp2mp_virt" axis="0 1 0" pos="-0.013 0 0.0025"/>
                         <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                         <body name="thumb_mp" pos="-0.031 0 0.0025">
                             <geom mesh="thumb_mp"/>
-                            <joint name="thumb_pp2mp" axis="0 1 0" pos="0 0 0" range="-0.96 0"/>
+                            <joint name="thumb_pp2mp" axis="0 1 0" pos="0 0 0"/>
                             <body name="thumb_dp_virt">
-                                <joint name="thumb_mp2dp_virt" axis="0 -1 0" pos="-0.031 0 0.00225" range="0 0.96"/>
+                                <joint name="thumb_mp2dp_virt" axis="0 -1 0" pos="-0.031 0 0.00225"/>
                                 <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                 <body name="thumb_dp" pos="-0.042 0.0 0.0045" euler="0 3.14159265 0">
-                                    <joint name="thumb_mp2dp" axis="0 -1 0" pos="0.0045 0 0.003" range="0 0.96"/>
+                                    <joint name="thumb_mp2dp" axis="0 -1 0" pos="0.0045 0 0.003"/>
                                     <geom mesh="thumb_tip"/>
                                 </body>
                             </body>
@@ -52,34 +45,34 @@ TODO: Update all filenames, axis, positions, masses and inertias (maybe some don
                 0.121145 -0.001" euler="-1.5708 -0.436332 3.141592653"> <!-- finger base (attached to hand)-->
                 <geom mesh="base"/>
                 <body name="index_abduct_link_virt"> <!-- virtual body for abduction/adduction link-->
-                    <joint name="index_base2abduct_virt" axis="0 1 0" pos="0 0 0" range="-0.155 0.155"/>
-                    <joint name="index_base2adduct_virt" axis="0 -1 0" pos="0 0 0" range="-0.155 0.155"/>
+                    <joint name="index_base2abduct_virt" axis="0 1 0" pos="0 0 0"/>
+                    <joint name="index_base2adduct_virt" axis="0 -1 0" pos="0 0 0"/>
                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                     <body name="index_abduct_link" pos="0 0.002498 0.011162" xyaxes="0 0 1 -1 0 0">
-                        <joint name="index_base2abduct" axis="0 0 -1" pos="0 0 0" range="-0.15 0.15"/> <!-- why is pos 0.005? -->
-                        <joint name="index_base2adduct" axis="0 0 1" pos="0 0 0" range="-0.15 0.15"/>
+                        <joint name="index_base2abduct" axis="0 0 -1" pos="0 0 0"/> <!-- why is pos 0.005? -->
+                        <joint name="index_base2adduct" axis="0 0 1" pos="0 0 0"/>
                         <geom mesh="abduct_mesh"/>
                         <body name="index_pp_link_virt">
-                            <joint name="index_abduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
-                            <joint name="index_adduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
+                            <joint name="index_abduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
+                            <joint name="index_adduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                             <body name="index_pp_link" pos="0.008988 0 0" euler="0 0 0">
-                                <joint name="index_abduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
-                                <joint name="index_adduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
+                                <joint name="index_abduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
+                                <joint name="index_adduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
                                 <geom mesh="pp_mesh"/>
                                 <body name="index_mp_link_virt"> <!-- dont touch this, pip/dip works -->
                                     <!-- Using the radius from the CAD file to find the axes-->
-                                    <joint name="index_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016" range="0 0.96"/>
+                                    <joint name="index_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016"/>
                                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                     <body name="index_mp_link" pos="0.041 0 -0.0004" euler="0 0 0">
                                         <geom mesh="mp_mesh"/>
-                                        <joint name="index_pp2mp" axis="0 -1 0" pos="0.006 0 0" range="0 0.96"/>
+                                        <joint name="index_pp2mp" axis="0 -1 0" pos="0.006 0 0"/>
                                         <body name="index_dp_adapter_virt">
                                             <!-- Using the radius from the CAD file to find the axes-->
-                                            <joint name="index_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008" range="0 0.96"/>
+                                            <joint name="index_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008"/>
                                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                             <body name="index_dp_adapter" pos="0.0275 0 -.0004" euler="0 0 0">
-                                                <joint name="index_mp2dp" axis="0 -1 0" pos="0.0045 0 0" range="0 0.96"/>
+                                                <joint name="index_mp2dp" axis="0 -1 0" pos="0.0045 0 0"/>
                                                 <geom mesh="dp_adapter_mesh"/>
                                             </body>
                                         </body>
@@ -96,34 +89,34 @@ TODO: Update all filenames, axis, positions, masses and inertias (maybe some don
                 0.12610 -0.001" euler="-1.5708 0 3.141592653"> <!-- finger base (attached to hand)-->
                 <geom mesh="base"/>
                 <body name="middle_abduct_link_virt"> <!-- virtual body for abduction/adduction link-->
-                    <joint name="middle_base2abduct_virt" axis="0 1 0" pos="0 0 0" range="-0.15 0.15"/>
-                    <joint name="middle_base2adduct_virt" axis="0 -1 0" pos="0 0 0" range="-0.15 0.15"/>
+                    <joint name="middle_base2abduct_virt" axis="0 1 0" pos="0 0 0"/>
+                    <joint name="middle_base2adduct_virt" axis="0 -1 0" pos="0 0 0"/>
                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                     <body name="middle_abduct_link" pos="0 0.002498 0.011162" xyaxes="0 0 1 -1 0 0">
-                        <joint name="middle_base2abduct" axis="0 0 -1" pos="0 0 0" range="-0.15 0.15"/> <!-- why is pos 0.005? -->
-                        <joint name="middle_base2adduct" axis="0 0 1" pos="0 0 0" range="-0.15 0.15"/>
+                        <joint name="middle_base2abduct" axis="0 0 -1" pos="0 0 0"/> <!-- why is pos 0.005? -->
+                        <joint name="middle_base2adduct" axis="0 0 1" pos="0 0 0"/>
                         <geom mesh="abduct_mesh"/>
                         <body name="middle_pp_link_virt">
-                            <joint name="middle_abduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
-                            <joint name="middle_adduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
+                            <joint name="middle_abduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
+                            <joint name="middle_adduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                             <body name="middle_pp_link" pos="0.008988 0 0" euler="0 0 0">
-                                <joint name="middle_abduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
-                                <joint name="middle_adduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
+                                <joint name="middle_abduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
+                                <joint name="middle_adduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
                                 <geom mesh="pp_mesh"/>
                                 <body name="middle_mp_link_virt"> <!-- dont touch this, pip/dip works -->
                                     <!-- Using the radius from the CAD file to find the axes-->
-                                    <joint name="middle_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016" range="0 0.96"/>
+                                    <joint name="middle_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016"/>
                                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                     <body name="middle_mp_link" pos="0.041 0 -0.0004" euler="0 0 0">
                                         <geom mesh="mp_mesh"/>
-                                        <joint name="middle_pp2mp" axis="0 -1 0" pos="0.006 0 0" range="0 0.96"/>
+                                        <joint name="middle_pp2mp" axis="0 -1 0" pos="0.006 0 0"/>
                                         <body name="middle_dp_adapter_virt">
                                             <!-- Using the radius from the CAD file to find the axes-->
-                                            <joint name="middle_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008" range="0 0.96"/>
+                                            <joint name="middle_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008"/>
                                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                             <body name="middle_dp_adapter" pos="0.0275 0 -.0004" euler="0 0 0">
-                                                <joint name="middle_mp2dp" axis="0 -1 0" pos="0.0045 0 0" range="0 0.96"/>
+                                                <joint name="middle_mp2dp" axis="0 -1 0" pos="0.0045 0 0"/>
                                                 <geom mesh="dp_adapter_mesh"/>
                                             </body>
                                         </body>
@@ -140,34 +133,34 @@ TODO: Update all filenames, axis, positions, masses and inertias (maybe some don
                 0.12100 -0.001" euler="-1.5708 0 3.141592653"> <!-- finger base (attached to hand)-->
                 <geom mesh="base"/>
                 <body name="ring_abduct_link_virt"> <!-- virtual body for abduction/adduction link-->
-                    <joint name="ring_base2abduct_virt" axis="0 1 0" pos="0 0 0" range="-0.15 0.15"/>
-                    <joint name="ring_base2adduct_virt" axis="0 -1 0" pos="0 0 0" range="-0.15 0.15"/>
+                    <joint name="ring_base2abduct_virt" axis="0 1 0" pos="0 0 0"/>
+                    <joint name="ring_base2adduct_virt" axis="0 -1 0" pos="0 0 0"/>
                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                     <body name="ring_abduct_link" pos="0 0.002498 0.011162" xyaxes="0 0 1 -1 0 0">
-                        <joint name="ring_base2abduct" axis="0 0 -1" pos="0 0 0" range="-0.15 0.15"/> <!-- why is pos 0.005? -->
-                        <joint name="ring_base2adduct" axis="0 0 1" pos="0 0 0" range="-0.15 0.15"/>
+                        <joint name="ring_base2abduct" axis="0 0 -1" pos="0 0 0"/> <!-- why is pos 0.005? -->
+                        <joint name="ring_base2adduct" axis="0 0 1" pos="0 0 0"/>
                         <geom mesh="abduct_mesh"/>
                         <body name="ring_pp_link_virt">
-                            <joint name="ring_abduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
-                            <joint name="ring_adduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
+                            <joint name="ring_abduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
+                            <joint name="ring_adduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                             <body name="ring_pp_link" pos="0.008988 0 0" euler="0 0 0">
-                                <joint name="ring_abduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
-                                <joint name="ring_adduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
+                                <joint name="ring_abduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
+                                <joint name="ring_adduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
                                 <geom mesh="pp_mesh"/>
                                 <body name="ring_mp_link_virt"> <!-- dont touch this, pip/dip works -->
                                     <!-- Using the radius from the CAD file to find the axes-->
-                                    <joint name="ring_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016" range="0 0.96"/>
+                                    <joint name="ring_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016"/>
                                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                     <body name="ring_mp_link" pos="0.041 0 -0.0004" euler="0 0 0">
                                         <geom mesh="mp_mesh"/>
-                                        <joint name="ring_pp2mp" axis="0 -1 0" pos="0.006 0 0" range="0 0.96"/>
+                                        <joint name="ring_pp2mp" axis="0 -1 0" pos="0.006 0 0"/>
                                         <body name="ring_dp_adapter_virt">
                                             <!-- Using the radius from the CAD file to find the axes-->
-                                            <joint name="ring_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008" range="0 0.96"/>
+                                            <joint name="ring_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008"/>
                                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                             <body name="ring_dp_adapter" pos="0.0275 0 -.0004" euler="0 0 0">
-                                                <joint name="ring_mp2dp" axis="0 -1 0" pos="0.0045 0 0" range="0 0.96"/>
+                                                <joint name="ring_mp2dp" axis="0 -1 0" pos="0.0045 0 0"/>
                                                 <geom mesh="dp_adapter_mesh"/>
                                             </body>
                                         </body>
@@ -184,34 +177,34 @@ TODO: Update all filenames, axis, positions, masses and inertias (maybe some don
                 0.10012 -0.001392" euler="-1.7889625 0.262 3.141592653"> <!-- finger base (attached to hand)-->
                 <geom mesh="base"/>
                 <body name="pinky_abduct_link_virt"> <!-- virtual body for abduction/adduction link-->
-                    <joint name="pinky_base2abduct_virt" axis="0 1 0" pos="0 0 0" range="-0.15 0.15"/>
-                    <joint name="pinky_base2adduct_virt" axis="0 -1 0" pos="0 0 0" range="-0.15 0.15"/>
+                    <joint name="pinky_base2abduct_virt" axis="0 1 0" pos="0 0 0"/>
+                    <joint name="pinky_base2adduct_virt" axis="0 -1 0" pos="0 0 0"/>
                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                     <body name="pinky_abduct_link" pos="0 0.002498 0.011162" xyaxes="0 0 1 -1 0 0">
-                        <joint name="pinky_base2abduct" axis="0 0 -1" pos="0 0 0" range="-0.15 0.15"/> <!-- why is pos 0.005? -->
-                        <joint name="pinky_base2adduct" axis="0 0 1" pos="0 0 0" range="-0.15 0.15"/>
+                        <joint name="pinky_base2abduct" axis="0 0 -1" pos="0 0 0"/> <!-- why is pos 0.005? -->
+                        <joint name="pinky_base2adduct" axis="0 0 1" pos="0 0 0"/>
                         <geom mesh="abduct_mesh"/>
                         <body name="pinky_pp_link_virt">
-                            <joint name="pinky_abduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
-                            <joint name="pinky_adduct2pp_virt" axis="0 -1 0" pos="0 0 0" range="-0.78 0.78"/>
+                            <joint name="pinky_abduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
+                            <joint name="pinky_adduct2pp_virt" axis="0 -1 0" pos="0 0 0"/>
                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                             <body name="pinky_pp_link" pos="0.008988 0 0" euler="0 0 0">
-                                <joint name="pinky_abduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
-                                <joint name="pinky_adduct2pp" axis="0 -1 0" pos="0.009 0 0" range="-0.78 0.78"/>
+                                <joint name="pinky_abduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
+                                <joint name="pinky_adduct2pp" axis="0 -1 0" pos="0.009 0 0"/>
                                 <geom mesh="pp_mesh"/>
                                 <body name="pinky_mp_link_virt"> <!-- dont touch this, pip/dip works -->
                                     <!-- Using the radius from the CAD file to find the axes-->
-                                    <joint name="pinky_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016" range="0 0.96"/>
+                                    <joint name="pinky_pp2mp_virt" axis="0 -1 0" pos="0.035 0 -0.0016"/>
                                     <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                     <body name="pinky_mp_link" pos="0.041 0 -0.0004" euler="0 0 0">
                                         <geom mesh="mp_mesh"/>
-                                        <joint name="pinky_pp2mp" axis="0 -1 0" pos="0.006 0 0" range="0 0.96"/>
+                                        <joint name="pinky_pp2mp" axis="0 -1 0" pos="0.006 0 0"/>
                                         <body name="pinky_dp_adapter_virt">
                                             <!-- Using the radius from the CAD file to find the axes-->
-                                            <joint name="pinky_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008" range="0 0.96"/>
+                                            <joint name="pinky_mp2dp_virt" axis="0 -1 0" pos="0.023 0 -0.0008"/>
                                             <inertial pos="0 0 0" mass="0.001" diaginertia="4E-10 4E-10 3E-10" />
                                             <body name="pinky_dp_adapter" pos="0.0275 0 -.0004" euler="0 0 0">
-                                                <joint name="pinky_mp2dp" axis="0 -1 0" pos="0.0045 0 0" range="0 0.96"/>
+                                                <joint name="pinky_mp2dp" axis="0 -1 0" pos="0.0045 0 0"/>
                                                 <geom mesh="dp_adapter_mesh"/>
                                             </body>
                                         </body>
@@ -224,5 +217,4 @@ TODO: Update all filenames, axis, positions, masses and inertias (maybe some don
             </body>
         </body>
     </body>
-    
 </mujoco>

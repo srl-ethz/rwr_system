@@ -17,7 +17,13 @@ Model of a single finger with rolling contact joints
     </asset>
     <worldbody>
         <geom name="ground" type="plane" pos="0 0 -.2" size="2 2 .1" material="grid" solimp=".99 .99 .01" solref=".001 1"/>
-        <light name="top" pos=".05 .05 1"/>
+        <camera name="scene_view" pos="0.166 0.139 0.152" xyaxes="-0.634 0.774 0.000 -0.357 -0.293 0.887"/>
+        <camera name="side" pos="0.2 0 0.05" xyaxes="0 1 0 0 0 1"/>
+        <camera name="front" pos="0.0 0.2 0.05" xyaxes="-1 0 0 0 0 1"/>
+
+
+        <!-- <camera name="scene_view" pos="2 2 2" xyaxes="-0.634 0.774 0.000 -0.357 -0.293 0.887"/> -->
+        <light name="scene_view" pos="0.166 0.139 0.152"/>
         <include file="joint_based_finger_structure.xml"/>
     </worldbody>
 </mujoco>

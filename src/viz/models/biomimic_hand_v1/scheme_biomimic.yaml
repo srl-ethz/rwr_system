@@ -1,0 +1,23 @@
+gc_tendons:
+  'root2thumb_base': {}
+  'thumb_base2pp': {}
+  'thumb_pp2mp_virt': {'thumb_pp2mp': 1, 'thumb_mp2dp_virt': 0.71, 'thumb_mp2dp': 0.71}
+  'index_abd_virt': {'index_abd': 1}
+  'root2index_pp_virt': {'root2index_pp': 1}
+  'index_pp2mp_virt': {'index_pp2mp': 1, 'index_mp2dp_virt': 0.71, 'index_mp2dp': 0.71}
+  'middle_abd_virt': {'middle_abd': 1}
+  'root2middle_pp_virt': {'root2middle_pp': 1}
+  'middle_pp2mp_virt': {'middle_pp2mp': 1, 'middle_mp2dp_virt': 0.71, 'middle_mp2dp': 0.71}
+  'ring_abd_virt': {'ring_abd': 1}
+  'root2ring_pp_virt': {'root2ring_pp': 1}
+  'ring_pp2mp_virt': {'ring_pp2mp': 1, 'ring_mp2dp_virt': 0.71, 'ring_mp2dp': 0.71}
+  'pinky_abd_virt': {'pinky_abd': 1}
+  'root2pinky_pp_virt': {'root2pinky_pp': 1}
+  'pinky_pp2mp_virt': {'pinky_pp2mp': 1, 'pinky_mp2dp_virt': 0.71, 'pinky_mp2dp': 0.71}
+
+finger_to_tip:
+  'thumb': 'thumb_fingertip'
+  'index': 'index_fingertip'
+  'middle': 'middle_fingertip'
+  'ring': 'ring_fingertip'
+  'pinky': 'pinky_fingertip'

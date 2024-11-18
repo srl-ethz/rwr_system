@@ -1,0 +1,24 @@
+<!-- 
+Model of a single finger with rolling contact joints
+-->
+<mujoco model="joint_based_finger">
+    <compiler angle="radian"/>
+    <include file="joint_based_finger_metadata.xml"/>
+    <visual>
+      <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+      <rgba haze="0.15 0.25 0.35 1"/>
+      <global azimuth="120" elevation="20"/>
+    </visual>
+    <asset>
+        <texture name="grid" type="2d" builtin="checker" rgb1=".1 .2 .3"
+        rgb2=".2 .3 .4" width="300" height="300" mark="edge" markrgb=".2 .3 .4"/>
+        <material name="grid" texture="grid" texrepeat="2 2" texuniform="true"
+        reflectance=".2"/>
+    </asset>
+    <worldbody>
+        <geom name="ground" type="plane" pos="0 0 -.2" size="2 2 .1" material="grid" solimp=".99 .99 .01" solref=".001 1"/>
+        <light name="top" pos=".05 .05 1"/>
+        <include file="joint_based_finger_structure.xml"/>
+    </worldbody>
+</mujoco>
+
