@@ -26,6 +26,8 @@ endif()
 install(PROGRAMS
     visualize_joints.py
     visualize_mano.py
+    mujoco_visualizer_node.py
+    mujoco_visualizer.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
