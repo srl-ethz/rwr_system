@@ -1,3 +1,5 @@
+#!/bin/env python3
+
 from time import sleep
 import numpy as np
 import rclpy
@@ -13,7 +15,7 @@ from threading import Lock
 
 import torch
 import yaml
-from rwr_system.src.common.utils import numpy_to_float32_multiarray, float32_multiarray_to_numpy
+from faive_system.src.common.utils import numpy_to_float32_multiarray, float32_multiarray_to_numpy
 from srl_il.export.il_policy import get_policy_from_ckpt
 
 class CameraListener(Node):

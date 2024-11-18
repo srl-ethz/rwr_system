@@ -18,8 +18,8 @@ def generate_launch_description():
 
     # Define the node with parameters from the launch arguments
     my_node = Node(
-        package='experiment',
-        executable='model_inference',
+        package='experiments',
+        executable='model_inference_node.py',
         name="model_inference",
         output='screen',
         parameters=[{
