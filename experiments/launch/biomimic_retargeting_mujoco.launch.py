@@ -37,8 +37,8 @@ def generate_launch_description():
                         "retarget/mjcf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
-                            "hand_p4.xml",
+                            "biomimic_hand_v3",
+                            "Biomimc_hand_job.xml",
                         )
                     },
                     # {
@@ -50,19 +50,27 @@ def generate_launch_description():
                     #         "biomimic_hand.urdf",
                     #     )
                     # },
-                    {"retarget/hand_scheme": "p4"},
+                    {"retarget/hand_scheme": "biomimic"},
                     {"debug": True},
                 ],
             ),
 
-            # PLOTTING NODE
+            # REMAPPER NODE
             # Node(
             #     package="retargeter",
-            #     executable="plot_target_joint_angles.py",
-            #     name="plot_joints",
-            #     output="screen",
-            #     emulate_tty=True,
+            #     executable="remapper_node",
+            #     name="remapper",
+            #     output="screen"
             # ),
+
+            # PLOTTING NODE
+            Node(
+                package="retargeter",
+                executable="plot_target_joint_angles.py",
+                name="plot_joints",
+                output="screen",
+                emulate_tty=True,
+            ),
 
             # VISUALIZATION NODE
             # Node(
@@ -83,23 +91,22 @@ def generate_launch_description():
             # ),
 
             # VISUALIZATION NODE (MuJoCo)
-            Node(
-                package="viz",
-                executable="mujoco_visualizer_node.py",
-                name="mujoco_visualizer",
-                parameters=[
-                    {
-                        "viz/model_path": os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            "biomimic_hand_v3",
-                            "Biomimic_hand_job.xml",
-                        )
-                    }
-                ],
-                output="screen"
-            ),
-
+            # Node(
+            #     package="viz",
+            #     executable="mujoco_visualizer_node.py",
+            #     name="mujoco_visualizer",
+            #     parameters=[
+            #         {
+            #             "viz/model_path": os.path.join(
+            #                 get_package_share_directory("viz"),
+            #                 "models",
+            #                 "biomimic_hand_v3",
+            #                 "Biomimic_hand_job.xml",
+            #             )
+            #         }
+            #     ],
+            #     output="screen"
+            # ),
 
             Node(
                 package='robot_state_publisher',
