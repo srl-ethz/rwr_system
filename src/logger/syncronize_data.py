@@ -1,4 +1,6 @@
 import os
+import glob
+import argparse
 from scipy.spatial.transform import Rotation as R
 from scipy.interpolate import interp1d
 import numpy as np
@@ -7,10 +9,6 @@ from logger_node import TOPICS_TYPES  # Import the predefined topic types
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
-
-
-import os
-import glob
 
 TOPIC_TO_STRING = {
     Float32MultiArray: "Float32MultiArray",
@@ -25,9 +23,7 @@ def get_topic_names(h5_path):
         print(f"Topics in the HDF5 file: {topic_names}")
     return topic_names
 
-
 def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_types):
-    
     qpos_franka = None
     qpos_hand = None
     actions_franka = None
@@ -46,6 +42,8 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
         end_time = None
         for topic in topic_types:
             if topic in input_h5:
+                if topic == "/task_description":
+                    continue
                 timestamps = np.array(list(map(int, input_h5[topic].keys())))
                 if start_time is None or timestamps[0] < start_time:
                     start_time = timestamps[0]
@@ -62,8 +60,16 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                 print(f"Topic {topic} not found in the HDF5 file. Skipping...")
                 continue
             
+            
             print(f"Processing topic: {topic}")
             topic_group = input_h5[topic]
+
+            if topic == "/task_description":
+                if TOPIC_TO_STRING[topic_type] == "String":
+                    string_data = topic_group["description"]
+                    output_h5.create_dataset("task_description", data=string_data)
+                continue
+
             topic_timestamps = np.array(list(map(int, topic_group.keys())))
             topic_timestamps.sort()
 
@@ -75,7 +81,7 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                     closest_timestamp = topic_timestamps[closest_idx]
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
                 sampled_images = np.array(sampled_images)  # Tx3xHxW
-                output_h5.create_dataset(f"observation/images/{topic}", data=sampled_images)
+                output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images)
 
             elif TOPIC_TO_STRING[topic_type] == "PoseStamped":
                 # Interpolate PoseStamped data
@@ -113,21 +119,17 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                 qpos_hand = sampled_array
                 actions_hand = sampled_array
             
-            elif TOPIC_TO_STRING[topic_type] == "String":
-                string_data = topic_group["Description"][:]
-                output_h5.create_dataset("task_description", data=string_data)
         
         if qpos_franka is not None and qpos_hand is not None and actions_franka is not None and actions_hand is not None:
             qpos = np.concatenate((qpos_franka, qpos_hand), axis=1)
             actions = np.concatenate((actions_franka, actions_hand), axis=1)
         
-            # create observation group
-            output_h5.create_dataset("observation/qpos", data=qpos)
+            # create observations group
+            output_h5.create_dataset("observations/qpos", data=qpos)
             output_h5.create_dataset("actions", data=actions)
 
 
     print(f"Processed data saved to: {output_h5_path}")
-
 
 def process_folder(input_folder, sampling_frequency, topic_types):
     """
@@ -146,7 +148,6 @@ def process_folder(input_folder, sampling_frequency, topic_types):
         return
 
     # Create the output folder
-    
     output_folder = os.path.dirname(input_folder) + "_processed"
     os.makedirs(output_folder, exist_ok=True)
     print(f"Output folder created: {output_folder}")
@@ -160,14 +161,14 @@ def process_folder(input_folder, sampling_frequency, topic_types):
 
     print(f"All files processed. Processed files are saved in {output_folder}.")
 
-
 def main():
-    # Define the input folder path and sampling frequency
-    input_folder = "/home/davide/demo/"  # Replace with your folder path
-    sampling_freq = 100  # Hz
+    parser = argparse.ArgumentParser(description="Process and synchronize HDF5 files.")
+    parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
+    parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
+    args = parser.parse_args()
 
     # Process all files in the folder
-    process_folder(input_folder, sampling_freq, TOPICS_TYPES)
+    process_folder(args.input_folder, args.sampling_freq, TOPICS_TYPES)
 
 if __name__ == "__main__":
     main()

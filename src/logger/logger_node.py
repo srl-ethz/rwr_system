@@ -46,7 +46,9 @@ class DemoLogger(Node):
 
     def run_logger(self):
         # Get task name (subfolder within the base path)
-        self.task_name = input("Enter the task name (this will be the output folder): ")
+        if self.task_name is None:
+            self.task_name = input("Enter the task name (this will be the output folder): ")
+        
         task_folder = self.base_path / self.task_name
         
         # Create the task directory if it doesn't exist
@@ -59,32 +61,32 @@ class DemoLogger(Node):
         self.task_description = input("Enter a description for the task: ")
         
         # Confirm and start recording
-        if input("Start recording? (y/n): ").strip().lower() == 'y':
-            # folder inside the task folder
-            task_folder_bag = task_folder / "rosbag2"
-            self.start_recording(task_folder_bag)
+        input("Press Enter to start recording ")
+        # folder inside the task folder
+        task_folder_bag = task_folder / "rosbag2"
+        self.start_recording(task_folder_bag)
 
-            # Publish task description as a String message
-            self.publish_task_description(self.task_description)
+        # Publish task description as a String message
+        self.publish_task_description(self.task_description)
 
-            # Wait for user to stop recording
-            input("Press Enter to stop recording...")
-            self.stop_recording()
+        # Wait for user to stop recording
+        input("Press Enter to stop recording...")
+        self.stop_recording()
 
-            # Ask to save or discard
-            if input("Save recording? (y/n): ").strip().lower() == 'y':
-                # Generate a unique name based on the current date and time
-                h5_filename = datetime.now().strftime("%Y%m%d_%H%M%S") + ".h5"
-                h5_filepath = task_folder / h5_filename
-                self.get_logger().info(f"Recording saved as '{h5_filename}' in folder '{task_folder}'")
-                
-                # Convert to HDF5 and delete the bag file afterward
-                convert_to_h5(input_bag_path=str(task_folder_bag), output_h5_path=str(h5_filepath))
-                self.get_logger().info(f"Recording converted to HDF5: {h5_filepath}")
-                self.delete_recording(task_folder_bag)
-            else:
-                self.get_logger().info("Recording discarded.")
-                self.delete_recording(task_folder_bag)
+        # Ask to save or discard
+        if input("Save recording? (y/n): ").strip().lower() == 'y':
+            # Generate a unique name based on the current date and time
+            h5_filename = datetime.now().strftime("%Y%m%d_%H%M%S") + ".h5"
+            h5_filepath = task_folder / h5_filename
+            self.get_logger().info(f"Recording saved as '{h5_filename}' in folder '{task_folder}'")
+            
+            # Convert to HDF5 and delete the bag file afterward
+            convert_to_h5(input_bag_path=str(task_folder_bag), output_h5_path=str(h5_filepath))
+            self.get_logger().info(f"Recording converted to HDF5: {h5_filepath}")
+            self.delete_recording(task_folder_bag)
+        else:
+            self.get_logger().info("Recording discarded.")
+            self.delete_recording(task_folder_bag)
 
     def publish_task_description(self, description):
         # Create a publisher for the task description topic
@@ -161,7 +163,14 @@ def main(args=None):
     base_path = "recordings"  # Modify this path as needed
 
     # Load topics to record (for demonstration, using hardcoded list)
-    topics_to_record = ['/oakd_front_view/color', '/hand/policy_output']
+    topics_to_record = ['/oakd_front_view/color', 
+                        '/oakd_side_view/color', 
+                        '/oakd_wrist_view/color', 
+                        '/hand/policy_output', 
+                        '/franka/end_effector_pose', 
+                        '/franka/end_effector_pose_cmd',
+                        '/task_description', 
+                        ]
 
     # Initialize ROS and create DemoLogger instance
     rclpy.init(args=args)

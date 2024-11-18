@@ -72,7 +72,7 @@ def convert_to_h5(input_bag_path: str, output_h5_path: str):
             
             elif isinstance(msg, String):
                 # For String, save the string data
-                h5_file[topic_name].create_dataset("Description", data=msg.data)
+                h5_file[topic_name].create_dataset("description", data=msg.data)
                 
 
             else:
