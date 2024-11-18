@@ -14,10 +14,10 @@ def generate_launch_description():
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
-        
+
     return LaunchDescription(
         [
-            
+
             Node(
                 package="ingress",
                 executable="mediapipe_node.py",
@@ -54,7 +54,7 @@ def generate_launch_description():
                     {"debug": True},
                 ],
             ),
-            
+
             # VISUALIZATION NODE
             Node(
                 package="viz",
@@ -72,8 +72,8 @@ def generate_launch_description():
                 ],
                 output="screen",
             ),
-            
-                        
+
+
             Node(
                 package='robot_state_publisher',
                 executable='robot_state_publisher',
@@ -81,12 +81,12 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{'robot_description': robot_desc,}],
                 arguments=[urdf]),
-            
+
             Node(
                 package='rviz2',
                 executable='rviz2',
                 name='rviz2',
-                output='screen', 
+                output='screen',
                 arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
                 ),
 

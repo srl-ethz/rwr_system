@@ -37,8 +37,8 @@ def generate_launch_description():
                         "retarget/mjcf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "biomimic_hand_v3",
-                            "Biomimic_hand_job.xml",
+                            "faive_hand_p4",
+                            "hand_p4.xml",
                         )
                     },
                     # {
@@ -50,7 +50,7 @@ def generate_launch_description():
                     #         "biomimic_hand.urdf",
                     #     )
                     # },
-                    {"retarget/hand_scheme": "biomimic"},
+                    {"retarget/hand_scheme": "p4"},
                     {"debug": True},
                 ],
             ),
@@ -65,40 +65,41 @@ def generate_launch_description():
             # ),
 
             # VISUALIZATION NODE
-            Node(
-                package="viz",
-                executable="visualize_joints.py",
-                name="visualize_joints",
-                parameters=[
-                    {
-                        "scheme_path": os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            "biomimic_hand",
-                            "scheme_biomimic.yaml",
-                        )
-                    },
-                ],
-                output="screen",
-            ),
-
-            # VISUALIZATION NODE (MuJoCo)
             # Node(
             #     package="viz",
-            #     executable="mujoco_visualizer_node.py",
-            #     name="mujoco_visualizer",
+            #     executable="visualize_joints.py",
+            #     name="visualize_joints",
             #     parameters=[
             #         {
-            #             "viz/model_path": os.path.join(
+            #             "scheme_path": os.path.join(
             #                 get_package_share_directory("viz"),
             #                 "models",
-            #                 "biomimic_hand_v3",
-            #                 "Biomimic_hand_job.xml",
+            #                 "biomimic_hand",
+            #                 "scheme_biomimic.yaml",
             #             )
-            #         }
+            #         },
             #     ],
-            #     output="screen"
+            #     output="screen",
             # ),
+
+            # VISUALIZATION NODE (MuJoCo)
+            Node(
+                package="viz",
+                executable="mujoco_visualizer_node.py",
+                name="mujoco_visualizer",
+                parameters=[
+                    {
+                        "viz/model_path": os.path.join(
+                            get_package_share_directory("viz"),
+                            "models",
+                            "biomimic_hand_v3",
+                            "Biomimic_hand_job.xml",
+                        )
+                    }
+                ],
+                output="screen"
+            ),
+
 
             Node(
                 package='robot_state_publisher',
@@ -108,13 +109,13 @@ def generate_launch_description():
                 parameters=[{'robot_description': robot_desc,}],
                 arguments=[urdf]),
 
-            Node(
-                package='rviz2',
-                executable='rviz2',
-                name='rviz2',
-                output='screen',
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
-                ),
+            # Node(
+            #     package='rviz2',
+            #     executable='rviz2',
+            #     name='rviz2',
+            #     output='screen',
+            #     arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
+            #     ),
 
         ]
     )
