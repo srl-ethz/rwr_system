@@ -60,11 +60,16 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                 print(f"Topic {topic} not found in the HDF5 file. Skipping...")
                 continue
             
-            if topic == "/task_description":
-                continue
             
             print(f"Processing topic: {topic}")
             topic_group = input_h5[topic]
+
+            if topic == "/task_description":
+                if TOPIC_TO_STRING[topic_type] == "String":
+                    string_data = topic_group["description"]
+                    output_h5.create_dataset("task_description", data=string_data)
+                continue
+
             topic_timestamps = np.array(list(map(int, topic_group.keys())))
             topic_timestamps.sort()
 
@@ -76,7 +81,7 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                     closest_timestamp = topic_timestamps[closest_idx]
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
                 sampled_images = np.array(sampled_images)  # Tx3xHxW
-                output_h5.create_dataset(f"observationsss/images/{topic}", data=sampled_images)
+                output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images)
 
             elif TOPIC_TO_STRING[topic_type] == "PoseStamped":
                 # Interpolate PoseStamped data
@@ -114,16 +119,13 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                 qpos_hand = sampled_array
                 actions_hand = sampled_array
             
-            elif TOPIC_TO_STRING[topic_type] == "String":
-                string_data = topic_group["Description"][:]
-                output_h5.create_dataset("task_description", data=string_data)
         
         if qpos_franka is not None and qpos_hand is not None and actions_franka is not None and actions_hand is not None:
             qpos = np.concatenate((qpos_franka, qpos_hand), axis=1)
             actions = np.concatenate((actions_franka, actions_hand), axis=1)
         
-            # create observationss group
-            output_h5.create_dataset("observationss/qpos", data=qpos)
+            # create observations group
+            output_h5.create_dataset("observations/qpos", data=qpos)
             output_h5.create_dataset("actions", data=actions)
 
 

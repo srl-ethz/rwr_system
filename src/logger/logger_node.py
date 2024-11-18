@@ -168,7 +168,7 @@ def main(args=None):
                         '/oakd_wrist_view/color', 
                         '/hand/policy_output', 
                         '/franka/end_effector_pose', 
-                        '/franka/end_effector_pose_cmd'
+                        '/franka/end_effector_pose_cmd',
                         '/task_description', 
                         ]
 
