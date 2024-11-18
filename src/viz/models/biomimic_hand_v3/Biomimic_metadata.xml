@@ -125,30 +125,34 @@ TODO: Updta all filenames, axis, positions, masses and inertias (maybe some dont
         
         note: the "gear" attribute allows a scaling to be applied from the actuator dimensions to the joint dimensions, but it seems not to be completely supported in IsaacGym so don't use it.
         -->
-        <position name="root2palm" joint="root2palm" ctrlrange="-0.75 0.75" kp="1"/>
-        <position name="root2thumb_base" joint="root2thumb_base" ctrlrange="-1.4 0" kp="1"/>
-        <position name="thumb_base2pp" joint="thumb_base2pp" ctrlrange="-0.785398 0.785398" kp="1"/>
-        <position name="thumb_pp2mp" joint="thumb_pp2mp" ctrlrange="-0.96 0"/>
-
-        <!-- new index finger -->
-        <position name="index_mcp" joint="index_adb2pp" ctrlrange="0 1.57"/>
-        <position name="index_adb" joint="index_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
-        <position name="index_pip" joint="index_pp2mp" ctrlrange="0 1.57"/>
-
-        <!-- new middle finger -->
-        <position name="middle_mcp" joint="middle_adb2pp" ctrlrange="0 1.57"/>
-        <position name="middle_adb" joint="middle_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
-        <position name="middle_pp2mp" joint="middle_pp2mp" ctrlrange="0 1.57"/>
-
-        <!-- new ring finger -->
-        <position name="ring_mcp" joint="ring_adb2pp" ctrlrange="0 1.57"/>
-        <position name="ring_adb" joint="ring_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
-        <position name="ring_pp2mp" joint="ring_pp2mp" ctrlrange="0 1.57"/>
 
         <!-- new pinky finger -->
         <position name="pinky_mcp" joint="pinky_adb2pp" ctrlrange="0 1.57"/>
-        <position name="pinky_adb" joint="pinky_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
         <position name="pinky_pp2mp" joint="pinky_pp2mp" ctrlrange="0 1.57"/>
+        <position name="pinky_adb" joint="pinky_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
+
+        <!-- new ring finger -->
+        <position name="ring_mcp" joint="ring_adb2pp" ctrlrange="0 1.57"/>
+        <position name="ring_pp2mp" joint="ring_pp2mp" ctrlrange="0 1.57"/>
+        <position name="ring_adb" joint="ring_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
+
+        <!-- new middle finger -->
+        <position name="middle_mcp" joint="middle_adb2pp" ctrlrange="0 1.57"/>
+        <position name="middle_pp2mp" joint="middle_pp2mp" ctrlrange="0 1.57"/>
+        <position name="middle_adb" joint="middle_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
+
+        <!-- new index finger -->
+        <position name="index_mcp" joint="index_adb2pp" ctrlrange="0 1.57"/>
+        <position name="index_pip" joint="index_pp2mp" ctrlrange="0 1.57"/>
+        <position name="index_adb" joint="index_base2adb" gear="4" ctrlrange="-0.52 0.52"/> 
+
+        <!-- thumb -->
+        <position name="thumb_palm" joint="root2thumb_base" ctrlrange="0 1.22" kp="1" gear="1"/>
+        <position name="thumb_adb" joint="thumb_base2pp" ctrlrange="-0.785398 0.785398" kp="1" gear="1"/>
+        <position name="thumb_mcp" joint="thumb_pp2mp" gear="-2" ctrlrange="0 1.57"/>
+
+        <!-- wrist -->
+        <position name="wrist" joint="root2palm" ctrlrange="-0.75 0.75" kp="1" gear="1"/>
     </actuator>
 
     <!-- 
