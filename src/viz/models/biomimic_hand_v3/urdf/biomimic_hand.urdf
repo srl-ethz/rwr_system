@@ -16,21 +16,21 @@
       <visual name="tower">
          <origin xyz="0.002364865199460947 -0.058011405237253066 -0.00016105648299251585" rpy="-1.6139551293120311 -1.561716121388361 -2.9768437729290564"/>
          <geometry>
-            <mesh filename="converted_tower.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/Tower_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
       <visual name="wrist_concept_1">
          <origin xyz="-0.03174380379669124 0.011915712195327334 2.700284945481736e-05" rpy="0.007171625908007462 0.0020408912241414168 0.2470769971928733"/>
          <geometry>
-            <mesh filename="converted_wrist_concept_1.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/Wrist_concept_actuation_side_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
       <visual name="wrist_concept_2">
          <origin xyz="0.032245049887780076 0.012156060535640886 1.0565636185675317e-07" rpy="2.043033431406438e-05 4.8627126234546125e-06 -0.2581000401397636"/>
          <geometry>
-            <mesh filename="converted_wrist_concept_2.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/Wrist_concept_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -61,14 +61,14 @@
       <visual name="wrist_counterpart_v2">
          <origin xyz="-0.00023286589265706536 0.03431860304032479 -8.514230674660817e-12" rpy="-3.13718684452829 -1.5707963267948966 0.0"/>
          <geometry>
-            <mesh filename="converted_wrist_counterpart_v2.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/Wrist_Counterpart_reframed_v2.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
       <visual name="palm_n">
          <origin xyz="0.003298856085237938 0.08283690440192504 5.319715678469291e-05" rpy="-2.414501374296908 -1.5621379725122209 -1.386013583786934"/>
          <geometry>
-            <mesh filename="converted_palm_n.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/palm_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -101,7 +101,7 @@
       <visual name="thumb_base_n">
          <origin xyz="-0.03896151638617342 0.08238129367054924 0.0022055098758475555" rpy="-1.4872237942305135 -1.4930754041998728 -2.854555655721935"/>
          <geometry>
-            <mesh filename="converted_thumb_base_n.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/thumb_base_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -134,7 +134,7 @@
       <visual name="thumb_pp">
          <origin xyz="-0.011053892269388146 3.4865384795573415e-05 4.381253094768987e-05" rpy="-2.8886516344078492 -1.5155657546694923 -0.2549822790790299"/>
          <geometry>
-            <mesh filename="converted_thumb_pp.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/thumb_link2_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -193,7 +193,7 @@
       <visual name="thumb_mp">
          <origin xyz="-0.014116018388780974 3.307865455442922e-05 -0.0013385556113386947" rpy="-2.97590650134968 -1.521351344482512 -0.1663615440956121"/>
          <geometry>
-            <mesh filename="converted_thumb_mp.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/thumb_link_3_reframed.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -252,7 +252,7 @@
       <visual name="thumb_tip">
          <origin xyz="0.002640041313834239 -8.033957342976116e-06 0.0037021472303460264" rpy="1.5640958002148793 -1.2122408048608502 0.002963949632654894"/>
          <geometry>
-            <mesh filename="converted_thumb_tip.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/thumb_tip.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -309,7 +309,7 @@
       <visual name="base">
          <origin xyz="-2.483271134301712e-06 -0.0006283949403360648 -0.0010218251722954041" rpy="-0.0019606141972857705 0.2848020899002486 1.562843097727972"/>
          <geometry>
-            <mesh filename="converted_base.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_base_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -366,7 +366,7 @@
       <visual name="abduct_mesh">
          <origin xyz="0.0030928024469548897 2.9633251576924873e-06 0.002049002293166934" rpy="0.0013444771177570697 -0.39052181680792253 -0.0006183615336743567"/>
          <geometry>
-            <mesh filename="converted_abduct_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_link_2.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -425,7 +425,7 @@
       <visual name="pp_mesh">
          <origin xyz="0.019800803261190037 3.0271736921860792e-05 0.0013379390944332293" rpy="2.9315996789214296 -1.513801422387418 0.21266149093854758"/>
          <geometry>
-            <mesh filename="converted_pp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_pp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -484,7 +484,7 @@
       <visual name="mp_mesh">
          <origin xyz="0.013539877442174646 6.836820127480553e-06 0.00034399519877882553" rpy="-3.0138281282533645 -1.544321997651543 -0.12981250347759032"/>
          <geometry>
-            <mesh filename="converted_mp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_mp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -543,7 +543,7 @@
       <visual name="dp_adapter_mesh">
          <origin xyz="0.005351633379461637 5.496078872092513e-06 0.00015893796923586228" rpy="1.573671515943945 -1.2942765355492696 -0.004465164146716716"/>
          <geometry>
-            <mesh filename="converted_dp_adapter_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_dp_adapter.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -600,7 +600,7 @@
       <visual name="base">
          <origin xyz="-2.483271134301712e-06 -0.0006283949403360648 -0.0010218251722954041" rpy="-0.0019606141972857705 0.2848020899002486 1.562843097727972"/>
          <geometry>
-            <mesh filename="converted_base.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_base_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -657,7 +657,7 @@
       <visual name="abduct_mesh">
          <origin xyz="0.0030928024469548897 2.9633251576924873e-06 0.002049002293166934" rpy="0.0013444771177570697 -0.39052181680792253 -0.0006183615336743567"/>
          <geometry>
-            <mesh filename="converted_abduct_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_link_2.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -716,7 +716,7 @@
       <visual name="pp_mesh">
          <origin xyz="0.019800803261190037 3.0271736921860792e-05 0.0013379390944332293" rpy="2.9315996789214296 -1.513801422387418 0.21266149093854758"/>
          <geometry>
-            <mesh filename="converted_pp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_pp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -775,7 +775,7 @@
       <visual name="mp_mesh">
          <origin xyz="0.013539877442174646 6.836820127480553e-06 0.00034399519877882553" rpy="-3.0138281282533645 -1.544321997651543 -0.12981250347759032"/>
          <geometry>
-            <mesh filename="converted_mp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_mp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -834,7 +834,7 @@
       <visual name="dp_adapter_mesh">
          <origin xyz="0.005351633379461637 5.496078872092513e-06 0.00015893796923586228" rpy="1.573671515943945 -1.2942765355492696 -0.004465164146716716"/>
          <geometry>
-            <mesh filename="converted_dp_adapter_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_dp_adapter.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -891,7 +891,7 @@
       <visual name="base">
          <origin xyz="-2.483271134301712e-06 -0.0006283949403360648 -0.0010218251722954041" rpy="-0.0019606141972857705 0.2848020899002486 1.562843097727972"/>
          <geometry>
-            <mesh filename="converted_base.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_base_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -948,7 +948,7 @@
       <visual name="abduct_mesh">
          <origin xyz="0.0030928024469548897 2.9633251576924873e-06 0.002049002293166934" rpy="0.0013444771177570697 -0.39052181680792253 -0.0006183615336743567"/>
          <geometry>
-            <mesh filename="converted_abduct_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_link_2.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1007,7 +1007,7 @@
       <visual name="pp_mesh">
          <origin xyz="0.019800803261190037 3.0271736921860792e-05 0.0013379390944332293" rpy="2.9315996789214296 -1.513801422387418 0.21266149093854758"/>
          <geometry>
-            <mesh filename="converted_pp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_pp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1066,7 +1066,7 @@
       <visual name="mp_mesh">
          <origin xyz="0.013539877442174646 6.836820127480553e-06 0.00034399519877882553" rpy="-3.0138281282533645 -1.544321997651543 -0.12981250347759032"/>
          <geometry>
-            <mesh filename="converted_mp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_mp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1125,7 +1125,7 @@
       <visual name="dp_adapter_mesh">
          <origin xyz="0.005351633379461637 5.496078872092513e-06 0.00015893796923586228" rpy="1.573671515943945 -1.2942765355492696 -0.004465164146716716"/>
          <geometry>
-            <mesh filename="converted_dp_adapter_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_dp_adapter.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1182,7 +1182,7 @@
       <visual name="base">
          <origin xyz="-2.483271134301712e-06 -0.0006283949403360648 -0.0010218251722954041" rpy="-0.0019606141972857705 0.2848020899002486 1.562843097727972"/>
          <geometry>
-            <mesh filename="converted_base.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_base_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1239,7 +1239,7 @@
       <visual name="abduct_mesh">
          <origin xyz="0.0030928024469548897 2.9633251576924873e-06 0.002049002293166934" rpy="0.0013444771177570697 -0.39052181680792253 -0.0006183615336743567"/>
          <geometry>
-            <mesh filename="converted_abduct_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_link_2.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1298,7 +1298,7 @@
       <visual name="pp_mesh">
          <origin xyz="0.019800803261190037 3.0271736921860792e-05 0.0013379390944332293" rpy="2.9315996789214296 -1.513801422387418 0.21266149093854758"/>
          <geometry>
-            <mesh filename="converted_pp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_pp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1357,7 +1357,7 @@
       <visual name="mp_mesh">
          <origin xyz="0.013539877442174646 6.836820127480553e-06 0.00034399519877882553" rpy="-3.0138281282533645 -1.544321997651543 -0.12981250347759032"/>
          <geometry>
-            <mesh filename="converted_mp_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_mp_link.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -1416,7 +1416,7 @@
       <visual name="dp_adapter_mesh">
          <origin xyz="0.005351633379461637 5.496078872092513e-06 0.00015893796923586228" rpy="1.573671515943945 -1.2942765355492696 -0.004465164146716716"/>
          <geometry>
-            <mesh filename="converted_dp_adapter_mesh.stl"/>
+            <mesh filename="package://viz/models/biomimic_hand_v3/mesh/experimental_finger_dp_adapter.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
