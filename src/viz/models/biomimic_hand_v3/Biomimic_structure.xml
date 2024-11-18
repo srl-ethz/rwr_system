@@ -14,9 +14,9 @@ TODO: Update all masses and inertias
             <joint name="root2palm" axis="1 0 0" pos="0 0.026 0" range="-0.75 0.75"/>
             <geom mesh="wrist_counterpart_v2" pos="0 0.026 0"/>
             <geom mesh="palm_n" />
-            
+
             <body name="thumb_base" pos="0 0 0" euler="0 0 0">
-                <joint name="root2thumb_base" axis="-0.42261826174  0.90630778704  0" pos="-0.0207220000000   0.0662890000000000  0.000509000000000" type="fixed"/>
+                <joint name="root2thumb_base" axis="-0.42261826174  0.90630778704  0" pos="-0.0207220000000   0.0662890000000000  0.000509000000000"/>
                 <geom mesh="thumb_base_n"/>
                 <body name="thumb_pp" pos="-0.042892 0.068639 0.000509" euler="0 0 0.436332">
                     <joint name="thumb_base2pp" axis="0 0 1" pos="0 0 0" range="-0.785398 0.785398"/>
