@@ -3,7 +3,7 @@ from typing import Dict
 
 # the information of the tendons in the hand. Each tendon represents a grouped actuation.
 GC_TENDONS = {
-    "root2palm": {},
+    # "root2palm": {},
     "root2thumb_base": {},
     "thumb_base2pp": {},
     "thumb_pp2mp_virt": {
