@@ -11,25 +11,29 @@ GC_TENDONS = {
         "thumb_mp2dp_virt": 0.71,
         "thumb_mp2dp": 0.71,
     },
-    "index_abd_virt": {"index_abd": 1},
-    "root2index_pp_virt": {"root2index_pp": 1},
+    "index_base2adb_virt": {"index_base2adb": 1},
+    "index_adb2pp_virt": {"index_adb2pp": 1},
     "index_pp2mp_virt": {
         "index_pp2mp": 1,
         "index_mp2dp_virt": 0.71,
         "index_mp2dp": 0.71,
     },
-    "middle_abd_virt": {"middle_abd": 1},
-    "root2middle_pp_virt": {"root2middle_pp": 1},
+    "middle_base2adb_virt": {"middle_base2adb": 1},
+    "middle_adb2pp_virt": {"middle_adb2pp": 1},
     "middle_pp2mp_virt": {
         "middle_pp2mp": 1,
         "middle_mp2dp_virt": 0.71,
         "middle_mp2dp": 0.71,
     },
-    "ring_abd_virt": {"ring_abd": 1},
-    "root2ring_pp_virt": {"root2ring_pp": 1},
-    "ring_pp2mp_virt": {"ring_pp2mp": 1, "ring_mp2dp_virt": 0.71, "ring_mp2dp": 0.71},
-    "pinky_abd_virt": {"pinky_abd": 1},
-    "root2pinky_pp_virt": {"root2pinky_pp": 1},
+    "ring_base2adb_virt": {"ring_base2adb": 1},
+    "ring_adb2pp_virt": {"ring_adb2pp": 1},
+    "ring_pp2mp_virt": {
+        "ring_pp2mp": 1,
+        "ring_mp2dp_virt": 0.71,
+        "ring_mp2dp": 0.71
+    },
+    "pinky_base2adb_virt": {"pinky_base2adb": 1},
+    "pinky_adb2pp_virt": {"pinky_adb2pp": 1},
     "pinky_pp2mp_virt": {
         "pinky_pp2mp": 1,
         "pinky_mp2dp_virt": 0.71,
@@ -51,47 +55,47 @@ FINGER_TO_TIP: Dict[str, str] = {
 # Use pytorch_kinematics.Chain.print_tree() to see the base frame
 FINGER_TO_BASE = {
     "thumb": "thumb_base",
-    "index": "index_um_virt",
-    "middle": "middle_um_virt",
-    "ring": "ring_um_virt",
-    "pinky": "pinky_um_virt",
+    "index": "index_base",
+    "middle": "middle_base",
+    "ring": "ring_base",
+    "pinky": "pinky_base",
 }
 
 GC_LIMITS_LOWER = np.array(
     [
-        0.0,  # root2thumb_base
-        -95.0,  # thumb_base2pp
-        0.0,  # thumb_pp2mp_virt
-        -30.0,  # index_abd_virt
-        0.0,  # root2index_pp_virt
+        -80.0,  # root2thumb_base
+        -45.0,  # thumb_base2pp
+        -55.0,  # thumb_pp2mp_virt
+        -30.0,  # index_base2abd_virt
+        0.0,  # index_adb2pp_virt
         0.0,  # index_pp2mp_virt
-        -30.0,  # middle_abd_virt
-        0.0,  # root2middle_pp_virt
+        -30.0,  # middle_base2abd_virt
+        0.0,  # middle_adb2pp_virt
         0.0,  # middle_pp2mp_virt
-        -30.0,  # ring_abd_virt
-        0.0,  # root2ring_pp_virt
+        -30.0,  # ring_base2abd_virt
+        0.0,  # ring_adb2pp_virt
         0.0,  # ring_pp2mp_virt
-        -30.0,  # pinky_abd_virt
-        0.0,  # root2pinky_pp_virt
+        -30.0,  # pinky_base2abd_virt
+        0.0,  # pinky_adb2pp_virt
         0.0,  # pinky_pp2mp_virt
     ]
 )
 GC_LIMITS_UPPER = np.array(
     [
-        130.0,  # root2thumb_base
-        60.0,  # thumb_base2pp
-        110.0,  # thumb_pp2mp_virt
-        30.0,  # index_abd_virt
-        95.0,  # root2index_pp_virt
-        110.0,  # index_pp2mp_virt
-        30.0,  # middle_abd_virt
-        95.0,  # root2middle_pp_virt
-        110.0,  # middle_pp2mp_virt
-        30.0,  # ring_abd_virt
-        95.0,  # root2ring_pp_virt
-        110.0,  # ring_pp2mp_virt
-        30.0,  # pinky_abd_virt
-        95.0,  # root2pinky_pp_virt
-        110.0,  # pinky_pp2mp_virt
+        0.0,  # root2thumb_base
+        45.0,  # thumb_base2pp
+        0.0,  # thumb_pp2mp_virt
+        30.0,  # index_base2adb_virt
+        90.0,  # index_adb2pp_virt
+        90.0,  # index_pp2mp_virt
+        30.0,  # middle_base2abd_virt
+        90.0,  # middle_adb2pp_virt
+        90.0,  # middle_pp2mp_virt
+        30.0,  # ring_base2adb_virt
+        90.0,  # ring_adb2pp_virt
+        90.0,  # ring_pp2mp_virt
+        30.0,  # pinky_base2adb_virt
+        90.0,  # pinky_adb2pp_virt
+        90.0,  # pinky_pp2mp_virt
     ]
 )
