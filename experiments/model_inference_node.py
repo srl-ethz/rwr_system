@@ -136,6 +136,7 @@ class PolicyPlayerAgent(Node):
         if not get_data_success:
             self.get_logger().info("No observations available. Sleeping for 1 seconds.")
             sleep(1)
+            return
         with torch.inference_mode():
             obs_dict = {k: torch.tensor(v).float().unsqueeze(0) for k, v in obs_dict.items()} # add batch dimension
             action = self.policy.predict_action(obs_dict)

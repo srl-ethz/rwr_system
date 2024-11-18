@@ -9,7 +9,7 @@ def generate_launch_description():
     # Declare launch arguments with default values
     policy_ckpt_arg = DeclareLaunchArgument(
         'policy_ckpt_path',
-        default_value='someckpt',
+        default_value='',
         description='The ckpt path of the model to load. There should be `config.yaml` in its directory or parent directory'
     )
 
