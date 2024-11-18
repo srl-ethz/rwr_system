@@ -78,7 +78,7 @@ xout_rect_right.setStreamName("rectified_right")
 if COLOR:
     camRgb = pipeline.create(dai.node.ColorCamera)
     camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
-    camRgb.setIspScale(1, 3)
+    camRgb.setIspScale(1, 2)
     camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
     camRgb.initialControl.setManualFocus(130)
     stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
@@ -177,12 +177,17 @@ class OakDDriver:
 
     def run(self, device):
         with device:
-            if (device.getOutputQueue("depth", maxSize=1, blocking=False ).tryGet()) is None:
-                has_depth = False
-                print("OAK-1.5 detected")
-            else:
-                has_depth = True
-                print("OAK-D detected")
+            print("Starting pipeline...")
+            attempts = 1000
+            has_depth = False
+            for _ in range(attempts):
+                print("Trying to get depth stream")
+                if device.getOutputQueue("depth", maxSize=1, blocking=False).tryGet() is not None:
+                    has_depth = True
+                    print("OAK-D detected")
+                    break
+                time.sleep(0.1)
+
                 
             device.setIrLaserDotProjectorBrightness(1200)
             qs = []
