@@ -120,13 +120,12 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                 actions_hand = sampled_array
             
         
-        if qpos_franka is not None and qpos_hand is not None and actions_franka is not None and actions_hand is not None:
-            qpos = np.concatenate((qpos_franka, qpos_hand), axis=1)
-            actions = np.concatenate((actions_franka, actions_hand), axis=1)
-        
             # create observations group
-            output_h5.create_dataset("observations/qpos", data=qpos)
-            output_h5.create_dataset("actions", data=actions)
+        output_h5.create_dataset("observations/qpos_franka", data=qpos_franka)
+        output_h5.create_dataset("observations/qpos_hand", data=qpos_hand)
+        output_h5.create_dataset("actions_franka", data=actions_franka)
+        output_h5.create_dataset("actions_hand", data=actions_hand)
+
 
 
     print(f"Processed data saved to: {output_h5_path}")
