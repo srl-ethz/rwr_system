@@ -20,17 +20,12 @@ class HandControllerNode(Node):
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
 
-
-        self.get_logger().info("PORT = {}".format(port))
-
         # self._hc = HandController(port=port, baudrate=baudrate)
-        self.get_logger().info("Hand Controller Before CLASS =========================")
 
         self._hc = HandControllerOld(port=port)
-        self.get_logger().info("Hand Controller Before INIT =========================")
+        # self.get_logger().info("Hand Controller Before INIT =========================")
 
         self._hc.init_joints(calibrate=False)
-        self.get_logger().info("Hand Controller After INIT =========================")
         
         self.joint_angle_sub = self.create_subscription(
             Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10
@@ -40,8 +35,6 @@ class HandControllerNode(Node):
         assert len(msg.data) == 16, "Expected 16 joint angles, got {}".format(
             len(msg.data)
         )
-        print("In NODE")
-        print("============================")
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
         # self._hc.command_joint_angles(joint_angles_deg)

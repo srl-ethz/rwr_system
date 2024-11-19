@@ -46,6 +46,21 @@ class HandControllerOld:
         self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
         self.connect_to_dynamixels()
 
+
+        # Mapping of joint names to their index ranges from the joint_angles array
+        self.joint_mapping = {
+            "thumb": slice(0, 4), # 0, 1, 2, 3 
+            "index": slice(4, 7), # 4, 5, 6 [ABD,MCP,PIP]
+            "middle": slice(7, 10), # 7, 8, 9 [ABD,MCP,PIP]
+            "ring": slice(10, 13), # 10, 11, 12 [ABD,MCP,PIP]
+            "pinky": slice(13, 16), # 13, 14, 15 [ABD,MCP,PIP]   
+        }
+
+        self.joints_rom_list = self.get_joints_rom_list()
+
+        print("=====================================")
+        print(f"Joint ROMs: {self.joints_rom_list}")
+        print("=====================================")
         # initialize the joint
         self.init_joints(calibrate=calibration, maxCurrent=maxCurrent)
 
@@ -79,9 +94,6 @@ class HandControllerOld:
                 getattr(self, attr).extend(getattr(muscle_group, attr))
         for attr in attrs_to_get:
             setattr(self, attr, np.array(getattr(self, attr)))
-
-        self.get_joints_upper_rom = self.get_joint_upper_rom()
-        self.get_joints_lower_rom = self.get_joint_lower_rom()
 
         self.joint_nr = 0
         # run some sanity checks
@@ -203,29 +215,28 @@ class HandControllerOld:
         TODO: Extend the calculation of the tendon lengths for every finger. Tip: A clever design can allow for the same formulas for each finger to reduce complexity.
         """
         # return 
-        # This is commented out for now as it will create problems with ServoGui and it is not working yet.
         tendon_lengths = np.zeros(len(self.tendon_ids))
-        j_idx = 0
-        t_idx = 0
-
-        # print(tendon_lengths)
-        # print(joint_angles)
+        tendon_id_ranges_dict = self.get_tendon_id_ranges()
         for muscle_group in self.muscle_groups:
-            t_nr = len(muscle_group.tendon_ids)
-            j_nr = len(muscle_group.joint_ids)
-            if muscle_group.name == "pinky":
-                tendon_lengths[t_idx:t_idx+t_nr] = fk.pose2tendon_finger(joint_angles[j_idx],joint_angles[j_idx+1],joint_angles[j_idx+2])
-            elif muscle_group.name == "index":
-                tendon_lengths[6:12] = fk.pose2tendon_finger(joint_angles[4],joint_angles[5],joint_angles[6])
-            elif muscle_group.name == "middle":
-                tendon_lengths[0:6] = fk.pose2tendon_finger(joint_angles[7],joint_angles[8],joint_angles[9])
+            t_s, t_e = tendon_id_ranges_dict[muscle_group.name]
 
-                # tendon_lengths[t_idx:t_idx+t_nr] = fk.pose2tendon_finger(joint_angles[j_idx],joint_angles[j_idx+1],joint_angles[j_idx+2])
+            # Maybe if statement for wrist
+            joint_angles_of_muscle_group = self.get_joint_angles_for_joint(joint_angles, muscle_group.name)
+            tendon_lengths[t_s:t_e+1] = fk.pose2tendon_length(muscle_group.name, *joint_angles_of_muscle_group)
 
-            # TODO: Extend the calculations here for your own fingers:
-            j_idx += j_nr
-            t_idx += t_nr
         return self.tendon_pos2motor_pos(tendon_lengths)
+
+    def get_tendon_id_ranges(self):
+        """
+        Create a dictionary with the starting tendon id and last tendon id of each muscle group.
+        :return: Dictionary with muscle group names as keys and tuples (start_tendon_id, end_tendon_id) as values.
+        """
+        tendon_id_ranges = {}
+        for muscle_group in self.muscle_groups:
+            start_tendon_id = muscle_group.tendon_ids[0]
+            end_tendon_id = muscle_group.tendon_ids[-1]
+            tendon_id_ranges[muscle_group.name] = (start_tendon_id, end_tendon_id)
+        return tendon_id_ranges
 
     def init_joints(self, calibrate: bool = False, maxCurrent: int = 150):
         """
@@ -282,72 +293,79 @@ class HandControllerOld:
         Command joint angles in deg
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
         """
-        ranges = [(0, 40), (0, 90), (0, 80), (0, 0)]
-
-        # Clip the 7th, 8th, and 9th values (indices 6, 7, and 8 in 0-based indexing)
-        print("=========Before Clipping=============================")
-        print("Joint angles: ", joint_angles[6:10])
-        print("===========================================")
-        
-        joint_angles[6] = np.clip(joint_angles[6], *ranges[3])  # For 7th value
-        joint_angles[7] = np.clip(joint_angles[7], *ranges[0])  # For 7th value
-        joint_angles[8] = np.clip(joint_angles[8], *ranges[1])  # For 8th value
-        joint_angles[9] = np.clip(joint_angles[9], *ranges[2])  # For 9th value
-        joint_angles[10] = np.clip(joint_angles[10], *ranges[3])  # For 7th value
-
-        print("===========================================")
-        print("Joint angles: ", joint_angles[6:10])
-        print("===========================================")
-        motor_pos_des = self.pose2motors(np.deg2rad(joint_angles)) - self.motor_pos_norm + self.motor_id2init_pos
+        print(f"Joint angles: {joint_angles}")
+        joint_angles_clipped = self.clip_joint_angles(joint_angles)
+        print(f"Clipped joint angles: {joint_angles_clipped}")
+        motor_pos_des = self.pose2motors(np.deg2rad(joint_angles_clipped)) - self.motor_pos_norm + self.motor_id2init_pos
         self.write_desired_motor_pos(motor_pos_des)
         time.sleep(0.01) # wait for the command to be sent
 
 
-    def get_joint_upper_rom(self):
+    def clip_joint_angles(self, joint_angles):
         """
-        Get the upper ROM value for each joint.
-        The ROM is taken directly from the joint ROM defined in each muscle group.
+        Clip the joint angles based on the ROM specified for each joint.
+        :param joint_angles: Array of joint angles to be clipped.
+        :return: Clipped joint angles.
         """
-        joint_upper_roms = np.zeros(len(self.joint_ids))  # Initialize array for upper ROMs
-        j_idx = 0
-        for muscle_group in self.muscle_groups:
-            for joint_id in range(len(muscle_group.joint_ids)):
-                joint_upper_roms[j_idx] = muscle_group.joint_roms[joint_id][1]  # Get upper ROM from joint ROM
-                j_idx += 1
-        return joint_upper_roms
+        # Get rom as array of 2 columns, one with min values and one with max values
+        bounds = np.array(self.joints_rom_list)
 
-    def get_joint_lower_rom(self):
-        """j_idx
-        Get the lower ROM value for each joint.
-        The ROM is taken directly from the joint ROM defined in each muscle group.
-        """
-        joint_lower_roms = np.zeros(len(self.joint_ids))  # Initialize array for lower ROMs
-        j_idx = 0
-        for muscle_group in self.muscle_groups:
-            for joint_id in range(len(muscle_group.joint_ids)):
-                joint_lower_roms[j_idx] = muscle_group.joint_roms[joint_id][0]  # Get lower ROM from joint ROM
-                j_idx += 1
-        return joint_lower_roms
+        # Separate bounds into min and max angle
+        min_angles = bounds[:, 0]
+        max_angle = bounds[:, 1]
 
-    def get_specific_joint_rom(self, joint_id):
-        """
-        Get the lower and upper ROM for a specific joint based on the joint_id.
-        :param joint_id: The ID of the joint to get ROM for.
-        :return: Tuple (lower ROM, upper ROM)
-        """
-        for muscle_group in self.muscle_groups:
-            if joint_id in muscle_group.joint_ids:
-                j_idx = muscle_group.joint_ids.index(joint_id)
-                lower_rom = muscle_group.joint_roms[j_idx][0]
-                upper_rom = muscle_group.joint_roms[j_idx][1]
-                return lower_rom, upper_rom, upper_rom - lower_rom
-        raise ValueError(f"Joint ID {joint_id} not found.")
+        clipped_angles = np.clip(joint_angles, min_angles[:len(joint_angles)], max_angle[:len(joint_angles)])
+        return clipped_angles
 
-    def get_motors_rom(self):
-        # Based on the ROMs defined in the muscle groups for the joints and the spool rom
-        # Calculate the ROMs of each motor and save it in self.motors_rom. 
-        # Comparing with initial values/Calibration check for the motors if they are requested to go outside their allower rom values.
-        return
+
+    def get_joint_angles_for_joint(self, joints_angles, joint_name):
+        """
+        Extract joint angles corresponding to the given joint name.
+
+        Parameters:
+            joints_angles (list or array): A list or array of size (21, 3) representing joint angles.
+            joint_name (str): The name of the joint (e.g., "thumb", "index", "middle", "ring", "pinky").
+
+        Returns:
+            list: The joint angles corresponding to the specified joint name.
+        """
+
+        # Ensure the joint name is valid
+        if joint_name not in self.joint_mapping:
+            raise ValueError(f"Invalid joint name '{joint_name}'. Valid names are: {list(self.joint_mapping.keys())}.")
+
+        # Get the index range for the specified joint
+        joint_indices = self.joint_mapping[joint_name]
+
+        # Extract and return the angles for the specified joint
+        return joints_angles[joint_indices]
+
+
+    def get_joints_rom_list(self):
+        """
+        Get the ROM (Range of Motion) for each muscle group.
+        :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
+        """
+        joints_rom_list = [(0,0) for _ in range(21)]
+        for muscle_group in self.muscle_groups:
+            joint_indices = self.joint_mapping[muscle_group.name]
+
+            muscle_roms = muscle_group.joint_roms
+
+            # idx is for geting the values from the muscle_roms which start from 0
+            # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
+            for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
+                joints_rom_list[joint_idx] = (muscle_roms[idx][0], muscle_roms[idx][1])
+        
+        return joints_rom_list
+
+
+    # TODO Implement the following function    
+    # def get_motors_rom(self):
+    #     # Based on the ROMs defined in the muscle groups for the joints and the spool rom
+    #     # Calculate the ROMs of each motor and save it in self.motors_rom. 
+    #     # Comparing with initial values/Calibration check for the motors if they are requested to go outside their allower rom values.
+    #     return
 
 if __name__ == "__main__" :
     gc = HandControllerOld("/dev/ttyUSB0")
