@@ -38,7 +38,7 @@ To get started with the RWR System, follow these steps:
 
 ## Main TODOs for RWR students
 
-- [ ] **Hand Control Package**: The `hand_control` package is specific to the P4 hand. Modify it to work with your hand model. Aim to make minimal or no changes to `hand_control_ros`.
+- [ ] **Hand Control Package**: The `hand_control` package is the template provided in the Workshop on how to interface dynamixels. You have to adapt it to the specific kinematics of your fingers and hand. 
 - [ ] **Retargeting File**: The `retargeter.py` file is tailored for P0, P1, or P4 hands. Adapt it for your hand model. You are free to develop a new retargeting method that better suits your needs. Refer to the workshop on 4/11 for guidance.
 - [ ] **Visualization Files**: Update the visualization files to simulate your hand in Rviz. The `visualize_joints.py` script provides hints on visualizing a mixed rolling_contact/pin joints hand. You can also refer to the URDF and MJCF models of the P4 or P0 hands.
 - [ ] **Logger**: The current logger is very basic. Feel free to enhance it to meet your requirements and make any necessary changes.
