@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 import os
 from faive_system.src.hand_control import HandController
-from faive_system.src.hand_control.hand_controller_old import HandControllerOld
+from faive_system.src.hand_control.hand_controller import HandController
 
 class HandControllerNode(Node):
     def __init__(self, debug=False):
@@ -22,7 +22,7 @@ class HandControllerNode(Node):
 
         # self._hc = HandController(port=port, baudrate=baudrate)
 
-        self._hc = HandControllerOld(port=port)
+        self._hc = HandController(port=port)
         # self.get_logger().info("Hand Controller Before INIT =========================")
 
         self._hc.init_joints(calibrate=False)
