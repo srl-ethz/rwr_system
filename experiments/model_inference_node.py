@@ -69,40 +69,35 @@ class PolicyPlayerAgent(Node):
         ]
         
         self.bridge = CvBridge()
-
+        self.current_wrist_state = None
+        self.current_hand_state = None
 
         self.policy = get_policy_from_ckpt(self.policy_ckpt_path)
         self.policy.reset_policy()
         self.policy_run = self.create_timer(0.05, self.run_policy_cb) # 20hz
-        
-        
 
-    def publish(self, hand_policy: np.ndarray, wrist_policy: np.ndarray):
+    def publish(self, wrist_policy: np.ndarray, hand_policy: np.ndarray):
         # publish hand policy
         hand_msg = numpy_to_float32_multiarray(hand_policy)
         self.hand_pub.publish(hand_msg)
 
         # publish wrist policy
         wrist_msg = PoseStamped()
-        wrist_msg.pose.position.x, wrist_msg.pose.position.y, wrist_msg.pose.position.z = wrist_policy[:3]
-        wrist_policy_quat = R.from_euler(
-            "xyz", wrist_policy[-3:], degrees=False
-        ).as_quat()
+        wrist_msg.pose.position.x, wrist_msg.pose.position.y, wrist_msg.pose.position.z = wrist_policy[:3].astype(np.float64)
         (   wrist_msg.pose.orientation.x,
             wrist_msg.pose.orientation.y,
             wrist_msg.pose.orientation.z,
             wrist_msg.pose.orientation.w,
-        ) = wrist_policy_quat
+        ) = wrist_policy[3:].astype(np.float64)
         wrist_msg.header.stamp = self.get_clock().now().to_msg()   
-        wrist_msg.header.frame_id = "world" 
+        wrist_msg.header.frame_id = "panda_link0" 
         self.arm_publisher.publish(wrist_msg)
     
     def arm_pose_callback(self, msg: PoseStamped):
         current_wrist_state_msg = msg.pose
         position = [current_wrist_state_msg.position.x, current_wrist_state_msg.position.y, current_wrist_state_msg.position.z]
         quaternion = [current_wrist_state_msg.orientation.x, current_wrist_state_msg.orientation.y, current_wrist_state_msg.orientation.z, current_wrist_state_msg.orientation.w]
-        rotation = R.from_quat(quaternion).as_euler("xyz", degrees=False)
-        self.current_wrist_state = np.concatenate([position, rotation])
+        self.current_wrist_state = np.concatenate([position, quaternion])
     
     def hand_callback(self, msg: Float32MultiArray):
         self.current_hand_state = float32_multiarray_to_numpy(msg)
@@ -124,10 +119,14 @@ class PolicyPlayerAgent(Node):
         with self.lock:
             wrist_pose = self.current_wrist_state
             hand_state = self.current_hand_state
+        if wrist_pose is None or hand_state is None:
+            return False, obs_dict
         
         qpos = np.concatenate(
             [wrist_pose, hand_state.flatten()]
         )
+        obs_dict.update(images)
+        obs_dict['qpos'] = qpos
         return get_data_success, obs_dict
     
     def run_policy_cb(self):
@@ -139,9 +138,9 @@ class PolicyPlayerAgent(Node):
             return
         with torch.inference_mode():
             obs_dict = {k: torch.tensor(v).float().unsqueeze(0) for k, v in obs_dict.items()} # add batch dimension
-            action = self.policy.predict_action(obs_dict)
-            wrist_action = action[0, :7].cpu().numpy()
-            hand_action = action[0, 7:].cpu().numpy()
+            action = self.policy.predict_action(obs_dict).cpu().numpy()
+            wrist_action = action[0, :7]
+            hand_action = action[0, 7:]
         self.publish(wrist_action, hand_action)
 
 def main(args=None):
