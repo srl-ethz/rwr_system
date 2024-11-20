@@ -58,9 +58,6 @@ class HandController:
 
         self.joints_rom_list = self.get_joints_rom_list()
 
-        print("=====================================")
-        print(f"Joint ROMs: {self.joints_rom_list}")
-        print("=====================================")
         # initialize the joint
         self.init_joints(calibrate=calibration, maxCurrent=maxCurrent)
 
@@ -368,7 +365,7 @@ class HandController:
     #     return
 
 if __name__ == "__main__" :
-    gc = HandControllerOld("/dev/ttyUSB0")
+    gc = HandController("/dev/ttyUSB0")
     gc.connect_to_dynamixels()
 
     gc.init_joints(calibrate=False)
