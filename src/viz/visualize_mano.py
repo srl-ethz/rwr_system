@@ -6,10 +6,13 @@ import numpy as np
 
 
 class ManoHandVisualizer:
-    def __init__(self, marker_publisher):
+    def __init__(self, marker_publisher, model):
         self.marker_publisher = marker_publisher
         self.markers = []
-        self.frame_id = "world"
+        if model == "biomimic":
+            self.frame_id = "world"
+        else:
+            self.frame_id = "hand_root"
 
     def reset_markers(self):
         self.markers = []

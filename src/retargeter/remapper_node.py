@@ -31,8 +31,8 @@ class RemapperNode(Node):
             9: 4, #index_mcp_angle
             10: 5, #index_pip_angle
             11: 3, #index_abd_angle
-            12: 1, #thumb_palm_angle
-            13: 0, #thumb_adb_angle
+            12: 0, #thumb_palm_angle
+            13: 1, #thumb_adb_angle
             14: 2, #thumb_mcp_angle (pip?)
         }
         self.num_joints = 15

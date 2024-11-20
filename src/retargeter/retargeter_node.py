@@ -48,7 +48,7 @@ class RetargeterNode(Node):
         self.debug = debug
         if self.debug:
             self.rviz_pub = self.create_publisher(MarkerArray, 'retarget/normalized_mano_points', 10)
-            self.mano_hand_visualizer = ManoHandVisualizer(self.rviz_pub)
+            self.mano_hand_visualizer = ManoHandVisualizer(self.rviz_pub, hand_scheme)
 
 
         self.timer = self.create_timer(0.005, self.timer_publish_cb)

@@ -125,6 +125,7 @@ class Retargeter:
         self.root = torch.zeros(1, 3).to(self.device)
 
         self.loss_coeffs = torch.tensor([5.0, 5.0, 5.0, 5.0, 5.0]).to(self.device)
+        # TODO: Update loss_coeffs
 
         if use_scalar_distance_palm:
             self.use_scalar_distance = [False, True, True, True, True]
@@ -200,10 +201,6 @@ class Retargeter:
                 chain_transform1[base].transform_points(self.root),
                 chain_transform1[base].transform_points(self.root),
             )
-            print("Base frame {base} ___ to palm (open)",
-                chain_transform1[base].transform_points(self.root),
-                chain_transform2[base].transform_points(self.root),
-                f"Base frame {base} ___ to palm")
             assert torch.allclose(
                 chain_transform1[base].transform_points(self.root),
                 chain_transform2[base].transform_points(self.root),
