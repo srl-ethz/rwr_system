@@ -63,9 +63,9 @@ FINGER_TO_BASE = {
 
 GC_LIMITS_LOWER = np.array(
     [
-        -80.0,  # root2thumb_base
+        0.0,  # root2thumb_base
         -45.0,  # thumb_base2pp
-        -55.0,  # thumb_pp2mp_virt
+        -90.0,  # thumb_pp2mp_virt
         -30.0,  # index_base2abd_virt
         0.0,  # index_adb2pp_virt
         0.0,  # index_pp2mp_virt
@@ -82,7 +82,7 @@ GC_LIMITS_LOWER = np.array(
 )
 GC_LIMITS_UPPER = np.array(
     [
-        0.0,  # root2thumb_base
+        70.0,  # root2thumb_base
         45.0,  # thumb_base2pp
         0.0,  # thumb_pp2mp_virt
         30.0,  # index_base2adb_virt
