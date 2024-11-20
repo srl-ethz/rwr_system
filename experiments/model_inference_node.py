@@ -117,16 +117,15 @@ class PolicyPlayerAgent(Node):
         }
 
         with self.lock:
-            wrist_pose = self.current_wrist_state
-            hand_state = self.current_hand_state
-        if wrist_pose is None or hand_state is None:
+            qpos_franka = self.current_wrist_state
+            qpos_hand = self.current_hand_state
+        if qpos_franka is None or qpos_hand is None:
             return False, obs_dict
         
-        qpos = np.concatenate(
-            [wrist_pose, hand_state.flatten()]
-        )
+        
         obs_dict.update(images)
-        obs_dict['qpos'] = qpos
+        obs_dict['qpos_franka'] = qpos_franka
+        obs_dict['qpos_hand'] = qpos_hand
         return get_data_success, obs_dict
     
     def run_policy_cb(self):
