@@ -31,7 +31,7 @@ class HandControllerNode(Node):
         )
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
-        self._hc.command_joint_angles(joint_angles_deg)
+        self._hc.write_desired_motor_pos(joint_angles_deg)
 
 
 def main(args=None):

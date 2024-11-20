@@ -96,7 +96,7 @@ class OakDPublisher(Node):
                     self.camera_dict[camera_name]["rgb_output_pub"].publish(
                         output_img_rgb
                     )
-                    print(f"Published image for {camera_name}")
+                    # print(f"Published image for {camera_name}")
                 except CvBridgeError as e:
                     self.get_logger().error(f"Error publishing color image: {e}")
 
