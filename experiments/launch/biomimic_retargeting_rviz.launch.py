@@ -45,7 +45,7 @@ def generate_launch_description():
                     #     "retarget/urdf_filepath": os.path.join(
                     #         get_package_share_directory("viz"),
                     #         "models",
-                    #         "biomimic_hand",
+                    #         "biomimic_hand_v3",
                     #         "urdf",
                     #         "biomimic_hand.urdf",
                     #     )
@@ -54,15 +54,6 @@ def generate_launch_description():
                     {"debug": True},
                 ],
             ),
-
-            # PLOTTING NODE
-            # Node(
-            #     package="retargeter",
-            #     executable="plot_target_joint_angles.py",
-            #     name="plot_joints",
-            #     output="screen",
-            #     emulate_tty=True,
-            # ),
 
             # VISUALIZATION NODE
             Node(
@@ -74,31 +65,13 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "biomimic_hand",
+                            "biomimic_hand_v3",
                             "scheme_biomimic.yaml",
                         )
                     },
                 ],
                 output="screen",
             ),
-
-            # VISUALIZATION NODE (MuJoCo)
-            # Node(
-            #     package="viz",
-            #     executable="mujoco_visualizer_node.py",
-            #     name="mujoco_visualizer",
-            #     parameters=[
-            #         {
-            #             "viz/model_path": os.path.join(
-            #                 get_package_share_directory("viz"),
-            #                 "models",
-            #                 "biomimic_hand_v3",
-            #                 "Biomimic_hand_job.xml",
-            #             )
-            #         }
-            #     ],
-            #     output="screen"
-            # ),
 
             Node(
                 package='robot_state_publisher',
@@ -113,7 +86,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen',
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'biomimic_retarget_config.rviz')],
                 ),
 
         ]

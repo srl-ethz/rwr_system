@@ -1,0 +1,402 @@
+Links:
+  All Links Enabled: true
+  Expand Joint Details: false
+  Expand Link Details: false
+  Expand Tree: false
+  Link Tree Style: Links in Alphabetic Order
+  index_abduct_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_abduct_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_adb2pp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_adb2pp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_base:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_base2adb_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_base2adb_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_dp_adapter:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_dp_adapter2index_fingertip_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_dp_adapter_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_fingertip:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_mp2dp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_mp2dp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_mp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_mp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_pp2mp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_pp2mp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_pp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  index_pp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_abduct_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_abduct_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_adb2pp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_adb2pp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_base:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_base2adb_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_base2adb_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_dp_adapter:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_dp_adapter2middle_fingertip_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_dp_adapter_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_fingertip:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_mp2dp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_mp2dp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_mp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_mp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_pp2mp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_pp2mp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_pp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  middle_pp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  palm:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  palm2index_base_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  palm2middle_base_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  palm2pinky_base_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  palm2ring_base_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_abduct_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_abduct_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_adb2pp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_adb2pp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_base:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_base2adb_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_base2adb_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_dp_adapter:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_dp_adapter2pinky_fingertip_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_dp_adapter_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_fingertip:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_mp2dp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_mp2dp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_mp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_mp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_pp2mp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_pp2mp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_pp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  pinky_pp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_abduct_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_abduct_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_adb2pp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_adb2pp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_base:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_base2adb_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_base2adb_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_dp_adapter:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_dp_adapter2ring_fingertip_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_dp_adapter_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_fingertip:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_mp2dp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_mp2dp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_mp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_mp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_pp2mp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_pp2mp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_pp_link:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  ring_pp_link_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  root:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  root2palm_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  root2thumb_base_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_base:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_base2pp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_dp:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_dp2thumb_fingertip_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_dp_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_fingertip:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_mp:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_mp2dp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_mp2dp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_mp_virt:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_pp:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_pp2mp_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  thumb_pp2mp_virt_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  world:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
+  world2root_fixed_jointbody:
+    Alpha: 1
+    Show Axes: false
+    Show Trail: false
