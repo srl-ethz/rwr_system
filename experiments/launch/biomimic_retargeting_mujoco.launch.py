@@ -38,7 +38,7 @@ def generate_launch_description():
                             get_package_share_directory("viz"),
                             "models",
                             "biomimic_hand_v3",
-                            "Biomimc_hand_job.xml",
+                            "Biomimic_hand_job.xml",
                         )
                     },
                     # {
@@ -58,19 +58,19 @@ def generate_launch_description():
             # REMAPPER NODE
             # Node(
             #     package="retargeter",
-            #     executable="remapper_node",
+            #     executable="remapper_node.py",
             #     name="remapper",
             #     output="screen"
             # ),
 
             # PLOTTING NODE
-            Node(
-                package="retargeter",
-                executable="plot_target_joint_angles.py",
-                name="plot_joints",
-                output="screen",
-                emulate_tty=True,
-            ),
+            # Node(
+            #     package="retargeter",
+            #     executable="plot_target_joint_angles.py",
+            #     name="plot_joints",
+            #     output="screen",
+            #     emulate_tty=True,
+            # ),
 
             # VISUALIZATION NODE
             # Node(
