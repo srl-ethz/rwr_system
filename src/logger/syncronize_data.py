@@ -29,6 +29,7 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
     qpos_franka = None
     qpos_hand = None
     actions_franka = None
+    actions_hand = None
     """
     Sample images and interpolate data for synchronization.
     
@@ -123,10 +124,14 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
             
         
             # create observations group
-        output_h5.create_dataset("observations/qpos_franka", data=qpos_franka)
-        output_h5.create_dataset("observations/qpos_hand", data=qpos_hand)
-        output_h5.create_dataset("actions_franka", data=actions_franka)
-        output_h5.create_dataset("actions_hand", data=actions_hand)
+        if qpos_franka is not None:
+            output_h5.create_dataset("observations/qpos_franka", data=qpos_franka)
+        if qpos_hand is not None:
+            output_h5.create_dataset("observations/qpos_hand", data=qpos_hand)
+        if actions_franka is not None:
+            output_h5.create_dataset("actions_franka", data=actions_franka)
+        if actions_hand is not None:
+            output_h5.create_dataset("actions_hand", data=actions_hand)
 
 
 
