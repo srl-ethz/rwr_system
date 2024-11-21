@@ -6,13 +6,15 @@ from torch.nn.functional import normalize
 import os
 import pytorch_kinematics as pk
 from .utils import retarget_utils
-
+from typing import Union
+import yaml
 ######################################################
 #TODO: Implement the Retargeter class for your hand model
 ######################################################
 class Retargeter:
     """
     Please note that the computed joint angles of the rolling joints are only half of the two joints combined.
+    hand_scheme either a string of the yaml path or a dictionary of the hand scheme
     """
 
     def __init__(
@@ -20,7 +22,7 @@ class Retargeter:
         urdf_filepath: str = None,
         mjcf_filepath: str = None,
         sdf_filepath: str = None,
-        hand_scheme: str = "p4",
+        hand_scheme:  Union[str, dict] = None,
         device: str = "cuda",
         lr: float = 2.5,
         use_scalar_distance_palm: bool = False,
@@ -31,24 +33,21 @@ class Retargeter:
             + int(sdf_filepath is not None)
         ) == 1, "Exactly one of urdf_filepath, mjcf_filepath, or sdf_filepath should be provided"
 
-        if hand_scheme == "p1":
-            from .hand_cfgs.p1_cfg import (
-                GC_TENDONS,
-                FINGER_TO_TIP,
-                FINGER_TO_BASE,
-                GC_LIMITS_LOWER,
-                GC_LIMITS_UPPER,
-            )
-        elif hand_scheme == "p4":
-            from .hand_cfgs.p4_cfg import (
-                GC_TENDONS,
-                FINGER_TO_TIP,
-                FINGER_TO_BASE,
-                GC_LIMITS_LOWER,
-                GC_LIMITS_UPPER,
-            )
+
+        if hand_scheme is None:
+            raise ValueError("hand_scheme is required")
+        if isinstance(hand_scheme, dict):
+            pass
+        elif isinstance(hand_scheme, str):
+            with open(hand_scheme, "r") as f:
+                hand_scheme = yaml.safe_load(f)
         else:
-            raise ValueError(f"hand_model {hand_scheme} not supported")
+            raise ValueError("hand_scheme should be a string or dictionary")
+        GC_TENDONS = hand_scheme["gc_tendons"]
+        FINGER_TO_TIP = hand_scheme["finger_to_tip"]
+        FINGER_TO_BASE = hand_scheme["finger_to_base"]
+        GC_LIMITS_LOWER = hand_scheme["gc_limits_lower"]
+        GC_LIMITS_UPPER = hand_scheme["gc_limits_upper"]
 
         self.target_angles = None
 

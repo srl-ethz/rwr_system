@@ -14,4 +14,4 @@ launch:
         - name: "retarget/mjcf_filepath"
           value: "$(find-pkg-share viz)/models/faive_hand_p4/hand_p4.xml"
         - name: "retarget/hand_scheme"
-          value: "p4"
+          value: "$(find-pkg-share viz)/models/faive_hand_p4/scheme_p4.yaml"

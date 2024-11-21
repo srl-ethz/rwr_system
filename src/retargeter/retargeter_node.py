@@ -10,7 +10,7 @@ from faive_system.src.retargeter import Retargeter
 from faive_system.src.common.utils import numpy_to_float32_multiarray
 import os
 from faive_system.src.viz.visualize_mano import ManoHandVisualizer
-
+import time
 class RetargeterNode(Node):
     def __init__(self, debug=False):
         super().__init__("rokoko_node")
@@ -52,12 +52,17 @@ class RetargeterNode(Node):
             
         
         self.timer = self.create_timer(0.005, self.timer_publish_cb)
+        self.keypoint_positions = None
     
     def ingress_mano_cb(self, msg):
         self.keypoint_positions = np.array(msg.data).reshape(-1, 3)
     
         
     def timer_publish_cb(self):
+        if self.keypoint_positions is None:
+            print("No keypoints received yet")
+            time.sleep(1)
+            return
         try:
             if self.debug:
                 self.mano_hand_visualizer.reset_markers()
