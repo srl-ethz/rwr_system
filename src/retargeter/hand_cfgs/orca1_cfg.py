@@ -3,6 +3,7 @@ from typing import Dict
 
 # the information of the tendons in the hand. Each tendon represents a grouped actuation.
 GC_TENDONS = {
+    'tower2root': {},
     'root2thumb_base': {},
     'thumb_base2pp': {},
     'thumb_pp2mp': {},
@@ -43,7 +44,8 @@ FINGER_TO_BASE = {
 
 GC_LIMITS_LOWER = np.array(
     [
-        -57.0,  # root2thumb_base
+        0.0,  # tower2root
+        0.0,  # root2thumb_base
         0.0,  # thumb_base2pp
         0.0,  # thumb_pp2mp
         0.0,  # thumb_mp2dp
@@ -63,6 +65,7 @@ GC_LIMITS_LOWER = np.array(
 )
 GC_LIMITS_UPPER = np.array(
     [
+        90.0,  # tower2root
         40.1,  # root2thumb_base
         179.9,  # thumb_base2pp
         85.9,  # thumb_pp2mp
