@@ -206,3 +206,19 @@ def numpy_to_float32_multiarray(np_array):
     msg.layout = layout
 
     return msg
+
+
+def float32_multiarray_to_numpy(msg):
+    """
+    Converts a ROS2 Float32MultiArray message to a NumPy array using its layout information.
+
+    :param msg: Float32MultiArray message
+    :return: NumPy array reconstructed from the Float32MultiArray message
+    """
+    # Extract the shape of the array from the layout dimensions
+    shape = [dim.size for dim in msg.layout.dim]
+
+    # Convert the flattened data back to a NumPy array and reshape it
+    np_array = np.array(msg.data, dtype=np.float32).reshape(shape)
+
+    return np_array

@@ -19,7 +19,7 @@ class RetargeterNode(Node):
         self.declare_parameter("retarget/mjcf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/urdf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/hand_scheme", rclpy.Parameter.Type.STRING)
-        self.declare_parameter("debug", rclpy.Parameter.Type.BOOL)
+        self.declare_parameter("debug", True)
 
         try:
             mjcf_filepath = self.get_parameter("retarget/mjcf_filepath").value
