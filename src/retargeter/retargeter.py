@@ -323,6 +323,12 @@ class Retargeter:
         normalized_joint_pos, mano_center_and_rot = (
             retarget_utils.normalize_points_to_hands_local(joints)
         )
+        
+        # TODO: Make the thumb rotate even more!
+        normalized_joint_pos = (
+            retarget_utils.correct_rokoko_offset(normalized_joint_pos, 
+                                                 offset_angle=15, scaling_factor=2)
+        )
         # rotate joints about z xis 15 degrees
         # (model_joint_pos - model_center) @ model_rotation = normalized_joint_pos
         debug_dict["mano_center_and_rot"] = mano_center_and_rot

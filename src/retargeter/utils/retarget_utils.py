@@ -123,6 +123,41 @@ def rotation_matrix_x(angle):
     )
     return rot_mat
 
+def correct_rokoko_offset(joint_pos, offset_angle, scaling_factor=2):
+    """
+    Param: joint_pos, a numpy array of 3
+    Param: offset_angle, the angle by which the rokoko hand is offset about z in degrees
+    Param: scaling_factor, which is added at each outer_going joint. This is because the rotation for
+    some reason generates kinked lines. This factor accounts for that.
+    The PIP joint Dip joint gets rotated by offset_angle + scaling_factor and the 
+    enf-of-finger joint gets rotated by offset_angle + 2*scaling_factor
+    
+    Corrects the offset of the rokoko hand by rotating the 3 
+    upmost positions of the hand around the z-axis by the offset_angle
+    """
+    
+    joint_dict = get_mano_joints_dict(joint_pos, include_wrist=True)
+    
+    # Special offset, see the description above
+    R1 = rotation_matrix_z(np.deg2rad(-offset_angle))
+    R2 = rotation_matrix_z(np.deg2rad(-offset_angle - scaling_factor))
+    R3 = rotation_matrix_z(np.deg2rad(-offset_angle - 2*scaling_factor))
+    
+    R = [R1, R2, R3]
+    
+    # Rotate the last 3 joints of the specified fingers
+    for finger in ["pinky", "ring", "middle", "index", "thumb"]:
+        for i in range(-3, 0):
+            joint_dict[finger][i] = np.dot(R[i], joint_dict[finger][i])
+            
+    # Update the joint positions in the original array
+    joint_pos[5:9, :] = joint_dict["index"]
+    joint_pos[9:13, :] = joint_dict["middle"]
+    joint_pos[13:17, :] = joint_dict["ring"]
+    joint_pos[17:21, :] = joint_dict["pinky"]
+    joint_pos[1:5, :] = joint_dict["thumb"]
+    
+    return joint_pos
 
 def get_hand_center_and_rotation(
     thumb_base, index_base, middle_base, ring_base, pinky_base, wrist=None
