@@ -8,13 +8,19 @@ import pytorch_kinematics as pk
 from .utils import retarget_utils
 from typing import Union
 import yaml
-######################################################
-#TODO: Implement the Retargeter class for your hand model
-######################################################
+from scipy.spatial.transform import Rotation
+
+
 class Retargeter:
     """
     Please note that the computed joint angles of the rolling joints are only half of the two joints combined.
     hand_scheme either a string of the yaml path or a dictionary of the hand scheme
+    mano_adjustments is a dictionary of the adjustments to the mano joints.
+        keys: "thumb", "index", "middle", "ring", "pinky"
+        value is a dictionary with the following keys:
+            translation: (3,) translation vector in palm frame
+            rotation: (3) x,y,z angles in palm frame, around the finger base
+            scale: (3,) scale factors in finger_base frame
     """
 
     def __init__(
@@ -23,6 +29,7 @@ class Retargeter:
         mjcf_filepath: str = None,
         sdf_filepath: str = None,
         hand_scheme:  Union[str, dict] = None,
+        mano_adjustments: Union[str, dict] = None,
         device: str = "cuda",
         lr: float = 2.5,
         use_scalar_distance_palm: bool = False,
@@ -48,6 +55,14 @@ class Retargeter:
         FINGER_TO_BASE = hand_scheme["finger_to_base"]
         GC_LIMITS_LOWER = hand_scheme["gc_limits_lower"]
         GC_LIMITS_UPPER = hand_scheme["gc_limits_upper"]
+
+        if mano_adjustments is None:
+            self.mano_adjustments = {}
+        elif isinstance(mano_adjustments, dict):
+            pass
+        elif isinstance(mano_adjustments, str):
+            with open(mano_adjustments, "r") as f:
+                self.mano_adjustments = yaml.safe_load(f)
 
         self.target_angles = None
 
@@ -308,10 +323,76 @@ class Retargeter:
 
         return finger_joint_angles
 
+
+    def adjust_mano_fingers(self, joints):
+
+
+        # Assuming mano_adjustments is accessible within the class
+        mano_adjustments = self.mano_adjustments
+
+        # Get the joints per finger
+        joints_dict = retarget_utils.get_mano_joints_dict(
+            joints, include_wrist=True, batch_processing=False
+        )
+
+        # Initialize adjusted joints dictionary
+        adjusted_joints_dict = {}
+
+        # Process each finger
+        for finger in ["thumb", "index", "middle", "ring", "pinky"]:
+            # Original joints for the finger
+            finger_joints = joints_dict[finger]  # Shape: (n_joints, 3)
+
+            if  mano_adjustments.get(finger) is None:
+                adjusted_joints_dict[finger] = finger_joints
+                continue
+            # Adjustments for the finger
+            adjustments = mano_adjustments[finger]
+            translation = adjustments.get("translation", np.zeros(3))  # (3,)
+            rotation_angles = adjustments.get("rotation", np.zeros(3))  # (3,)
+            scale = adjustments.get("scale", np.ones(3))  # (3,)
+
+            # Scaling in the finger base frame
+            x_base = finger_joints[0]  # Base joint position (3,)
+            x_local = finger_joints - x_base  # Local coordinates (n_joints, 3)
+            x_local_scaled = x_local * scale  # Apply scaling
+
+            # Rotation around base joint in palm frame
+            rot = Rotation.from_euler("xyz", rotation_angles, degrees=False)
+            R_matrix = rot.as_matrix()  # Rotation matrix (3,3)
+            x_local_rotated = x_local_scaled @ R_matrix.T  # Apply rotation
+            finger_joints_rotated = x_base + x_local_rotated  # Rotated positions
+
+            # Translation in palm frame
+            finger_joints_adjusted = finger_joints_rotated + translation  # Adjusted positions
+
+            # Store adjusted joints
+            adjusted_joints_dict[finger] = finger_joints_adjusted
+
+        # Keep the wrist as is
+        adjusted_joints_dict["wrist"] = joints_dict["wrist"]
+
+        # Concatenate adjusted joints
+        joints = np.concatenate(
+            [
+                adjusted_joints_dict["wrist"].reshape(1, -1),
+                adjusted_joints_dict["thumb"],
+                adjusted_joints_dict["index"],
+                adjusted_joints_dict["middle"],
+                adjusted_joints_dict["ring"],
+                adjusted_joints_dict["pinky"],
+            ],
+            axis=0,
+        )
+
+        return joints
+
+
     def retarget(self, joints, debug_dict=None):
         normalized_joint_pos, mano_center_and_rot = (
             retarget_utils.normalize_points_to_hands_local(joints)
         )
+        normalized_joint_pos = self.adjust_mano_fingers(normalized_joint_pos)
         # (model_joint_pos - model_center) @ model_rotation = normalized_joint_pos
         debug_dict["mano_center_and_rot"] = mano_center_and_rot
         debug_dict["model_center_and_rot"] = (self.model_center, self.model_rotation)

@@ -58,7 +58,12 @@ def generate_launch_description():
                             "models",
                             "faive_hand_p4",
                             "scheme_p4.yaml",
-                        )
+                        ),
+                        "retarget/mano_adjustments": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_adjustment.yaml"
+                        ),
                     },
                     {"debug": True},
                 ],
