@@ -95,6 +95,11 @@ class Retargeter:
             )
         os.chdir(prev_cwd)
 
+        ## This part builds the `joint_map` (n_joints, n_tendons) which is jacobian matrix.
+        ## each tendon is a group of coupled joints that are driven by a single motor
+        ## The rolling contact joints are modeled as a pair of joint and virtual joint
+        ## The virtual joints are identified by the suffix "_virt"
+        ## So, the output of the virtual joint will be the sum of the joint and its virtual counterpart, i.e. twice 
         joint_parameter_names = self.chain.get_joint_parameter_names()
         gc_tendons = GC_TENDONS
         self.n_joints = self.chain.n_joints
@@ -106,7 +111,7 @@ class Retargeter:
         self.tendon_names = []
         joint_names_check = []
         for i, (name, tendons) in enumerate(gc_tendons.items()):
-            virtual_joint_weight = 0.5 if "virt" in name else 1.0
+            virtual_joint_weight = 0.5 if name.endswith("_virt") else 1.0
             self.joint_map[joint_parameter_names.index(name), i] = virtual_joint_weight
             self.tendon_names.append(name)
             joint_names_check.append(name)
