@@ -30,37 +30,37 @@ finger_to_base:
   pinky: pinky_um_virt
 
 gc_limits_lower : [
-  0.0,  # root2thumb_base
-  -95.0,  # thumb_base2pp
-  0.0,  # thumb_pp2mp_virt
-  -30.0,  # index_abd_virt
-  0.0,  # root2index_pp_virt
-  0.0,  # index_pp2mp_virt
-  -30.0,  # middle_abd_virt
-  0.0,  # root2middle_pp_virt
-  0.0,  # middle_pp2mp_virt
-  -30.0,  # ring_abd_virt
-  0.0,  # root2ring_pp_virt
-  0.0,  # ring_pp2mp_virt
-  -30.0,  # pinky_abd_virt
-  0.0,  # root2pinky_pp_virt
-  0.0,  # pinky_pp2mp_virt
+  0.0,        # root2thumb_base
+  -95.0,      # thumb_base2pp
+  0.0,        # thumb_pp2mp_virt
+  -30.0,      # index_abd_virt
+  0.0,        # root2index_pp_virt
+  0.0,        # index_pp2mp_virt
+  -30.0,      # middle_abd_virt
+  0.0,        # root2middle_pp_virt
+  0.0,        # middle_pp2mp_virt
+  -30.0,      # ring_abd_virt
+  0.0,        # root2ring_pp_virt
+  0.0,        # ring_pp2mp_virt
+  -30.0,      # pinky_abd_virt
+  0.0,        # root2pinky_pp_virt
+  0.0,        # pinky_pp2mp_virt
 ]
 
 gc_limits_upper : [
-  130.0,  # root2thumb_base
-  60.0,  # thumb_base2pp
-  110.0,  # thumb_pp2mp_virt
-  30.0,  # index_abd_virt
-  95.0,  # root2index_pp_virt
-  110.0,  # index_pp2mp_virt
-  30.0,  # middle_abd_virt
-  95.0,  # root2middle_pp_virt
-  110.0,  # middle_pp2mp_virt
-  30.0,  # ring_abd_virt
-  95.0,  # root2ring_pp_virt
-  110.0,  # ring_pp2mp_virt
-  30.0,  # pinky_abd_virt
-  95.0,  # root2pinky_pp_virt
-  110.0,  # pinky_pp2mp_virt
+  130.0,      # root2thumb_base
+  60.0,       # thumb_base2pp
+  110.0,      # thumb_pp2mp_virt
+  30.0,       # index_abd_virt
+  95.0,       # root2index_pp_virt
+  110.0,      # index_pp2mp_virt
+  30.0,       # middle_abd_virt
+  95.0,       # root2middle_pp_virt
+  110.0,      # middle_pp2mp_virt
+  30.0,       # ring_abd_virt
+  95.0,       # root2ring_pp_virt
+  110.0,      # ring_pp2mp_virt
+  30.0,       # pinky_abd_virt
+  95.0,       # root2pinky_pp_virt
+  110.0,      # pinky_pp2mp_virt
 ]
