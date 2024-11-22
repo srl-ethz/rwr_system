@@ -4,7 +4,7 @@ import h5py
 from pathlib import Path
 import rosbag2_py
 from rclpy.serialization import deserialize_message
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge  
@@ -37,7 +37,7 @@ def convert_to_h5(input_bag_path: str, output_h5_path: str):
             # Get the message type based on the topic
             msg_type_str = topic_type_map[topic_name]
             print(f"Processing message for topic '{topic_name}' with type '{msg_type_str}'")
-            msg_class = Image if msg_type_str == 'Image' else PoseStamped if msg_type_str == 'PoseStamped' else Float32MultiArray if msg_type_str == 'Float32MultiArray' else None
+            msg_class = Image if msg_type_str == 'Image' else PoseStamped if msg_type_str == 'PoseStamped' else Float32MultiArray if msg_type_str == 'Float32MultiArray' else String if msg_type_str == 'String' else None
 
             if msg_class is None:
                 print(f"Unsupported message type for topic '{topic_name}': {msg_type_str}")
@@ -69,6 +69,11 @@ def convert_to_h5(input_bag_path: str, output_h5_path: str):
                 msg_shape = (msg.height, msg.width, msg.step)
                 cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
                 h5_file[topic_name].create_dataset(f"{timestamp}", data=cv_image)
+            
+            elif isinstance(msg, String):
+                # For String, save the string data
+                h5_file[topic_name].create_dataset("description", data=msg.data)
+                
 
             else:
                 print(f"Message type for topic '{topic_name}' not supported for conversion.")

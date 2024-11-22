@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": True, "side_view": True, "wrist_view": True}
+cameras = {"front_view": True, "side_view": True, "wrist_view": False}
 
 
 def generate_launch_description():
@@ -16,7 +16,7 @@ def generate_launch_description():
                 package="ingress",
                 executable="oakd_node.py",
                 name="oakd_node",
-                output="log",
+                output="screen",
                 parameters=[
                     {"enable_front_camera": cameras["front_view"]},
                     {"enable_side_camera": cameras["side_view"]},
@@ -44,22 +44,34 @@ def generate_launch_description():
                 output="screen"
             ),
             
+
             # RETARGET NODE
             Node(
                 package="retargeter",
                 executable="retargeter_node.py",
                 name="retargeter_node",
                 output="log",
+                # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
+                    # {
+                    #     "retarget/mjcf_filepath": os.path.join(
+                    #         get_package_share_directory("viz"),
+                    #         "models",
+                    #         "faive_hand_p4",
+                    #         "hand_p4.xml",
+                    #     )
+                    # },
                     {
-                        "retarget/mjcf_filepath": os.path.join(
+                        "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
                             "faive_hand_p4",
-                            "hand_p4.xml",
+                            "urdf",
+                            "p4.urdf",
                         )
                     },
                     {"retarget/hand_scheme": "p4"},
+                    {"debug": True},
                 ],
             ),
             
