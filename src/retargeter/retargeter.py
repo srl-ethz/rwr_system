@@ -55,6 +55,7 @@ class Retargeter:
         FINGER_TO_BASE = hand_scheme["finger_to_base"]
         GC_LIMITS_LOWER = hand_scheme["gc_limits_lower"]
         GC_LIMITS_UPPER = hand_scheme["gc_limits_upper"]
+        self.wrist_name = hand_scheme["wrist_name"]
 
         if mano_adjustments is None:
             self.mano_adjustments = {}
@@ -167,7 +168,7 @@ class Retargeter:
                 .transform_points(self.root)
                 .cpu()
                 .numpy(),
-                wrist=_chain_transforms["palm"]
+                wrist=_chain_transforms[self.wrist_name]
                 .transform_points(self.root)
                 .cpu()
                 .numpy(),
@@ -236,7 +237,7 @@ class Retargeter:
         17-20: pinky
         """
 
-        print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
+        # print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
 
         start_time = time.time()
         if not warm:
