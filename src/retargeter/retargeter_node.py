@@ -10,6 +10,7 @@ from faive_system.src.retargeter import Retargeter
 from faive_system.src.common.utils import numpy_to_float32_multiarray
 import os
 from faive_system.src.viz.visualize_mano import ManoHandVisualizer
+import time
 
 class RetargeterNode(Node):
     def __init__(self, debug=False):
@@ -19,6 +20,7 @@ class RetargeterNode(Node):
         self.declare_parameter("retarget/mjcf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/urdf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/hand_scheme", rclpy.Parameter.Type.STRING)
+        self.declare_parameter("retarget/mano_adjustments", "")
         self.declare_parameter("debug", True)
 
         try:
@@ -31,6 +33,10 @@ class RetargeterNode(Node):
         except:
             urdf_filepath = None
         hand_scheme = self.get_parameter("retarget/hand_scheme").value
+        # mano_adjustments's default value is None
+        mano_adjustments = self.get_parameter("retarget/mano_adjustments").value
+        if mano_adjustments == "":
+            mano_adjustments = None
         debug = self.get_parameter("debug").value
         
         # subscribe to ingress topics
@@ -39,7 +45,8 @@ class RetargeterNode(Node):
         )
         
         self.retargeter = Retargeter(
-            device="cuda",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
+            device="cuda",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, 
+            hand_scheme=hand_scheme, mano_adjustments=mano_adjustments
         )
         
         self.joints_pub = self.create_publisher(
@@ -52,12 +59,17 @@ class RetargeterNode(Node):
             
         
         self.timer = self.create_timer(0.005, self.timer_publish_cb)
+        self.keypoint_positions = None
     
     def ingress_mano_cb(self, msg):
         self.keypoint_positions = np.array(msg.data).reshape(-1, 3)
     
         
     def timer_publish_cb(self):
+        if self.keypoint_positions is None:
+            print("No keypoints received yet")
+            time.sleep(1)
+            return
         try:
             if self.debug:
                 self.mano_hand_visualizer.reset_markers()

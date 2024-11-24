@@ -40,8 +40,8 @@ class RokokoNode(Node):
         key_points = self.tracker.get_keypoint_positions()
         wait_cnt = 1
         while (key_points is None):
-            if (wait_cnt % 10):
-                print("waiting for hand tracker")
+            if (not (wait_cnt % 100000)):
+                print("waiting for hand tracker", wait_cnt//100000)
             wait_cnt+=1
             key_points = self.tracker.get_keypoint_positions()
         keypoint_positions, timestamp = key_points

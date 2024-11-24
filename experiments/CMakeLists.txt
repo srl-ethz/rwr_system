@@ -44,5 +44,10 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY
+  cfgs
+  DESTINATION share/${PROJECT_NAME}
+)
+
 
 ament_package()
