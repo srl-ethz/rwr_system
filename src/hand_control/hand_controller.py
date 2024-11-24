@@ -32,6 +32,11 @@ class HandController:
         """
         config_yml: path to the config file, relative to this source file
         """
+
+        print("================Setting Current to 60 (low) for Safety================")
+        maxCurrent = 150
+
+
         baudrate = 3000000
 
         self.motor_lock = RLock() # lock to read / write motor information
@@ -54,6 +59,7 @@ class HandController:
             "middle": slice(7, 10), # 7, 8, 9 [ABD,MCP,PIP]
             "ring": slice(10, 13), # 10, 11, 12 [ABD,MCP,PIP]
             "pinky": slice(13, 16), # 13, 14, 15 [ABD,MCP,PIP]   
+            "wrist": slice(16, 17), # 0, 1, 2 [ABD, MCP, PIP]
         }
 
         self.joints_rom_list = self.get_joints_rom_list()
@@ -216,9 +222,14 @@ class HandController:
         tendon_id_ranges_dict = self.get_tendon_id_ranges()
         for muscle_group in self.muscle_groups:
             t_s, t_e = tendon_id_ranges_dict[muscle_group.name]
-
+                
             # Maybe if statement for wrist
             joint_angles_of_muscle_group = self.get_joint_angles_for_joint(joint_angles, muscle_group.name)
+            
+            if muscle_group.name == "wrist":
+                # tendon_lengths[t_s:t_e+1] = fk.pose2wrist(*joint_angles_of_muscle_group)
+                continue
+            
             tendon_lengths[t_s:t_e+1] = fk.pose2tendon_length(muscle_group.name, *joint_angles_of_muscle_group)
 
         return self.tendon_pos2motor_pos(tendon_lengths)
@@ -230,8 +241,8 @@ class HandController:
         """
         tendon_id_ranges = {}
         for muscle_group in self.muscle_groups:
-            start_tendon_id = muscle_group.tendon_ids[0]
-            end_tendon_id = muscle_group.tendon_ids[-1]
+            start_tendon_id = muscle_group.tendon_ids[0]-1
+            end_tendon_id = muscle_group.tendon_ids[-1]-1
             tendon_id_ranges[muscle_group.name] = (start_tendon_id, end_tendon_id)
         return tendon_id_ranges
 
@@ -289,10 +300,22 @@ class HandController:
         """
         Command joint angles in deg
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
+
         """
-        print(f"Joint angles: {joint_angles}")
+
+        # print(f"Thumb Joint Before: {joint_angles[0:4]}")
+
+
+        joint_angles = np.append(joint_angles,0) # Add wrist angle
+
+        # joint_angles[1] = joint_angles[1]-35
+        
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
-        print(f"Clipped joint angles: {joint_angles_clipped}")
+
+        joint_angles_clipped = joint_angles_clipped
+        
+        
+        # print(f"Thumb Joint After: {joint_angles_clipped[0:4]}")
         motor_pos_des = self.pose2motors(np.deg2rad(joint_angles_clipped)) - self.motor_pos_norm + self.motor_id2init_pos
         self.write_desired_motor_pos(motor_pos_des)
         time.sleep(0.01) # wait for the command to be sent

@@ -4,7 +4,6 @@ from rclpy.node import Node
 import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 import os
-from faive_system.src.hand_control import HandController
 from faive_system.src.hand_control.hand_controller import HandController
 
 class HandControllerNode(Node):
@@ -32,10 +31,11 @@ class HandControllerNode(Node):
         )
 
     def joint_angle_cb(self, msg):
-        assert len(msg.data) == 16, "Expected 16 joint angles, got {}".format(
+        assert len(msg.data) == 16, "Expected 17 joint angles, got {}".format(
             len(msg.data)
         )
         joint_angles = np.array(msg.data)
+        print(f"Node thumb angles: {joint_angles[0:4]}")
         joint_angles_deg = joint_angles * 180 / np.pi
         # self._hc.command_joint_angles(joint_angles_deg)
 

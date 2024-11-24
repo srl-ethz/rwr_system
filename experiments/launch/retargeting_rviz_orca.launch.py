@@ -19,23 +19,23 @@ def generate_launch_description():
     return LaunchDescription(
         [
             
-            Node(
-                package="ingress",
-                executable="mediapipe_node.py",
-                name="mediapipe_node",
-                output="log",
-            ),
             # Node(
             #     package="ingress",
-            #     executable="rokoko_node.py",
-            #     name="rokoko_node",
+            #     executable="mediapipe_node.py",
+            #     name="mediapipe_node",
             #     output="log",
-            #     parameters=[
-            #         {"rokoko_tracker/ip": "0.0.0.0"},
-            #         {"rokoko_tracker/port": 14043},
-            #         {"rokoko_tracker/use_coil": True}
-            #     ],
             # ),
+            Node(
+                package="ingress",
+                executable="rokoko_node.py",
+                name="rokoko_node",
+                output="log",
+                parameters=[
+                    {"rokoko_tracker/ip": "0.0.0.0"},
+                    {"rokoko_tracker/port": 14043},
+                    {"rokoko_tracker/use_coil": True}
+                ],
+            ),
 
             # HAND CONTROLLER NODE
             Node(

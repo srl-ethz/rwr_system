@@ -16,7 +16,6 @@ class VisualizeJointsNode(Node):
         self.publisher_ = self.create_publisher(JointState, "/joint_states", 10)
         self.get_logger().info('Subscribing to "/hand/policy_output"')
         self.get_logger().info('Publishing to "/joint_states"')
-        
         self.declare_parameter('scheme_path', "")
         scheme_path = self.get_parameter("scheme_path").value
         print(f"Reading hand scheme from {scheme_path}")
@@ -51,6 +50,7 @@ class VisualizeJointsNode(Node):
         
         self.js_msg.header.stamp = self.get_clock().now().to_msg()
         joint_states = self.policy_output2urdf_joint_states(msg.data)
+        print(f"Publishing joint states: {joint_states[:4]}")
         self.js_msg.position = joint_states
         self.publisher_.publish(self.js_msg)
         # self.get_logger().info('Publishing joint states: "%s"' % self.js_msg)
