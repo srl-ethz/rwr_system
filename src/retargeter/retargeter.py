@@ -21,6 +21,11 @@ class Retargeter:
             translation: (3,) translation vector in palm frame
             rotation: (3) x,y,z angles in palm frame, around the finger base
             scale: (3,) scale factors in finger_base frame
+    retargeter_cfg is a dictionary of the retargeter algorithm. Including the following options:
+        lr: learning rate
+        use_scalar_distance_palm: whether to use scalar distance for palm
+        loss_coeffs: (5,) loss coefficients for each fingertip
+        joint_regularizers: tuples (joint_name, zero_value, weight) for regularizing joints to zero
     """
 
     def __init__(
@@ -30,9 +35,8 @@ class Retargeter:
         sdf_filepath: str = None,
         hand_scheme:  Union[str, dict] = None,
         mano_adjustments: Union[str, dict] = None,
+        retargeter_cfg: Union[str, dict] = None,
         device: str = "cuda",
-        lr: float = 2.5,
-        use_scalar_distance_palm: bool = False,
     ) -> None:
         assert (
             int(urdf_filepath is not None)
@@ -64,6 +68,24 @@ class Retargeter:
         elif isinstance(mano_adjustments, str):
             with open(mano_adjustments, "r") as f:
                 self.mano_adjustments = yaml.safe_load(f)
+
+        if retargeter_cfg is None:
+            self.retargeter_cfg = {
+                "lr": 2.5,
+                "use_scalar_distance_palm": False,
+                "loss_coeffs": [5.0, 5.0, 5.0, 5.0, 5.0],
+                "joint_regularizers": [],
+            }
+        elif isinstance(retargeter_cfg, dict):
+            self.retargeter_cfg = retargeter_cfg
+        elif isinstance(retargeter_cfg, str):
+            with open(retargeter_cfg, "r") as f:
+                self.retargeter_cfg = yaml.safe_load(f)
+
+        self.lr = self.retargeter_cfg["lr"]
+        self.use_scalar_distance_palm = self.retargeter_cfg["use_scalar_distance_palm"]
+        self.loss_coeffs = torch.tensor(self.retargeter_cfg["loss_coeffs"]).to(device)            
+        self.joint_regularizers = self.retargeter_cfg["joint_regularizers"]
 
         self.target_angles = None
 
@@ -128,15 +150,18 @@ class Retargeter:
         self.gc_joints = torch.ones(self.n_tendons).to(self.device) * 15.0
         self.gc_joints.requires_grad_()
 
-        self.lr = lr
+        self.regularizer_zeros = torch.zeros(self.n_tendons).to(self.device)
+        self.regularizer_weights = torch.zeros(self.n_tendons).to(self.device)
+        for joint_name, zero_value, weight in self.joint_regularizers:
+            self.regularizer_zeros[self.tendon_names.index(joint_name)] = zero_value
+            self.regularizer_weights[self.tendon_names.index(joint_name)] = weight
+
         # self.opt = torch.optim.Adam([self.gc_joints], lr=self.lr)
         self.opt = torch.optim.RMSprop([self.gc_joints], lr=self.lr)
 
         self.root = torch.zeros(1, 3).to(self.device)
 
-        self.loss_coeffs = torch.tensor([5.0, 5.0, 5.0, 5.0, 5.0]).to(self.device)
-
-        if use_scalar_distance_palm:
+        if self.use_scalar_distance_palm:
             self.use_scalar_distance = [False, True, True, True, True]
         else:
             self.use_scalar_distance = [False, False, False, False, False]
@@ -310,6 +335,11 @@ class Retargeter:
                         * (torch.norm(keyvector_mano) - torch.norm(keyvector_faive))
                         ** 2
                     )
+            
+            # Regularize the joints to zero
+            loss += torch.sum(
+                self.regularizer_weights * (self.gc_joints - self.regularizer_zeros) ** 2
+            )
 
             # print(f"step: {step} Loss: {loss}")
             self.scaling_factors_set = True

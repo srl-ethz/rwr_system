@@ -1,0 +1,8 @@
+lr: 2.5
+use_scalar_distance_palm: False
+loss_coeffs: [5.0, 5.0, 5.0, 5.0, 5.0,]
+joint_regularizers:  # tuples (joint_name, zero_value, weight) for regularizing joints to zero
+  - [index_abd_virt, 0,  0.00001]
+  - [middle_abd_virt, 0, 0.00001]
+  - [ring_abd_virt, 0, 0.00001]
+  - [pinky_abd_virt, 0, 0.00001]

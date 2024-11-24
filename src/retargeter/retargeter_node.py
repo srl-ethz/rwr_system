@@ -21,6 +21,7 @@ class RetargeterNode(Node):
         self.declare_parameter("retarget/urdf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/hand_scheme", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/mano_adjustments", "")
+        self.declare_parameter("retarget/retargeter_cfg", "")
         self.declare_parameter("debug", True)
 
         try:
@@ -37,6 +38,11 @@ class RetargeterNode(Node):
         mano_adjustments = self.get_parameter("retarget/mano_adjustments").value
         if mano_adjustments == "":
             mano_adjustments = None
+
+        retargeter_cfg = self.get_parameter("retarget/retargeter_cfg").value
+        if retargeter_cfg == "":
+            retargeter_cfg = None
+
         debug = self.get_parameter("debug").value
         
         # subscribe to ingress topics
@@ -46,7 +52,7 @@ class RetargeterNode(Node):
         
         self.retargeter = Retargeter(
             device="cuda",  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, 
-            hand_scheme=hand_scheme, mano_adjustments=mano_adjustments
+            hand_scheme=hand_scheme, mano_adjustments=mano_adjustments, retargeter_cfg=retargeter_cfg
         )
         
         self.joints_pub = self.create_publisher(

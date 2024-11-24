@@ -64,6 +64,11 @@ def generate_launch_description():
                             "cfgs",
                             "retargeter_adjustment.yaml"
                         ),
+                        "retarget/retargeter_cfg": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_cfgs_p4.yaml"
+                        ),
                     },
                     {"debug": True},
                 ],
