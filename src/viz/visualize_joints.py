@@ -29,7 +29,7 @@ class VisualizeJointsNode(Node):
         self.joint_names = []
         for i, (tendon_name, joints) in enumerate(self.tendons.items()):
             self.joint_names.append(tendon_name)
-            rolling_contact_factor = 0.5 if len(joints)>0 else 1.0
+            rolling_contact_factor = 0.5 if tendon_name.endswith("_virt") else 1.0
             self.jacobian_list.append((i, rolling_contact_factor))
             for joint_name, factor in joints.items():
                 self.joint_names.append(joint_name)
