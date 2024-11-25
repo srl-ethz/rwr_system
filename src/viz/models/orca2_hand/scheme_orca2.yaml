@@ -1,0 +1,75 @@
+gc_tendons:
+  'tower2root': {}
+  'root2thumb_base': {}
+  'thumb_base2pp': {}
+  'thumb_pp2mp': {}
+  'thumb_mp2dp': {}
+  'index_abd': {}
+  'root2index_pp': {}
+  'index_pp2mp': {'index_mp2dp': 0.58333}
+  'middle_abd': {}
+  'root2middle_pp': {}
+  'middle_pp2mp': {'middle_mp2dp': 0.58333}
+  'ring_abd': {}
+  'root2ring_pp': {}
+  'ring_pp2mp': {'ring_mp2dp': 0.58333}
+  'pinky_abd': {}
+  'root2pinky_pp': {}
+  'pinky_pp2mp': {'pinky_mp2dp': 0.58333}
+
+
+finger_to_tip:
+  thumb: thumb_fingertip
+  index: index_fingertip
+  middle: middle_fingertip
+  ring: ring_fingertip
+  pinky: pinky_fingertip
+
+finger_to_base:
+  thumb: thumb_base
+  index: index_um
+  middle: middle_um
+  ring: ring_um
+  pinky: pinky_um
+
+wrist_name: palm
+
+gc_limits_lower : [
+  -80.0,    # tower2root
+  -75.0,  # root2thumb_base
+  -45.0,  # thumb_base2pp
+  -10.0,  # thumb_pp2mp
+  -100.0,  # thumb_mp2dp
+  -25.0,  # index_abd
+  -10.0,  # root2index_pp
+   0.0,  # index_pp2mp
+  -25.0,  # middle_abd
+  -10.0,  # root2middle_pp
+   0.0,  # middle_pp2mp
+  -25.0,  # ring_abd
+  -10.0,  # root2ring_pp
+   0.0,  # ring_pp2mp
+  -25.0,  # pinky_abd
+  -10.0,  # root2pinky_pp
+   0.0,  # pinky_pp2mp
+]
+
+gc_limits_upper : [
+  80.0,  # tower2root
+  75.0,  # root2thumb_base
+  45.0,  # thumb_base2pp
+  90.0,  # thumb_pp2mp
+  0.0,  # thumb_mp2dp
+  35.0,  # index_abd
+  115.0,  # root2index_pp
+  120.0,  # index_pp2mp
+  35.0,  # middle_abd
+  115.0,  # root2middle_pp
+  120.0,  # middle_pp2mp
+  35.0,  # ring_abd
+  115.0,  # root2ring_pp
+  120.0,  # ring_pp2mp
+  35.0,  # pinky_abd
+  115.0,  # root2pinky_pp
+  120.0,  # pinky_pp2mp
+]
