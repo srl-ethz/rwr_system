@@ -26,8 +26,22 @@ def generate_launch_description():
             # ),
 
             
+            # Node(
+            #     package="ingress",
+            #     executable="mediapipe_node.py",
+            #     name="mediapipe_node",
+            #     output="log",
+            # ),
             Node(
                 package="ingress",
+                executable="rokoko_node.py",
+                name="rokoko_node",
+                output="screen",
+                parameters=[
+                    {"rokoko_tracker/ip": "0.0.0.0"},
+                    {"rokoko_tracker/port": 14043},
+                    {"rokoko_tracker/use_coil": False}
+                ],
                 executable="rokoko_node.py",
                 name="rokoko_node",
                 output="log",
@@ -38,6 +52,7 @@ def generate_launch_description():
                 ],
             ),
 
+
             # RETARGET NODE
             Node(
                 package="retargeter",
@@ -46,14 +61,6 @@ def generate_launch_description():
                 output="screen",
                 # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
-                    # {
-                    #     "retarget/mjcf_filepath": os.path.join(
-                    #         get_package_share_directory("viz"),
-                    #         "models",
-                    #         "faive_hand_p4",
-                    #         "hand_p4.xml",
-                    #     )
-                    # },
                     {
                         "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
@@ -61,9 +68,24 @@ def generate_launch_description():
                             "faive_hand_p4",
                             "urdf",
                             "p4.urdf",
-                        )
+                        ),
+                        "retarget/hand_scheme": os.path.join(
+                            get_package_share_directory("viz"),
+                            "models",
+                            "faive_hand_p4",
+                            "scheme_p4.yaml",
+                        ),
+                        "retarget/mano_adjustments": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_adjustment.yaml"
+                        ),
+                        "retarget/retargeter_cfg": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_cfgs_p4.yaml"
+                        ),
                     },
-                    {"retarget/hand_scheme": "p4"},
                     {"debug": True},
                 ],
             ),

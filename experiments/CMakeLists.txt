@@ -32,9 +32,20 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  model_inference_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+
 # install the launch file
 install(DIRECTORY
   launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY
+  cfgs
   DESTINATION share/${PROJECT_NAME}
 )
 

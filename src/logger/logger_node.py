@@ -13,13 +13,30 @@ from datetime import datetime
 
 # Define supported topics and message types
 TOPICS_TYPES = {
+    # FRANKA ROBOT
     "/franka/end_effector_pose": PoseStamped,
     "/franka/end_effector_pose_cmd": PoseStamped,
+    
+    # HAND POLICY OUTPUT
     "/hand/policy_output": Float32MultiArray,
+    
+    # CAMERA IMAGES
     "/oakd_front_view/color": Image,
     "/oakd_side_view/color": Image,
     "/oakd_wrist_view/color": Image,
+    
     "/task_description": String,  # New topic for task description
+    
+    # CAMERA PARAMETERS
+    "/oakd_front_view/intrinsics": Float32MultiArray,
+    "/oakd_side_view/intrinsics": Float32MultiArray,
+    "/oakd_wrist_view/intrinsics": Float32MultiArray,
+    "/oakd_front_view/extrinsics": Float32MultiArray,
+    "/oakd_side_view/extrinsics": Float32MultiArray,
+    "/oakd_wrist_view/extrinsics": Float32MultiArray,
+    "/oakd_front_view/projection": Float32MultiArray,
+    "/oakd_side_view/projection": Float32MultiArray,
+    "/oakd_wrist_view/projection": Float32MultiArray,
 }
 
 class DemoLogger(Node):
@@ -126,6 +143,11 @@ class DemoLogger(Node):
             ))
 
             # Subscribe and add callback to write messages
+            from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+            qos_profile = QoSProfile(depth=10)
+            qos_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
+            
+
             self.subscribers.append(
                 self.create_subscription(
                     topic_type,
@@ -133,7 +155,7 @@ class DemoLogger(Node):
                     lambda msg, topic_name=topic_name: self.writer.write(
                         topic_name, serialize_message(msg), self.get_clock().now().nanoseconds
                     ),
-                    10
+                    qos_profile if "intrinsics" in topic_name or "extrinsics" in topic_name or "projection"in topic_name  else 10,
                 )
             )
 
@@ -164,8 +186,17 @@ def main(args=None):
 
     # Load topics to record (for demonstration, using hardcoded list)
     topics_to_record = ['/oakd_front_view/color', 
+                        '/oakd_front_view/intrinsics',
+                        '/oakd_front_view/extrinsics',
+                        '/oakd_front_view/projection', 
                         '/oakd_side_view/color', 
+                        '/oakd_side_view/intrinsics',
+                        '/oakd_side_view/extrinsics',
+                        '/oakd_side_view/projection',
                         '/oakd_wrist_view/color', 
+                        '/oakd_wrist_view/intrinsics',
+                        '/oakd_wrist_view/extrinsics',
+                        '/oakd_wrist_view/projection',
                         '/hand/policy_output', 
                         '/franka/end_effector_pose', 
                         '/franka/end_effector_pose_cmd',
