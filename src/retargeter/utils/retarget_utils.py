@@ -7,44 +7,48 @@ import numpy as np
 def get_mano_joints_dict(
     joints: torch.Tensor, include_wrist=False, batch_processing=False
 ):
-    # joints: 21 x 3
-    # For retargeting, we don't need the wrist
+    # joints: 22 x 3
+    # For retargeting, we need the wrist
     # For visualization, we need the wrist
     if not batch_processing:
         if not include_wrist:
             return {
-                "thumb": joints[1:5, :],
-                "index": joints[5:9, :],
-                "middle": joints[9:13, :],
-                "ring": joints[13:17, :],
-                "pinky": joints[17:21, :],
+                "wrist": joints[1, :],
+                "thumb": joints[2:6, :],
+                "index": joints[6:10, :],
+                "middle": joints[10:14, :],
+                "ring": joints[14:18, :],
+                "pinky": joints[18:22, :],
             }
         else:
             return {
-                "wrist": joints[0, :],
-                "thumb": joints[1:5, :],
-                "index": joints[5:9, :],
-                "middle": joints[9:13, :],
-                "ring": joints[13:17, :],
-                "pinky": joints[17:21, :],
+                "forearm": joints[0, :],
+                "wrist": joints[1, :],
+                "thumb": joints[2:6, :],
+                "index": joints[6:10, :],
+                "middle": joints[10:14, :],
+                "ring": joints[14:18, :],
+                "pinky": joints[18:22, :],
             }
     else:
         if not include_wrist:
             return {
-                "thumb": joints[:, 1:5, :],
-                "index": joints[:, 5:9, :],
-                "middle": joints[:, 9:13, :],
-                "ring": joints[:, 13:17, :],
-                "pinky": joints[:, 17:21, :],
+                "wrist": joints[:, 1, :],
+                "thumb": joints[:, 2:6, :],
+                "index": joints[:, 6:10, :],
+                "middle": joints[:, 10:14, :],
+                "ring": joints[:, 14:18, :],
+                "pinky": joints[:, 18:22, :],
             }
         else:
             return {
-                "wrist": joints[:, 0, :],
-                "thumb": joints[:, 1:5, :],
-                "index": joints[:, 5:9, :],
-                "middle": joints[:, 9:13, :],
-                "ring": joints[:, 13:17, :],
-                "pinky": joints[:, 17:21, :],
+                "forearm": joints[:, 0, :],
+                "wrist": joints[:, 1, :],
+                "thumb": joints[:, 2:6, :],
+                "index": joints[:, 6:10, :],
+                "middle": joints[:, 10:14, :],
+                "ring": joints[:, 14:18, :],
+                "pinky": joints[:, 18:22, :],
             }
 
 
@@ -68,13 +72,14 @@ def get_mano_pps_batch(mano_joints_dict):
     }
 
 
-def get_keyvectors(fingertips: Dict[str, torch.Tensor], palm: torch.Tensor):
+def get_keyvectors(fingertips: Dict[str, torch.Tensor], palm: torch.Tensor, wrist: torch.Tensor, mano_middle_base: torch.Tensor):
     return {
         "palm2thumb": fingertips["thumb"] - palm,
         "palm2index": fingertips["index"] - palm,
         "palm2middle": fingertips["middle"] - palm,
         "palm2ring": fingertips["ring"] - palm,
         "palm2pinky": fingertips["pinky"] - palm,
+        "wrist2palm": mano_middle_base - wrist,
         # 'thumb2index': fingertips['index'] - fingertips['thumb'],
         # 'thumb2middle': fingertips['middle'] - fingertips['thumb'],
         # 'thumb2ring': fingertips['ring'] - fingertips['thumb'],
@@ -123,9 +128,45 @@ def rotation_matrix_x(angle):
     )
     return rot_mat
 
+def correct_rokoko_offset(joint_pos, offset_angle, scaling_factor=2):
+    """
+    Param: joint_pos, a numpy array of 3
+    Param: offset_angle, the angle by which the rokoko hand is offset about z in degrees
+    Param: scaling_factor, which is added at each outer_going joint. This is because the rotation for
+    some reason generates kinked lines. This factor accounts for that.
+    The PIP joint Dip joint gets rotated by offset_angle + scaling_factor and the 
+    enf-of-finger joint gets rotated by offset_angle + 2*scaling_factor
+    
+    Corrects the offset of the rokoko hand by rotating the 3 
+    upmost positions of the hand around the z-axis by the offset_angle
+    """
+    
+    joint_dict = get_mano_joints_dict(joint_pos, include_wrist=True)
+    
+    # Special offset, see the description above
+    R1 = rotation_matrix_z(np.deg2rad(offset_angle))
+    R2 = rotation_matrix_z(np.deg2rad(offset_angle + scaling_factor))
+    R3 = rotation_matrix_z(np.deg2rad(offset_angle + 2*scaling_factor))
+    
+    R = [R1, R2, R3]
+    
+    # Rotate the last 3 joints of the specified fingers
+    for finger in ["pinky", "ring", "middle", "index", "thumb"]:
+        for i in range(-3, 0):
+            joint_dict[finger][i] = np.dot(R[i], joint_dict[finger][i])
+            
+    # Update the joint positions in the original array
+    joint_pos[6:10, :] = joint_dict["index"]
+    joint_pos[10:14, :] = joint_dict["middle"]
+    joint_pos[14:18, :] = joint_dict["ring"]
+    joint_pos[18:22, :] = joint_dict["pinky"]
+    joint_pos[2:6, :] = joint_dict["thumb"]
+
+    return joint_pos
+
 
 def get_hand_center_and_rotation(
-    thumb_base, index_base, middle_base, ring_base, pinky_base, wrist=None
+    thumb_base, index_base, middle_base, ring_base, pinky_base, tower, wrist=None
 ):
     """
     Get the center of the hand and the rotation matrix of the hand
@@ -134,14 +175,17 @@ def get_hand_center_and_rotation(
     z axis goes from the palm if the hand is right hand, otherwise it goes to the palm
     If the hand is right hand, then the z
     """
-    hand_center = (thumb_base + pinky_base) / 2
-    hand_center = hand_center
-    if wrist is None:
-        wrist = hand_center
+    # hand_center = (thumb_base + pinky_base) / 2
+    # hand_center = hand_center
+    # print("wrist", wrist)
+    # if wrist is None:
+    #     wrist = hand_center
 
-    y_axis = middle_base - wrist
+    hand_center = wrist
+
+    y_axis = wrist - tower
     y_axis = y_axis / np.linalg.norm(y_axis)
-    x_axis = index_base - ring_base
+    x_axis = middle_base - index_base
     x_axis -= (x_axis @ y_axis.T) * y_axis
     x_axis = x_axis / np.linalg.norm(x_axis)
     z_axis = np.cross(x_axis, y_axis)
@@ -167,6 +211,7 @@ def normalize_points_to_hands_local(joint_pos):
         middle_base=joint_dict["middle"][0],
         ring_base=joint_dict["ring"][0],
         pinky_base=joint_dict["pinky"][0],
+        tower=joint_dict["forearm"],
         wrist=joint_dict["wrist"],
     )
     joint_pos = joint_pos - hand_center

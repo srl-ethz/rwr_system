@@ -9,7 +9,7 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca1_hand",
+    "orca2_hand",
     "urdf",
     "orca1.urdf")
 
@@ -18,7 +18,17 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-    
+            # Node(
+            #     package="ingress",
+            #     executable="rokoko_node.py",
+            #     name="rokoko_node",
+            #     output="log",
+            #     parameters=[
+            #         {"rokoko_tracker/ip": "0.0.0.0"},
+            #         {"rokoko_tracker/port": 14043},
+            #         {"rokoko_tracker/use_coil": True}
+            #     ],
+            # ),
             Node(
                 package="ingress",  # Replace with your package name
                 executable="rosbag_node.py",  # Replace with your script's entry point (name set in setup.py)
@@ -30,7 +40,7 @@ def generate_launch_description():
                             get_package_share_directory('viz'),
                             "rosbag",
                             "recordings",
-                            "recording_2024-11-14_17-46-39/",
+                            "recording_2024-11-20_16-20-01/",
                         )
                     },
                 ],
@@ -56,7 +66,7 @@ def generate_launch_description():
                         "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca1_hand",
+                            "orca2_hand",
                             "urdf",
                             "orca1.urdf",
                         )
@@ -65,6 +75,12 @@ def generate_launch_description():
                     {"debug": True},
                 ],
             ),
+
+            # Node(
+            #     package="hand_control",
+            #     executable="hand_controller_node.py",
+            #     name="hand_controller_node",
+            # ),
             
             # VISUALIZATION NODE
             Node(
@@ -76,7 +92,7 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca1_hand",
+                            "orca2_hand",
                             "scheme_orca1.yaml",
                         )
                     }
@@ -98,7 +114,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca1.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
                 ),
 
         ]

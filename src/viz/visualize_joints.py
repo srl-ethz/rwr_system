@@ -5,6 +5,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32MultiArray
 import yaml
 import os
+import numpy as np
 
 
 class VisualizeJointsNode(Node):
@@ -51,6 +52,8 @@ class VisualizeJointsNode(Node):
         
         self.js_msg.header.stamp = self.get_clock().now().to_msg()
         joint_states = self.policy_output2urdf_joint_states(msg.data)
+
+        print(np.rad2deg(joint_states[:4]))
         self.js_msg.position = joint_states
         self.publisher_.publish(self.js_msg)
         # self.get_logger().info('Publishing joint states: "%s"' % self.js_msg)

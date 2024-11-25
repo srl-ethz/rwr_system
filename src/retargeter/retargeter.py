@@ -55,6 +55,15 @@ class Retargeter:
                 GC_LIMITS_LOWER,
                 GC_LIMITS_UPPER,
             )
+
+        elif hand_scheme == "orca2":
+            from.hand_cfgs.orca1_cfg import (
+                GC_TENDONS,
+                FINGER_TO_TIP,
+                FINGER_TO_BASE,
+                GC_LIMITS_LOWER,
+                GC_LIMITS_UPPER,
+        )
         else:
             raise ValueError(f"hand_model {hand_scheme} not supported")
 
@@ -114,7 +123,7 @@ class Retargeter:
             joint_parameter_names
         ), "Joint names mismatch, please double check hand_scheme"
 
-        self.gc_joints = torch.ones(self.n_tendons).to(self.device) * 16.0
+        self.gc_joints = torch.ones(self.n_tendons).to(self.device) * 17.0
         self.gc_joints.requires_grad_()
 
         self.lr = lr
@@ -123,12 +132,12 @@ class Retargeter:
 
         self.root = torch.zeros(1, 3).to(self.device)
 
-        self.loss_coeffs = torch.tensor([5.0, 5.0, 5.0, 5.0, 5.0]).to(self.device)
+        self.loss_coeffs = torch.tensor([5.0, 5.0, 5.0, 5.0, 5.0, 5.0]).to(self.device)
 
         if use_scalar_distance_palm:
-            self.use_scalar_distance = [False, True, True, True, True]
+            self.use_scalar_distance = [False, True, True, True, True, True]
         else:
-            self.use_scalar_distance = [False, False, False, False, False]
+            self.use_scalar_distance = [False, False, False, False, False, False]
 
         self.sanity_check()
         _chain_transforms = self.chain.forward_kinematics(
@@ -157,10 +166,15 @@ class Retargeter:
                 .transform_points(self.root)
                 .cpu()
                 .numpy(),
+                tower=_chain_transforms["tower"]
+                .transform_points(self.root)
+                .cpu()
+                .numpy(),
                 wrist=_chain_transforms["palm"]
                 .transform_points(self.root)
                 .cpu()
                 .numpy(),
+               
             )
         )
 
@@ -218,24 +232,25 @@ class Retargeter:
     ):
         """
         Process the MANO joints and update the finger joint angles
-        joints: (21, 3)
-        Over the 21 dims:
-        0-4: thumb (from hand base)
-        5-8: index
-        9-12: middle
-        13-16: ring
-        17-20: pinky
+        joints: (22, 3)
+        Over the 22 dims:
+        0: forearm
+        1-5: thumb (from hand base)
+        6-9: index
+        10-13: middle
+        14-17: ring
+        18-21: pinky
         """
 
         #print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
 
         start_time = time.time()
         if not warm:
-            self.gc_joints = torch.ones(self.n_joints).to(self.device) * 16.0
+            self.gc_joints = torch.ones(self.n_joints).to(self.device) * 17.0
             self.gc_joints.requires_grad_()
 
         assert joints.shape == (
-            21,
+            22,
             3,
         ), "The shape of the mano joints array should be (21, 3)"
 
@@ -244,11 +259,11 @@ class Retargeter:
         mano_joints_dict = retarget_utils.get_mano_joints_dict(joints)
 
         mano_fingertips = {}
-        for finger, finger_joints in mano_joints_dict.items():
+        for finger, finger_joints in list(mano_joints_dict.items())[1:]:
             mano_fingertips[finger] = finger_joints[[-1], :]
 
         mano_pps = {}
-        for finger, finger_joints in mano_joints_dict.items():
+        for finger, finger_joints in list(mano_joints_dict.items())[1:]:
             mano_pps[finger] = finger_joints[[0], :]
 
         mano_palm = torch.mean(
@@ -257,9 +272,14 @@ class Retargeter:
             keepdim=True,
         )
 
-        keyvectors_mano = retarget_utils.get_keyvectors(mano_fingertips, mano_palm)
+        mano_middle_base = mano_joints_dict["middle"][0]
+        mano_wrist = mano_joints_dict["wrist"]
+
+
+        keyvectors_mano = retarget_utils.get_keyvectors(mano_fingertips, mano_palm, mano_wrist, mano_middle_base)
         # norms_mano = {k: torch.norm(v) for k, v in keyvectors_mano.items()}
         # print(f"keyvectors_mano: {norms_mano}")
+        #print(f"keyvectors_mano: {keyvectors_mano}")
 
         for step in range(opt_steps):
             chain_transforms = self.chain.forward_kinematics(
@@ -280,7 +300,13 @@ class Retargeter:
                 )
             ) / 2
 
-            keyvectors_faive = retarget_utils.get_keyvectors(fingertips, palm)
+            wrist = chain_transforms["palm"].transform_points(
+                    self.root
+            )
+            middle_base = chain_transforms[self.finger_to_base["middle"]].transform_points(self.root)
+
+            keyvectors_faive = retarget_utils.get_keyvectors(fingertips, palm, wrist, middle_base)
+           #  print(f"keyvectors_faive: {keyvectors_faive}")
             # norms_faive = {k: torch.norm(v) for k, v in keyvectors_faive.items()}
             # print(f"keyvectors_faive: {norms_faive}")
 
@@ -300,7 +326,7 @@ class Retargeter:
                         * (torch.norm(keyvector_mano) - torch.norm(keyvector_faive))
                         ** 2
                     )
-
+            #print("akfdhsakh")
             # print(f"step: {step} Loss: {loss}")
             self.scaling_factors_set = True
             self.opt.zero_grad()
@@ -323,13 +349,20 @@ class Retargeter:
         normalized_joint_pos, mano_center_and_rot = (
             retarget_utils.normalize_points_to_hands_local(joints)
         )
+
+        normalized_joint_pos = (
+            retarget_utils.correct_rokoko_offset(normalized_joint_pos, 
+                                                 offset_angle=15, scaling_factor=2)
+        )
         # (model_joint_pos - model_center) @ model_rotation = normalized_joint_pos
         debug_dict["mano_center_and_rot"] = mano_center_and_rot
         debug_dict["model_center_and_rot"] = (self.model_center, self.model_rotation)
         normalized_joint_pos = (
-            normalized_joint_pos @ self.model_rotation.T + self.model_center
+            normalized_joint_pos @ self.model_rotation.T +  0.75  * self.model_center
         )
+
         if debug_dict is not None:
             debug_dict["normalized_joint_pos"] = normalized_joint_pos
         self.target_angles = self.retarget_finger_mano_joints(normalized_joint_pos)
+
         return self.target_angles, debug_dict

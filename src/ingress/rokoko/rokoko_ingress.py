@@ -8,6 +8,7 @@ from scipy.spatial.transform import Rotation
 
 
 MANO_KEYPOINTS_LIST = [
+    "rightLowerArm",
     "rightHand",
     "rightThumbProximal",
     "rightThumbMedial",
@@ -91,6 +92,8 @@ class RokokoTracker:
                 1024 * 20
             )  # buffer size is 1024 bytes
             # print("Received message: %s" % received_data)
+            print("Received message: %s", received_data)
+
             try:
                 data_dict = json.loads(
                     received_data.decode("utf-8")

@@ -4,7 +4,7 @@ from rclpy.node import Node
 import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 import os
-from rwr_system.src.hand_control import HandController
+from rwr_system.src.hand_control import HandController # type: ignore
 
 
 class HandControllerNode(Node):

@@ -32,17 +32,28 @@ def generate_launch_description():
                 package="retargeter",
                 executable="retargeter_node.py",
                 name="retargeter_node",
-                output="log",
+                output="screen",
+                # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
+                    # {
+                    #     "retarget/mjcf_filepath": os.path.join(
+                    #         get_package_share_directory("viz"),
+                    #         "models",
+                    #         "faive_hand_p4",
+                    #         "hand_p4.xml",
+                    #     )
+                    # },
                     {
-                        "retarget/mjcf_filepath": os.path.join(
+                        "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
                             "faive_hand_p4",
-                            "hand_p4.xml",
+                            "urdf",
+                            "p4.urdf",
                         )
                     },
                     {"retarget/hand_scheme": "p4"},
+                    {"debug": True},
                 ],
             ),
             
