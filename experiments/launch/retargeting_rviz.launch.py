@@ -42,14 +42,6 @@ def generate_launch_description():
                     {"rokoko_tracker/port": 14043},
                     {"rokoko_tracker/use_coil": False}
                 ],
-                executable="rokoko_node.py",
-                name="rokoko_node",
-                output="log",
-                parameters=[
-                    {"rokoko_tracker/ip": "0.0.0.0"},
-                    {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": True}
-                ],
             ),
 
 

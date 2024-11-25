@@ -1,7 +1,19 @@
-thumb: null
-index: null
-middle: null
-ring: null
+thumb: 
+  translation : [0.0, 0.0, 0.0]
+  rotation : [0.0, 0.0, 0.0]
+  scale : [1.0, 1.0, 0.6]
+index:
+  translation : [0.0, 0.0, 0.0]
+  rotation : [0.0, 0.0, 0.0]
+  scale : [1.0, 1.0, 1.0]
+middle:
+  translation : [0.0, 0.0, 0.0]
+  rotation : [0.0, 0.0, 0.0]
+  scale : [1.0, 1.0, 1.0]
+ring:
+  translation : [0.0, 0.0, 0.0]
+  rotation : [0.0, 0.0, 0.0]
+  scale : [1.0, 1.0, 1.0]
 pinky: 
   translation : [0.0, 0.0, 0.0]
   rotation : [0.0, 0.0, 0.0]

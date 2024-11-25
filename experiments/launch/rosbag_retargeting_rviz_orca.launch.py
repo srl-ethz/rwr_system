@@ -41,6 +41,7 @@ def generate_launch_description():
                 name="hand_control_node",
                 output="screen"
             ),
+            
             # RETARGET NODE
             Node(
                 package="retargeter",
@@ -49,14 +50,6 @@ def generate_launch_description():
                 output="screen",
                 # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
-                    # {
-                    #     "retarget/mjcf_filepath": os.path.join(
-                    #         get_package_share_directory("viz"),
-                    #         "models",
-                    #         "faive_hand_p4",
-                    #         "hand_p4.xml",
-                    #     )
-                    # },
                     {
                         "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
@@ -64,12 +57,28 @@ def generate_launch_description():
                             "orca1_hand",
                             "urdf",
                             "orca1.urdf",
-                        )
+                        ),
+                        "retarget/hand_scheme": os.path.join(
+                            get_package_share_directory("viz"),
+                            "models",
+                            "orca1_hand",
+                            "scheme_orca1.yaml",
+                        ),
+                        "retarget/mano_adjustments": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_adjustment.yaml"
+                        ),
+                        "retarget/retargeter_cfg": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_cfgs_orca1.yaml"
+                        ),
                     },
-                    {"retarget/hand_scheme": "orca1"},
                     {"debug": True},
                 ],
             ),
+
             Node(
                 package="hand_control",
                 executable="hand_control_node.py",

@@ -6,10 +6,10 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
-from faive_system.src.retargeter import Retargeter
-from faive_system.src.common.utils import numpy_to_float32_multiarray
+from faive_system.src.retargeter import Retargeter # type: ignore
+from faive_system.src.common.utils import numpy_to_float32_multiarray # type: ignore
 import os
-from faive_system.src.viz.visualize_mano import ManoHandVisualizer
+from faive_system.src.viz.visualize_mano import ManoHandVisualizer # type: ignore
 import torch
 import time
 
