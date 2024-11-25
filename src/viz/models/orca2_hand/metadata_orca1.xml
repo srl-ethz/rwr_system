@@ -1,0 +1,94 @@
+<mujoco>
+	<compiler angle="radian"/>
+	<default>
+		<geom rgba="1 1 1 1" type="mesh" friction="1 0.005 0.001" condim="3" margin="0.0005" contype="1" conaffinity="1"/>
+		<joint type="hinge" limited="true" damping="0.1" armature="0.001" margin="0.01" frictionloss="0.001"/>
+		<position ctrllimited="true" forcelimited="true" forcerange="-1 1" kp="2.0"/>
+		<mesh scale="0.001 0.001 0.001"/>
+	</default>
+	<asset>
+
+        <mesh name="tower" file="mesh_orca/Tower_MK3.stl"/>
+        <mesh name="palm_tower" file="mesh_orca/Carpals.stl"/>
+
+    	<mesh name="thumb_base" file="mesh_orca/T-AP.stl"/>
+		<mesh name="thumb_pp" file="mesh_orca/T-AP_OUT.stl"/>
+        <mesh name="thumb_mp" file="mesh_orca/T-PP.stl"/>
+        <mesh name="thumb_dp" file="mesh_orca/T-DP.stl"/>
+
+    	<mesh name="index_um" file="mesh_orca/M-AP.stl"/>
+        <mesh name="index_pp" file="mesh_orca/I-PP.stl"/>
+        <mesh name="index_mp" file="mesh_orca/M-MP.stl"/>
+        <mesh name="index_dp" file="mesh_orca/M-DP.stl"/>
+		
+        <mesh name="middle_um" file="mesh_orca/M-AP.stl"/>
+		<mesh name="middle_pp" file="mesh_orca/M-PP.stl"/>
+        <mesh name="middle_mp" file="mesh_orca/M-MP.stl"/>
+        <mesh name="middle_dp" file="mesh_orca/M-DP.stl"/>
+
+        <mesh name="ring_um" file="mesh_orca/M-AP.stl"/>
+        <mesh name="ring_pp" file="mesh_orca/M-PP.stl"/>
+        <mesh name="ring_mp" file="mesh_orca/M-MP.stl"/>
+        <mesh name="ring_dp" file="mesh_orca/M-DP.stl"/>
+
+        <mesh name="pinky_um" file="mesh_orca/M-AP.stl"/>
+		<mesh name="pinky_pp" file="mesh_orca/P-PP.stl"/>
+		<mesh name="pinky_mp" file="mesh_orca/M-MP.stl"/>
+		<mesh name="pinky_dp" file="mesh_orca/M-DP.stl"/>
+
+	</asset>
+	
+	<actuator>
+		<position name="tower2root" joint="tower2root" ctrlrange="-1.3962634015954636 1.3962634015954636"/>
+		<position name="middle_abd" joint="middle_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
+		<position name="root2middle_pp" joint="root2middle_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
+		<position name="middle_pp2mp" joint="middle_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
+		<position name="root2thumb_base" joint="root2thumb_base" ctrlrange="-1.3089969389957472 1.3089969389957472"/>
+		<position name="thumb_base2pp" joint="thumb_base2pp" ctrlrange="-0.7853981633974483 0.7853981633974483"/>
+		<position name="thumb_pp2mp" joint="thumb_pp2mp" ctrlrange="-0.17453292519943295 1.5707963267948966"/>
+		<position name="thumb_mp2dp" joint="thumb_mp2dp" ctrlrange="-1.7453292519943295 0.0"/>
+		<position name="ring_abd" joint="ring_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
+		<position name="root2ring_pp" joint="root2ring_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
+		<position name="ring_pp2mp" joint="ring_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
+		<position name="pinky_abd" joint="pinky_abd" ctrlrange="-0.6108652381980153 0.4363323129985824"/>
+		<position name="root2pinky_pp" joint="root2pinky_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
+		<position name="pinky_pp2mp" joint="pinky_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
+		<position name="index_abd" joint="index_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
+		<position name="root2index_pp" joint="root2index_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
+		<position name="index_pp2mp" joint="index_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
+	</actuator>
+
+	<contact>
+		<exclude body1="root" body2="tower"/>
+		<exclude body1="tower" body2="palm"/>
+        <exclude body1="tower" body2="thumb_base"/>
+        <exclude body1="tower" body2="thumb_pp"/>
+		<exclude body1="palm" body2="middle_um"/>
+		<exclude body1="middle_um" body2="middle_pp"/>
+		<exclude body1="middle_pp" body2="middle_mp"/>
+		<exclude body1="middle_mp" body2="middle_dp"/>
+		<exclude body1="palm" body2="thumb_base"/>
+        <exclude body1="palm" body2="thumb_pp"/>
+		<exclude body1="thumb_base" body2="thumb_pp"/>
+		<exclude body1="thumb_pp" body2="thumb_mp"/>
+		<exclude body1="thumb_mp" body2="thumb_dp"/>
+		<exclude body1="palm" body2="ring_um"/>
+		<exclude body1="ring_um" body2="ring_pp"/>
+		<exclude body1="ring_pp" body2="ring_mp"/>
+		<exclude body1="ring_mp" body2="ring_dp"/>
+		<exclude body1="palm" body2="pinky_um"/>
+		<exclude body1="pinky_um" body2="pinky_pp"/>
+		<exclude body1="pinky_pp" body2="pinky_mp"/>
+		<exclude body1="pinky_mp" body2="pinky_dp"/>
+		<exclude body1="palm" body2="index_um"/>
+		<exclude body1="index_um" body2="index_pp"/>
+		<exclude body1="index_pp" body2="index_mp"/>
+		<exclude body1="index_mp" body2="index_dp"/>
+	</contact>
+	<equality>
+		<joint joint1="middle_mp2dp" joint2="middle_pp2mp" polycoef="0 0.5833333333333334 0 0 0"/>
+		<joint joint1="index_mp2dp" joint2="index_pp2mp" polycoef="0 0.5833333333333334 0 0 0"/>
+		<joint joint1="ring_mp2dp" joint2="ring_pp2mp" polycoef="0 0.5833333333333334 0 0 0"/>
+        <joint joint1="pinky_mp2dp" joint2="pinky_pp2mp" polycoef="0 0.5833333333333334 0 0 0"/>
+	</equality>
+</mujoco>
