@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from rokoko_ingress import RokokoTracker
-from src.common.utils import numpy_to_float32_multiarray    
+from faive_system.src.common.utils import numpy_to_float32_multiarray    
 
 class RokokoNode(Node):
     def __init__(self, debug=False):

@@ -56,7 +56,7 @@ GC_LIMITS_LOWER = np.array(
         -25.0,  # ring_abd
         -10.0,  # root2ring_pp
         0.0,  # ring_pp2mp
-        -35.0,  # pinky_abd
+        -25.0,  # pinky_abd
         -10.0,  # root2pinky_pp
         0.0,  # pinky_pp2mp
     ]
@@ -76,7 +76,7 @@ GC_LIMITS_UPPER = np.array(
         35.0,  # ring_abd
         115.0,  # root2ring_pp
         120.0,  # ring_pp2mp
-        25.0,  # pinky_abd
+        35.0,  # pinky_abd
         115.0,  # root2pinky_pp
         120.0,  # pinky_pp2mp
     ]

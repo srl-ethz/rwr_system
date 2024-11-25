@@ -1,8 +1,50 @@
 muscle_groups:
-  finger1:
-    joint_ids: [0, 1]           # ids for each controllable joint from proximal to distal
-    tendon_ids: [0, 1, 2, 3]    # ids for each tendon according to joints, first flexor then extensor, from proximal to distal
-    motor_ids: [1, 2]           # ids of motors for this muscle group
-    motor_map: [1, 1, 2, 2]     # maps each tendon to a certain motor. antagonistic tendons have same motor id in motor_map
-    spool_rad: [-5, 5, -5, 5]   # defines spool radius and wind direction for each tendon. 
-                                # wind direction is positive, if tendon attaches on the right side of the spool (from the front of the motor)
+  thumb: # These are randomly allocated do not change
+    joint_ids: [2, 1 ,13, 14] # [ABD, MCP, PIP]  
+    motor_ids: [2, 1, 13, 14]           
+    joint_roms: [[-75, 75], [-45, 45], [-10, 90], [-100, 0]]
+    tendon_ids: [1, 2, 3, 4, 5, 6, 7, 8]    
+    motor_map: [2, 2, 1, 1, 13, 13, 14, 14]     
+    spool_rad: [-7.5, 7.5, -7.5, 7.5, 7.5, -7.5, -7.5, 7.5] 
+
+  index: 
+    joint_ids: [4, 15, 3]           # [ABD, MCP, PIP]  ids for each controllable joint from proximal to distal 
+    motor_ids: [4, 15 ,3]           # ids of motors for this muscle group
+    motor_map: [4, 4, 15, 15, 3, 3]     # maps each tendon to a certain motor. antagonistic tendons have same motor id in motor_map
+    joint_roms: [[-25, 35], [-10, 115], [0, 120]] # [PIP, MCP, ABD] 
+    tendon_ids: [9, 10, 11, 12, 13, 14]    # ids for each tendon according to joints, first flexor then extensor, from proximal to distal
+    spool_rad: [-7.5, 7.5, 7.5, -7.5, 7.5, -7.5] # [+ = counterclockwise motion, - clockwise motion]  
+               # + = if tendon attaches on the left side it will shorten with a positive angle
+  
+  middle:
+    joint_ids: [12, 16, 5]              
+    motor_ids: [12, 16, 5]        
+    joint_roms: [[-25, 35], [-10, 115], [0, 120]]   
+    tendon_ids: [15, 16, 17, 18, 19, 20]    
+    motor_map: [12, 12, 16, 16, 5, 5]     
+    spool_rad: [-7.5, 7.5, 7.5, -7.5, 7.5, -7.5] 
+
+
+  ring: # These are randomly allocated do not change
+    joint_ids: [10, 11, 7]            
+    motor_ids: [10, 11, 7]          
+    joint_roms: [[-25, 35], [-10, 115], [0, 120]]
+    tendon_ids: [21, 22, 23, 24, 25, 26]    
+    motor_map: [10, 10, 11, 11, 7, 7]     
+    spool_rad: [7.5, -7.5, 7.5, -7.5, 7.5, -7.5] 
+
+  pinky: # These are randomly allocated do not change
+    joint_ids: [8, 6, 9] # [ABD, MCP, PIP]             
+    motor_ids: [8, 6, 9]          
+    joint_roms: [[-35, 25], [-10, 115], [0, 120]]
+    tendon_ids: [27, 28, 29, 30, 31, 32]    
+    motor_map: [8, 8, 6, 6, 9, 9]     
+    spool_rad: [-7.5, 7.5, 7.5, -7.5, 7.5, -7.5] 
+
+  wrist:
+    joint_ids: [17]           
+    motor_ids: [17]          
+    joint_roms: [[-35, 35]]
+    tendon_ids: [33, 34]    
+    motor_map: [17, 17]     
+    spool_rad: [ 9.6, -9.6] 
