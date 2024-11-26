@@ -8,9 +8,9 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca1_hand",
+    "orca2_hand",
     "urdf",
-    "orca1.urdf")
+    "orca2.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
@@ -75,7 +75,7 @@ def generate_launch_description():
                 ],
             ),
 
-            # HAND CONTROLLER NODE
+           # HAND CONTROLLER NODE
             Node(
                 package="hand_control",
                 executable="hand_control_node.py",
@@ -94,8 +94,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca1_hand",
-                            "scheme_orca1.yaml",
+                            "orca2_hand",
+                            "scheme_orca2.yaml",
                         )
                     }
                 ],
@@ -116,7 +116,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca1.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
                 ),
 
         ]

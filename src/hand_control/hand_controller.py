@@ -34,7 +34,7 @@ class HandController:
         """
 
         print("================Setting Current to 60 (low) for Safety================")
-        maxCurrent = 150
+        maxCurrent = 200
 
 
         baudrate = 3000000
@@ -42,7 +42,7 @@ class HandController:
         self.motor_lock = RLock() # lock to read / write motor information
 
         self._load_musclegroup_yaml(os.path.join(os.path.dirname(os.path.abspath(__file__)), config_yml))
-        self.joint_ids = np.zeros(16)
+        self.joint_ids = np.zeros(17)
         self.command_lock = RLock() # lock to receive and read angle commands
         self._cmd_joint_angles = np.zeros(self.joint_nr)
 
@@ -54,12 +54,12 @@ class HandController:
 
         # Mapping of joint names to their index ranges from the joint_angles array
         self.joint_mapping = {
-            "thumb": slice(0, 4), # 0, 1, 2, 3 
-            "index": slice(4, 7), # 4, 5, 6 [ABD,MCP,PIP]
-            "middle": slice(7, 10), # 7, 8, 9 [ABD,MCP,PIP]
-            "ring": slice(10, 13), # 10, 11, 12 [ABD,MCP,PIP]
-            "pinky": slice(13, 16), # 13, 14, 15 [ABD,MCP,PIP]   
-            "wrist": slice(16, 17), # 0, 1, 2 [ABD, MCP, PIP]
+            "wrist": slice(0, 1), 
+            "thumb": slice(1, 5), # 0, 1, 2, 3 
+            "index": slice(5, 8), # 4, 5, 6 [ABD,MCP,PIP]
+            "middle": slice(8, 11), # 7, 8, 9 [ABD,MCP,PIP]
+            "ring": slice(11, 14), # 10, 11, 12 [ABD,MCP,PIP]
+            "pinky": slice(14, 17) # 13, 14, 15 [ABD,MCP,PIP]   
         }
 
         self.joints_rom_list = self.get_joints_rom_list()
@@ -227,11 +227,12 @@ class HandController:
             joint_angles_of_muscle_group = self.get_joint_angles_for_joint(joint_angles, muscle_group.name)
             
             if muscle_group.name == "wrist":
-                # tendon_lengths[t_s:t_e+1] = fk.pose2wrist(*joint_angles_of_muscle_group)
-                continue
-            
-            tendon_lengths[t_s:t_e+1] = fk.pose2tendon_length(muscle_group.name, *joint_angles_of_muscle_group)
-
+                print("YESS")
+                tendon_lengths[t_s:t_e+1] = fk.pose2wrist(*joint_angles_of_muscle_group)
+            else:
+                print("NOOO     ")
+                tendon_lengths[t_s:t_e+1] = fk.pose2tendon_length(muscle_group.name, *joint_angles_of_muscle_group)
+                print(f"Joint Angles: {joint_angles_of_muscle_group}")
         return self.tendon_pos2motor_pos(tendon_lengths)
 
     def get_tendon_id_ranges(self):
@@ -306,7 +307,7 @@ class HandController:
         # print(f"Thumb Joint Before: {joint_angles[0:4]}")
 
 
-        joint_angles = np.append(joint_angles,0) # Add wrist angle
+       # joint_angles = np.append(joint_angles,0) # Add wrist angle
 
         # joint_angles[1] = joint_angles[1]-35
         

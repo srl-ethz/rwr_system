@@ -44,7 +44,7 @@ muscle_groups:
   wrist:
     joint_ids: [17]           
     motor_ids: [17]          
-    joint_roms: [[-35, 35]]
+    joint_roms: [[-80, 80]]
     tendon_ids: [33, 34]    
     motor_map: [17, 17]     
-    spool_rad: [ 9.6, -9.6] 
+    spool_rad: [ -9.6, 9.6] 

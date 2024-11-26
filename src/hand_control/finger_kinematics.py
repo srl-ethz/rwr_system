@@ -11,7 +11,7 @@ thumb_PIP_diameter = 11.5
 thumb_DIP_diameter = 12.5
 
 
-wrist_joint_diameter = 17.7
+wrist_joint_diameter = 25.0 # to optimize
 
 def get_tendonlength(theta, joint_diameter):
    '''Input: joint angle of PIP joint in rad
