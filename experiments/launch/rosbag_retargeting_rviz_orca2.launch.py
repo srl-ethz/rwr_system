@@ -9,9 +9,9 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca1_hand",
+    "orca2_hand",
     "urdf",
-    "orca1.urdf")
+    "orca2.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
@@ -30,17 +30,17 @@ def generate_launch_description():
                             get_package_share_directory('viz'),
                             "rosbag",
                             "recordings",
-                            "recording_2024-11-14_17-46-39/",
+                            "recording_2024-11-20_16-20-01/",
                         )
                     },
                 ],
             ),
-            Node(
-                package="hand_control",
-                executable="hand_control_node.py",
-                name="hand_control_node",
-                output="screen"
-            ),
+            # Node(
+            #     package="hand_control",
+            #     executable="hand_control_node.py",
+            #     name="hand_control_node",
+            #     output="screen"
+            # ),
             
             # RETARGET NODE
             Node(
@@ -76,15 +76,12 @@ def generate_launch_description():
                         ),
                     },
                     {"debug": True},
+                    {"include_wrist_and_tower": True},
+
                 ],
             ),
 
-            Node(
-                package="hand_control",
-                executable="hand_control_node.py",
-                name="hand_control_node",
-                output="screen"
-            ),
+        
             # VISUALIZATION NODE
             Node(
                 package="viz",
@@ -95,8 +92,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca1_hand",
-                            "scheme_orca1.yaml",
+                            "orca2_hand",
+                            "scheme_orca2.yaml",
                         )
                     }
                 ],
@@ -117,7 +114,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca1.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
                 ),
 
         ]

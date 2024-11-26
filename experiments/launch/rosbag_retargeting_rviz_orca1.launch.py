@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
+from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
@@ -15,28 +16,32 @@ def generate_launch_description():
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
-        
     return LaunchDescription(
         [
-            
-            # Node(
-            #     package="ingress",
-            #     executable="mediapipe_node.py",
-            #     name="mediapipe_node",
-            #     output="log",
-            # ),
+    
             Node(
-                package="ingress",
-                executable="rokoko_node.py",
-                name="rokoko_node",
+                package="ingress",  # Replace with your package name
+                executable="rosbag_node.py",  # Replace with your script's entry point (name set in setup.py)
+                name="rosbag_node",
                 output="screen",
                 parameters=[
-                    {"rokoko_tracker/ip": "0.0.0.0"},
-                    {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": False}
+                    {
+                         "rosbag_path": os.path.join(
+                            get_package_share_directory('viz'),
+                            "rosbag",
+                            "recordings",
+                            "recording_2024-11-20_16-20-01/",
+                        )
+                    },
                 ],
             ),
-
+            # Node(
+            #     package="hand_control",
+            #     executable="hand_control_node.py",
+            #     name="hand_control_node",
+            #     output="screen"
+            # ),
+            
             # RETARGET NODE
             Node(
                 package="retargeter",
@@ -71,19 +76,11 @@ def generate_launch_description():
                         ),
                     },
                     {"debug": True},
-                    {"include_wrist_and_tower": True},
+                    {"include_wrist_and_tower": False},
                 ],
             ),
 
-            # HAND CONTROLLER NODE
-            Node(
-                package="hand_control",
-                executable="hand_control_node.py",
-                name="hand_control_node",
-                output="screen"
-            ),
-
-            
+         
             # VISUALIZATION NODE
             Node(
                 package="viz",

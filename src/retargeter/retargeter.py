@@ -37,6 +37,8 @@ class Retargeter:
         mano_adjustments: Union[str, dict] = None,
         retargeter_cfg: Union[str, dict] = None,
         device: str = "cpu",
+        include_wrist_and_tower: bool = False,
+
     ) -> None:
         assert (
             int(urdf_filepath is not None)
@@ -44,7 +46,7 @@ class Retargeter:
             + int(sdf_filepath is not None)
         ) == 1, "Exactly one of urdf_filepath, mjcf_filepath, or sdf_filepath should be provided"
 
-
+        self.include_wrist_and_tower = include_wrist_and_tower
         if hand_scheme is None:
             raise ValueError("hand_scheme is required")
         if isinstance(hand_scheme, dict):
@@ -273,7 +275,7 @@ class Retargeter:
             self.gc_joints.requires_grad_()
 
         assert joints.shape == (
-            21,
+            22,
             3,
         ), "The shape of the mano joints array should be (21, 3)"
 
@@ -282,11 +284,11 @@ class Retargeter:
         mano_joints_dict = retarget_utils.get_mano_joints_dict(joints)
 
         mano_fingertips = {}
-        for finger, finger_joints in mano_joints_dict.items():
+        for finger, finger_joints in list(mano_joints_dict.items())[1:]:
             mano_fingertips[finger] = finger_joints[[-1], :]
 
         mano_pps = {}
-        for finger, finger_joints in mano_joints_dict.items():
+        for finger, finger_joints in list(mano_joints_dict.items())[1:]:
             mano_pps[finger] = finger_joints[[0], :]
 
         mano_palm = torch.mean(
@@ -358,9 +360,17 @@ class Retargeter:
 
         finger_joint_angles = self.gc_joints.detach().cpu().numpy()
 
+
+        if self.include_wrist_and_tower == True:
+            wrist_angle = retarget_utils.get_wrist_angle(joints)
+            finger_joint_angles = np.insert(finger_joint_angles, 0, wrist_angle)
+        else:
+            wrist_angle = 0
+        
+
         # print(f"Retarget time: {(time.time() - start_time) * 1000} ms")
 
-        return finger_joint_angles
+        return finger_joint_angles, wrist_angle
 
 
     def adjust_mano_fingers(self, joints):
@@ -410,10 +420,12 @@ class Retargeter:
 
         # Keep the wrist as is
         adjusted_joints_dict["wrist"] = joints_dict["wrist"]
+        adjusted_joints_dict["forearm"] = joints_dict["forearm"]
 
         # Concatenate adjusted joints
         joints = np.concatenate(
             [
+                adjusted_joints_dict["forearm"].reshape(1, -1),
                 adjusted_joints_dict["wrist"].reshape(1, -1),
                 adjusted_joints_dict["thumb"],
                 adjusted_joints_dict["index"],
@@ -445,7 +457,11 @@ class Retargeter:
         normalized_joint_pos = (
             normalized_joint_pos @ self.model_rotation.T + self.model_center
         )
+            
+        self.target_angles, wrist_angle = self.retarget_finger_mano_joints(normalized_joint_pos)
+
+        normalized_joint_pos =retarget_utils.rotate_points_around_y(normalized_joint_pos, wrist_angle)
         if debug_dict is not None:
             debug_dict["normalized_joint_pos"] = normalized_joint_pos
-        self.target_angles = self.retarget_finger_mano_joints(normalized_joint_pos)
+
         return self.target_angles, debug_dict

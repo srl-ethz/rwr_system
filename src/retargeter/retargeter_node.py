@@ -24,6 +24,7 @@ class RetargeterNode(Node):
         self.declare_parameter("retarget/mano_adjustments", "")
         self.declare_parameter("retarget/retargeter_cfg", "")
         self.declare_parameter("debug", True)
+        self.declare_parameter("include_wrist_and_tower", True)
 
         try:
             mjcf_filepath = self.get_parameter("retarget/mjcf_filepath").value
@@ -46,6 +47,7 @@ class RetargeterNode(Node):
 
         debug = self.get_parameter("debug").value
         device = "cuda" if torch.cuda.is_available() else "cpu"
+        include_wrist_and_tower = self.get_parameter("include_wrist_and_tower").value
 
         
         # subscribe to ingress topics
@@ -55,7 +57,8 @@ class RetargeterNode(Node):
         
         self.retargeter = Retargeter(
             device=device,  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, 
-            hand_scheme=hand_scheme, mano_adjustments=mano_adjustments, retargeter_cfg=retargeter_cfg
+            hand_scheme=hand_scheme, mano_adjustments=mano_adjustments, retargeter_cfg=retargeter_cfg,
+            include_wrist_and_tower=include_wrist_and_tower
         )
         
         self.joints_pub = self.create_publisher(
