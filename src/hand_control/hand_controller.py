@@ -78,8 +78,6 @@ class HandController(CalibrationClass):
         if auto_calibrate:
             self.auto_calibrate_fingers()
         
-        #TODO: Uncomment when we want to test ratio based kinematics 
-
         self.mano_joints_rom_list = self.get_joints_rom_list()
         self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
 
@@ -240,7 +238,6 @@ class HandController(CalibrationClass):
     def pose2motors(self, joint_angles):
         """ Input: joint angles in rad
         Output: motor positions 
-        TODO: Extend the calculation of the tendon lengths for every finger. Tip: A clever design can allow for the same formulas for each finger to reduce complexity.
         """
         # return 
         tendon_lengths = np.zeros(len(self.tendon_ids))
@@ -286,7 +283,6 @@ class HandController(CalibrationClass):
         """
         Set the offsets based on the current (initial) motor positions
         :param calibrate: if True, perform calibration and set the offsets else move to the initial position
-        TODO: Think of a clever way to perform the calibration. How can you make sure that all the motor are in the corect position?
         """
 
         cal_yaml_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cal.yaml")
@@ -320,8 +316,10 @@ class HandController(CalibrationClass):
 
             self.update_motorinitpos()
 
-        #TODO: Maybe this need to change based on ratio kinematics model
-        self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
+        #TODO: Maybe this need to change based on ratio kinematics model. Run and see what this norm value is. IF zero then just delete it.
+        # self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
+
+        self.motor_pos_norm = np.zeros(len(self.joint_ids))
 
     def update_motorinitpos(self):
         """
@@ -349,12 +347,7 @@ class HandController(CalibrationClass):
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
 
         """
-
-        joint_angles = np.append(joint_angles,0) # Add wrist angle
-        
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
-
-        # motor_pos_des = self.pose2motors(np.deg2rad(joint_angles_clipped)) - self.motor_pos_norm + self.motor_id2init_pos
 
         motor_pos_from_ratio = joint_angles_clipped * self.mano_joints2spools_ratio
         motor_pos_des = np.deg2rad(motor_pos_from_ratio) - self.motor_pos_norm + self.motor_id2init_pos
@@ -426,8 +419,6 @@ class HandController(CalibrationClass):
 
 #TODO: Test if ratios work for fingers
 #TODO: Thumb calibration , test at Lab to see what needs to be added.
-#TODO: Add or make all data in one config. Example Max_Current, calibration current, joints number,
-# maybe mapping indices?Don't really like that.
 
 
 if __name__ == "__main__" :
