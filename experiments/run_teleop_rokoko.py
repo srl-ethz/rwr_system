@@ -9,26 +9,19 @@ from rclpy.node import Node
 from geometry_msgs.msg import Point, TransformStamped, Vector3, Quaternion, PoseStamped
 from tf2_ros import TransformBroadcaster
 
-from pydrake.math import RigidTransform as DrakeRigidTransform
-from pydrake.math import RollPitchYaw as DrakeRollPitchYaw
-from pydrake.common.eigen_geometry import Quaternion as DrakeQuaternion
-
+from scipy.spatial.transform import Rotation as R
 
 
 class RokokoCoilDemo(Node):
     def __init__(self):
         super().__init__("rokoko_coil_demo")
 
-        self.X_bCP_G = None  # DrakeRigidTransform from coil pro to glove wrist
-        self.X_bCP_G_init = (
-            None  # Initial DrakeRigidTransform from coil pro to glove wrist
-        )
+        self.X_bCP_G = None  # Transformation from coil pro to glove wrist
+        self.X_bCP_G_init = None  # Initial transformation from coil pro to glove wrist
 
-        self.X_W_bCP = DrakeRigidTransform(
-            p=[1.0, 2.0, -1.3],
-            R=DrakeRollPitchYaw(
-                np.deg2rad(np.array([90.0, 0.0, 0.0]))
-            ).ToRotationMatrix(),
+        # Transformation from map to coil pro
+        self.X_W_bCP = self.create_transform(
+            [1.0, 2.0, -1.3], R.from_euler("xyz", [90.0, 0.0, 0.0], degrees=True)
         )
         self.X_W_fEE_d = None
         self.X_W_fEE_init = None
@@ -38,7 +31,6 @@ class RokokoCoilDemo(Node):
             PoseStamped, "/ingress/wrist", self.rokoko_pose_callback, 10
         )
 
-        # publishes to franka/end_effector_pose_cmd
         self.arm_publisher = self.create_publisher(
             PoseStamped, "/franka/end_effector_pose_cmd", 10
         )
@@ -49,22 +41,40 @@ class RokokoCoilDemo(Node):
             PoseStamped, "/franka/end_effector_pose", self.arm_pose_callback, 10
         )
 
+    def create_transform(self, translation, rotation):
+        return {"translation": np.array(translation), "rotation": rotation}
+
+    def transform_to_pose(self, transform):
+        return PoseStamped(
+            pose={
+                "position": Point(
+                    x=transform["translation"][0],
+                    y=transform["translation"][1],
+                    z=transform["translation"][2],
+                ),
+                "orientation": Quaternion(
+                    x=transform["rotation"].as_quat()[0],
+                    y=transform["rotation"].as_quat()[1],
+                    z=transform["rotation"].as_quat()[2],
+                    w=transform["rotation"].as_quat()[3],
+                ),
+            }
+        )
+
     def arm_pose_callback(self, msg: PoseStamped):
         orientation = msg.pose.orientation
         position = msg.pose.position
-        # Get the pose of the wrist
-        self.X_W_fEE = DrakeRigidTransform(
-            DrakeQuaternion(orientation.w, orientation.x, orientation.y, orientation.z),
+        self.X_W_fEE = self.create_transform(
             [position.x, position.y, position.z],
+            R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w]),
         )
 
     def rokoko_pose_callback(self, msg: PoseStamped):
         orientation = msg.pose.orientation
         position = msg.pose.position
-        # Get the pose of the wrist
-        self.X_bCP_G = DrakeRigidTransform(
-            DrakeQuaternion(orientation.w, orientation.x, orientation.y, orientation.z),
+        self.X_bCP_G = self.create_transform(
             [position.x, position.y, position.z],
+            R.from_quat([orientation.x, orientation.y, orientation.z, orientation.w]),
         )
         self.publish_tf("coil_pro", self.X_W_bCP, "map")
         if self.X_W_fEE_init is not None:
@@ -81,43 +91,35 @@ class RokokoCoilDemo(Node):
             self.get_logger().warn("Initial poses not set yet")
             return self.X_W_fEE
 
-        # Compute the pose of the glove in world frame
-        self.X_W_G = self.X_W_bCP @ self.X_bCP_G
-        self.Xr_W_G = DrakeRigidTransform(self.X_W_G.rotation())
+        # Compute glove pose in world frame
+        X_W_G_translation = self.X_W_bCP["translation"] + self.X_bCP_G["translation"]
+        X_W_G_rotation = self.X_W_bCP["rotation"] * self.X_bCP_G["rotation"]
 
-        self.Xt_W_G_delta = self.Xt_W_G_init.inverse() @ DrakeRigidTransform(
-            p=self.X_W_G.translation()
+        # Transform delta and target computation
+        X_W_fEE_d_translation = (
+            self.X_W_fEE_init["translation"]
+            + (X_W_G_translation - self.X_bCP_G_init["translation"])
         )
+        X_W_fEE_d_rotation = self.X_W_fEE_init["rotation"] * X_W_G_rotation.inv()
 
-        # Compute the target pose for the robot
-        X_W_fEE_d = (
-            self.Xt_W_G_delta
-            @ self.Xt_W_fEE_init
-            @ self.Xr_W_G
-            @ self.Xr_W_G_init_fEE_init
-        )
+        return self.create_transform(X_W_fEE_d_translation, X_W_fEE_d_rotation)
 
-        return X_W_fEE_d
-
-    def publish_target_pose(self, X_W_fEE_d: DrakeRigidTransform):
+    def publish_target_pose(self, X_W_fEE_d):
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "world"
         msg.pose.position = Point(
-            x=X_W_fEE_d.translation()[0],
-            y=X_W_fEE_d.translation()[1],
-            z=X_W_fEE_d.translation()[2],
+            x=X_W_fEE_d["translation"][0],
+            y=X_W_fEE_d["translation"][1],
+            z=X_W_fEE_d["translation"][2],
         )
-        quat = X_W_fEE_d.rotation().ToQuaternion()
-        msg.pose.orientation = Quaternion(
-            x=quat.x(), y=quat.y(), z=quat.z(), w=quat.w()
-        )
+        quat = X_W_fEE_d["rotation"].as_quat()
+        msg.pose.orientation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
         self.arm_publisher.publish(msg)
 
     def calibrate(self):
         input("Press enter to move the robot to init pose")
 
-        # Assume robot is at home pose
         self.X_W_fEE_init = deepcopy(self.X_W_fEE)
         while self.X_W_fEE_init is None:
             print("Waiting for robot pose...")
@@ -140,36 +142,20 @@ class RokokoCoilDemo(Node):
             time.sleep(0.2)
             self.X_bCP_G_init = self.get_hand_pose()
 
-        print(f"Initial pose of the robot: {self.X_W_fEE_init}")
-        print(f"Initial pose of the glove: {self.X_bCP_G_init}")
-
-        self.Xr_W_fEE_init = DrakeRigidTransform(self.X_W_fEE_init.rotation())
-        self.Xt_W_fEE_init = DrakeRigidTransform(self.X_W_fEE_init.translation())
-
-        self.Xr_bCP_G_init = DrakeRigidTransform(self.X_bCP_G_init.rotation())
-
-        self.X_W_G_init = self.X_W_bCP @ self.X_bCP_G_init
-
-        self.Xt_W_G_init = DrakeRigidTransform(p=self.X_W_G_init.translation())
-        self.Xr_W_G_init = DrakeRigidTransform(R=self.X_W_G_init.rotation())
-        self.Xr_W_G_init_inv = self.Xr_W_G_init.inverse()
-
-        self.Xr_W_G_init_fEE_init = self.Xr_W_G_init.inverse() @ self.Xr_W_fEE_init
-
         self.get_logger().info("Calibration complete")
 
-    def publish_tf(self, frame_id, X: DrakeRigidTransform, parent_frame_id):
+    def publish_tf(self, frame_id, transform, parent_frame_id):
         msg = TransformStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = parent_frame_id
         msg.child_frame_id = frame_id
         msg.transform.translation = Vector3(
-            x=X.translation()[0], y=X.translation()[1], z=X.translation()[2]
+            x=transform["translation"][0],
+            y=transform["translation"][1],
+            z=transform["translation"][2],
         )
-        quat = X.rotation().ToQuaternion()
-        msg.transform.rotation = Quaternion(
-            x=quat.x(), y=quat.y(), z=quat.z(), w=quat.w()
-        )
+        quat = transform["rotation"].as_quat()
+        msg.transform.rotation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
         self.tf_publisher.sendTransform(msg)
 
 
