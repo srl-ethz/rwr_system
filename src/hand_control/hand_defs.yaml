@@ -1,6 +1,6 @@
 muscle_groups:
   thumb: # These are randomly allocated do not change
-    joint_ids: [2, 1 ,13, 14] # [ABD, MCP, PIP]  
+    joint_ids: [2, 1 ,13, 14] # [MCP, ABD, PIP, DIP]  
     motor_ids: [2, 1, 13, 14]           
     joint_roms: [[-75, 75], [-45, 45], [-10, 90], [-100, 0]]
     tendon_ids: [1, 2, 3, 4, 5, 6, 7, 8]    

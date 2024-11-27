@@ -23,7 +23,7 @@ class MuscleGroup:
 
 class HandController(CalibrationClass):
     """
-    class specialized for the VGripper
+    class specialized for Hand Control of the Orca Hand.
     wraps DynamixelClient to make it easier to access hand-related functions, letting the user think with "tendons" and "joints" instead of "motors"
     
     ## about tendon direction
@@ -36,7 +36,7 @@ class HandController(CalibrationClass):
         config_yml: path to the config file, relative to this source file
         """
         
-        # All configurations are here
+        ### All configurations are here ### 
 
         maxCurrent = 150
         calibration_current = 70
@@ -60,14 +60,16 @@ class HandController(CalibrationClass):
         self._cmd_joint_angles = np.zeros(self.joint_nr)
 
         # initialize and connect dynamixels
-        
-        self._dxc = DummyDynamixelClient(self.motor_ids, port, baudrate)
-        # self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
+        # self._dxc = DummyDynamixelClient(self.motor_ids, port, baudrate)
+        self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
 
         self.connect_to_dynamixels()
 
         self.motor_ids_dict = self.get_motor_id_dict() 
         
+        self.mano_joints_rom_list = self.get_mano_joints_rom_list()
+        
+        self.mano_motor_directions = self.get_mano_motor_directions()
         # If we have auto_calibrate no manual calibration is needed
         if auto_calibrate:
             calibration = False
@@ -76,10 +78,9 @@ class HandController(CalibrationClass):
         self.init_joints(calibrate=calibration, auto_calibrate=False, calib_current=calibration_current, maxCurrent=maxCurrent)
         
         if auto_calibrate:
-            self.auto_calibrate_fingers()
+            self.auto_calibrate_fingers_with_pos()
         
-        self.mano_joints_rom_list = self.get_joints_rom_list()
-        self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+        # self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
 
     def terminate(self):
         '''
@@ -182,7 +183,25 @@ class HandController(CalibrationClass):
                 m_idx += 1
         with self.motor_lock:
             self._dxc.write_desired_current(self.motor_ids, - motor_currents_mA * directions)
-    
+
+    def get_mano_motor_directions(self):
+        """
+        Get the ROM (Range of Motion) for each muscle group.
+        :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
+        """
+        directions_list = [0 for _ in range(17)]
+        for muscle_group in self.muscle_groups:
+            joint_indices = self.mano_joint_mapping[muscle_group.name]
+
+            spool_rad_list = muscle_group.spool_rad
+
+            # idx is for geting the values from the muscle_roms which start from 0
+            # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
+            for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
+                directions_list[joint_idx] = np.sign(spool_rad_list[idx*2])
+
+        return directions_list
+
     def connect_to_dynamixels(self):
         with self.motor_lock:
             self._dxc.connect()
@@ -372,7 +391,7 @@ class HandController(CalibrationClass):
         clipped_angles = np.clip(joint_angles, min_angles[:len(joint_angles)], max_angle[:len(joint_angles)])
         return clipped_angles
 
-    def get_joints_rom_list(self):
+    def get_mano_joints_rom_list(self):
         """
         Get the ROM (Range of Motion) for each muscle group.
         :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
@@ -422,5 +441,5 @@ class HandController(CalibrationClass):
 
 
 if __name__ == "__main__" :
-    gc = HandController("/dev/ttyUSB0", auto_calibrate= True)
-    time.sleep(2.0)
+    gc = HandController("/dev/ttyUSB0", calibration= False, auto_calibrate= True)
+    time.sleep(1.0)
