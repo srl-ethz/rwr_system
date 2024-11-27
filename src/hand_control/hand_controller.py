@@ -4,10 +4,10 @@ import time
 import yaml
 import os
 from threading import RLock
-# import faive_system.src.hand_control.finger_kinematics as fk
-# from faive_system.src.hand_control.dynamixel_client import *
-from dynamixel_client import *
-import finger_kinematics as fk
+import faive_system.src.hand_control.finger_kinematics as fk
+from faive_system.src.hand_control.dynamixel_client import *
+# import finger_kinematics as fk
+# from dynamixel_client import *
 from calibration import CalibrationClass
 
 class MuscleGroup:
@@ -39,7 +39,7 @@ class HandController(CalibrationClass):
         ### All configurations are here ### 
 
         maxCurrent = 150
-        calibration_current = 70
+        calibration_current = 170
         baudrate = 3000000
 
         # Mapping of joint names to their index ranges from the joint_angles array
@@ -78,9 +78,9 @@ class HandController(CalibrationClass):
         self.init_joints(calibrate=calibration, auto_calibrate=False, calib_current=calibration_current, maxCurrent=maxCurrent)
         
         if auto_calibrate:
-            self.auto_calibrate_fingers_with_pos()
+            self.auto_calibrate_fingers_with_pos(calib_current=calibration_current)
         
-        # self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+        self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
 
     def terminate(self):
         '''
@@ -416,7 +416,7 @@ class HandController(CalibrationClass):
         """
         joints_ratio_list = [0 for _ in range(17)]
         
-        calibration_ratios_file_name = self.find_latest_calibration_file("src/hand_control/calibration_yaml")
+        calibration_ratios_file_name = self.find_latest_calibration_file("calibration_yaml")
         # Open the YAML file
         with open(calibration_ratios_file_name, "r") as yaml_file:
             calibration_defs = yaml.safe_load(yaml_file)
