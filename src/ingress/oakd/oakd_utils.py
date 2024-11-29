@@ -109,19 +109,20 @@ def calibrate_with_aruco(frame, camera_matrix, dist_coeffs, marker_length = 0.1)
      
     
     # Convert the rotation vector (rvecs) to a 3x3 rotation matrix
-    R_cam_marker, _ = cv2.Rodrigues(rvecs[0])  # Convert rvec to a 3x3 rotation matrix
+    R_aruco_cam, _ = cv2.Rodrigues(rvecs[0])  # Convert rvec to a 3x3 rotation matrix
 
     # Initialize a 4x4 identity matrix for the transformation
-    T_cam_marker = np.eye(4)
+    T_aruco_cam = np.eye(4)
 
     # Set the upper-left 3x3 part to the rotation matrix
-    T_cam_marker[:3, :3] = R_cam_marker
+    T_aruco_cam[:3, :3] = R_aruco_cam
 
     # Set the upper-right 3x1 part to the translation vector (tvec)
-    T_cam_marker[:3, 3] = tvecs[0].flatten()
-
+    T_aruco_cam[:3, 3] = tvecs[0].flatten()
     # Now T_cam_marker is the 4x4 transformation matrix from the camera to the marker
-    T_cam_world = get_camera_in_world(T_cam_marker)
+    T_cam_world = get_camera_in_world(T_aruco_cam)
+    np.savetxt('T_cam_marker.txt', T_aruco_cam, fmt='%.6f')  # Save T_cam_marker with 6 decimal places
+    np.savetxt('T_cam_world.txt', T_cam_world, fmt='%.6f')  # Save T_cam_world with 6 decimal places
     return T_cam_world
 
 
@@ -136,8 +137,8 @@ def get_camera_in_world(T_aruco_cam):
     Returns:
         np.ndarray: 4x4 transformation matrix of the camera in the world frame.
     """
-    T_aruco_world_position = np.array([0, 0, 0])
-    T_aruco_world_euler = np.array([0, 0, 0])
+    T_aruco_world_position = np.array([0.694, -0.155, 0])
+    T_aruco_world_euler = np.array([0, 0, 0 ])
     rotation_matrix = R.from_euler('xyz', T_aruco_world_euler).as_matrix()
     
     # Construct the 4x4 transformation matrix

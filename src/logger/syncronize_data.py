@@ -73,8 +73,14 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, topic_
                     output_h5.create_dataset("task_description", data=string_data)
                 continue
 
+
             topic_timestamps = np.array(list(map(int, topic_group.keys())))
             topic_timestamps.sort()
+
+            if "intrinsics" in topic or "extrinsics" in topic or "projection" in topic:
+                data = np.array(topic_group[str(topic_timestamps[0])][:])
+                output_h5.create_dataset(f"observations/images/{topic}", data=data)
+                continue
 
             if TOPIC_TO_STRING[topic_type] == "Image":
                 # Sample images
@@ -160,10 +166,13 @@ def process_folder(input_folder, sampling_frequency, topic_types):
 
     # Process each file
     for idx, input_file in enumerate(h5_files):
-        output_file = os.path.join(output_folder, f"{idx:04d}.h5")
-        print(f"Processing file: {input_file}")
-        sample_and_sync_h5(input_file, output_file, sampling_frequency, topic_types)
-        print(f"Processed file saved as: {output_file}")
+        try:
+            output_file = os.path.join(output_folder, f"{idx:04d}.h5")
+            print(f"Processing file: {input_file}")
+            sample_and_sync_h5(input_file, output_file, sampling_frequency, topic_types)
+            print(f"Processed file saved as: {output_file}")
+        except Exception as e:
+            print(e)
 
     print(f"All files processed. Processed files are saved in {output_folder}.")
 
