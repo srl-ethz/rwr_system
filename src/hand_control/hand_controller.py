@@ -38,7 +38,7 @@ class HandController(CalibrationClass):
         
         ### All configurations are here ### 
 
-        maxCurrent = 150
+        maxCurrent = 120
         calibration_current = 170
         baudrate = 3000000
 
@@ -416,7 +416,7 @@ class HandController(CalibrationClass):
         """
         joints_ratio_list = [0 for _ in range(17)]
         
-        calibration_ratios_file_name = self.find_latest_calibration_file("calibration_yaml")
+        calibration_ratios_file_name = self.find_latest_calibration_file("src/hand_control/calibration_yaml")
         # Open the YAML file
         with open(calibration_ratios_file_name, "r") as yaml_file:
             calibration_defs = yaml.safe_load(yaml_file)
