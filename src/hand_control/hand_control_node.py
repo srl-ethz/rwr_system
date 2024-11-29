@@ -21,7 +21,7 @@ class HandControllerNode(Node):
 
         # self._hc = HandController(port=port, baudrate=baudrate)
 
-        self._hc = HandController(port=port)
+        self._hc = HandController(port=port, auto_calibrate= True)
         # self.get_logger().info("Hand Controller Before INIT =========================")
 
         self._hc.init_joints(calibrate=False)

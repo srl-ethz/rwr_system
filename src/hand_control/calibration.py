@@ -219,10 +219,10 @@ class CalibrationClass():
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
             # Dummy code that moves the fingers mcp joints by 90 degrees.
             joint_angles = np.zeros(len(self.motor_ids))
-            joint_angles[5] = 90
-            joint_angles[8] = 90
-            joint_angles[11] = 90
-            joint_angles[14] = 90
+            joint_angles[4] = 10
+            joint_angles[7] = 10
+            joint_angles[10] = 10
+            joint_angles[13] = 10
             
             self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
 
@@ -296,6 +296,72 @@ class CalibrationClass():
         self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))  # Max current for safety
         self.write_desired_motor_pos(self.motor_id2init_pos)
         time.sleep(0.2)
+
+    def calibrate_wrist_pitch(self, yaml_file_path, calib_current=40, maxCurrent: int = 150):
+        """
+        Calibrate the wrist joint by extending the pitch movement fully in both directions
+        and recording the motor positions. Reads and writes results to the provided YAML file.
+        
+        Args:
+            yaml_file_path (str): Path to the existing YAML calibration file.
+            calib_current (int): Current value for calibration (default is 40).
+
+        Returns:
+            dict: Updated calibration results for the wrist pitch joint.
+        """
+        # Set to current control mode
+        self.set_operating_mode(0)
+
+        # Initialize motor position calibration array
+        motor_pos_calib = np.zeros(len(self.motor_ids))
+
+        # Get the motor ID for the wrist pitch joint
+        
+        wrist_motor_id = self.motor_ids_dict["wrist"][0]
+        wrist_motor_idx = self.motor_ids.tolist().index(wrist_motor_id)
+
+        # Apply calibration current in one direction and record position
+        motor_pos_calib[wrist_motor_idx] = calib_current
+        wrist_pos_extended = self.write_current_and_get_pos(motor_pos_calib, np.zeros(len(self.motor_ids)))[wrist_motor_idx]
+
+        # Apply calibration current in the opposite direction and record position
+        motor_pos_calib[wrist_motor_idx] = -calib_current
+        wrist_pos_flexed = self.write_current_and_get_pos(motor_pos_calib, np.zeros(len(self.motor_ids)))[wrist_motor_idx]
+
+        # Calculate the range of motion (ROM) for the wrist joint
+        wrist_pos_diff = np.rad2deg(np.abs(wrist_pos_extended - wrist_pos_flexed))
+        
+        wrist_min_rom, wrist_max_rop = self.mano_joints_rom_list[self.mano_joint_mapping["wrist"]][0] 
+        wrist_rom_range = wrist_max_rop - wrist_min_rom
+
+        # Calculate the mean position to center the wrist after calibration
+        wrist_pos_mean = np.mean([wrist_pos_extended, wrist_pos_flexed])
+
+        # Load the existing calibration definitions
+        with open(yaml_file_path, "r") as yaml_file:
+            calibration_defs = yaml.safe_load(yaml_file)
+
+        # Save the start and end values, and the ratio for the wrist joint
+        calibration_defs["wrist"] = {
+            "PITCH": {
+                "value": [float(wrist_pos_flexed), float(wrist_pos_extended)],
+                "ratio": float(wrist_pos_diff / wrist_rom_range)
+            }
+        }
+
+        # Write the updated calibration definitions back to the YAML file
+        with open(yaml_file_path, "w") as yaml_file:
+            yaml.dump(calibration_defs, yaml_file, default_flow_style=False)
+
+        # Set the motor position to the mean position for centering the wrist
+        self.motor_id2init_pos[wrist_motor_idx] = wrist_pos_mean
+
+        # Comment out later: Return to normal mode and set motor position
+        self.set_operating_mode(5)
+        self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))  # Max current for safety
+        self.write_desired_motor_pos(self.motor_id2init_pos)
+        time.sleep(0.2)
+
 
 
     def auto_calibrate_fingers(self, calib_current=40, maxCurrent: int = 150):

@@ -38,7 +38,7 @@ class HandController(CalibrationClass):
         
         ### All configurations are here ### 
 
-        maxCurrent = 120
+        maxCurrent = 130
         calibration_current = 170
         baudrate = 3000000
 
@@ -167,7 +167,6 @@ class HandController(CalibrationClass):
         with self.motor_lock:
             self._dxc.write_desired_pos(self.motor_ids, motor_positions_rad)
 
-
     def write_desired_motor_current(self, motor_currents_mA):
         """
         send current command to the motors
@@ -289,6 +288,7 @@ class HandController(CalibrationClass):
             tendon_id_ranges[muscle_group.name] = (start_tendon_idx, end_tendon_idx)
         return tendon_id_ranges
     
+    
     def get_motor_id_dict(self):
         """
         Create a dictionary with the motor ids for each muscle group.
@@ -369,12 +369,34 @@ class HandController(CalibrationClass):
         """
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
 
-        motor_pos_from_ratio = joint_angles_clipped * self.mano_joints2spools_ratio
-        motor_pos_des = np.deg2rad(motor_pos_from_ratio) - self.motor_pos_norm + self.motor_id2init_pos
+        # Map Mano indexes to the corresponding motor_ids index
+        mano_to_motor_ids_mapping =self.get_mano_to_motor_ids_mapping()
+
+        joint_anlges_from_ratio = joint_angles_clipped * self.mano_joints2spools_ratio
+        
+        motor_pos_mapped = [joint_anlges_from_ratio[i] for i in mano_to_motor_ids_mapping]
+
+        motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
     
         self.write_desired_motor_pos(motor_pos_des)
         time.sleep(0.01) # wait for the command to be sent
 
+
+    def get_mano_to_motor_ids_mapping(self):
+        mano_indexes_list = []
+        motors_ids_idxs_list = []
+        for joint in self.mano_joint_mapping.keys():
+            joint_motor_ids = self.motor_ids_dict[joint]
+            joint_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in joint_motor_ids]      
+            motors_ids_idxs_list.extend(joint_motor_idxs)
+
+            joints_slice = self.mano_joint_mapping[joint]
+            mano_indexes_list.extend(list(range(joints_slice.start, joints_slice.stop)))
+
+        sorted_indices = sorted(range(len(mano_indexes_list)), key=lambda i: mano_indexes_list[i])
+        mano_indexes_list = [mano_indexes_list[i] for i in sorted_indices]
+        mapping = [motors_ids_idxs_list[i] for i in sorted_indices]
+        return mapping
 
     def clip_joint_angles(self, joint_angles):
         """
@@ -443,4 +465,4 @@ class HandController(CalibrationClass):
 
 if __name__ == "__main__" :
     gc = HandController("/dev/ttyUSB0", calibration= False, auto_calibrate= True)
-    time.sleep(1.0)
+    time.sleep(2.0)
