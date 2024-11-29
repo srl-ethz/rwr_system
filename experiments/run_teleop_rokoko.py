@@ -125,8 +125,20 @@ class RokokoCoilDemo(Node):
             self.X_W_fEE_init = deepcopy(self.X_W_fEE)
 
         start_target = np.array(
-            [[0, 0, -1, 0], [-1, 0, 0, 0], [0, 1, 0, 0], [0.5, -0.1, 0.25, 1]]
+            [[0, 0, -1, 0], [-1, 0, 0, 0], [0, 1, 0, 0], [0.45, -0.25, 0.25, 1]]
         ).T
+
+        R_z_neg90 = np.array([
+            [0, 1, 0, 0],
+            [-1, 0, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        # Perform the matrix multiplication
+        start_target = np.dot(start_target, R_z_neg90)
+
+
         start_target = DrakeRigidTransform(start_target)
         self.publish_target_pose(start_target)
 

@@ -17,17 +17,17 @@ def generate_launch_description():
     policy_ckpt_path = LaunchConfiguration('policy_ckpt_path')
 
     # Define the node with parameters from the launch arguments
-    my_node = Node(
+    policy_node = Node(
         package='experiments',
         executable='model_inference_node.py',
         name="model_inference",
         output='screen',
         parameters=[{
             'camera_topics': [
-                "/oakd_front_view/color"
+                "/oakd_front_view/color", "/oakd_side_view/color"
             ],
             'camera_names': [
-                "oakd_front_view_images"
+                "oakd_front_view_images", "oakd_side_view_images"
             ],
             "policy_ckpt_path": policy_ckpt_path
          }]
@@ -36,5 +36,5 @@ def generate_launch_description():
     # Return the LaunchDescription with all the launch arguments and nodes
     return LaunchDescription([
         policy_ckpt_arg,
-        my_node
-    ])
+        policy_node
+])
