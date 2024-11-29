@@ -96,10 +96,6 @@ class OakDPublisher(Node):
                     self.camera_dict[camera_name]["color"]
                 ), deepcopy(self.camera_dict[camera_name]["depth"])
 
-                # 180 flip (need to do it for all oakd cameras for now)
-                color = cv2.rotate(color, cv2.ROTATE_180)
-                depth = cv2.rotate(depth, cv2.ROTATE_180)
-
                 # publish normal images
                 try:
                     header = Header()
