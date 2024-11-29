@@ -1,7 +1,7 @@
 <mujoco model="right_orca1">
     <!-- TODO: UPDATE FINGERTP POS AND ORIENTATION + FIX THUMB -->
 
-    <body name="root" euler="0 0 0" >
+    <body name="root" quat="1.0 0.0 0.0 0.0">
     <!-- match the initial pose of P0, with the palm facing downwards (-z) and the fingers point +y -->
         <!-- so that the base can be colored separately in IsaacGym, make it into its own body -->
         <!-- <geom mesh="base" rgba="0.2 0.2 0.2 1"/> -->
