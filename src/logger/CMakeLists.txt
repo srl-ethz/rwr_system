@@ -31,6 +31,7 @@ find_package(tf2_eigen REQUIRED)
 install(PROGRAMS
     logger_node.py
     bag2h5_converter.py
+    syncronize_data.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

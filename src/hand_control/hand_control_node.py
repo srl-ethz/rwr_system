@@ -31,7 +31,7 @@ class HandControllerNode(Node):
         )
 
     def joint_angle_cb(self, msg):
-        assert len(msg.data) == 16, "Expected 17 joint angles, got {}".format(
+        assert len(msg.data) == 17, "Expected 17 joint angles, got {}".format(
             len(msg.data)
         )
         joint_angles = np.array(msg.data)

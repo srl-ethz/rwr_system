@@ -1,4 +1,5 @@
 gc_tendons:
+  'tower2root': {}
   'root2thumb_base': {}
   'thumb_base2pp': {}
   'thumb_pp2mp': {}
@@ -15,6 +16,7 @@ gc_tendons:
   'pinky_abd': {}
   'root2pinky_pp': {}
   'pinky_pp2mp': {'pinky_mp2dp': 0.58333}
+
 
 finger_to_tip:
   thumb: thumb_fingertip
@@ -33,6 +35,7 @@ finger_to_base:
 wrist_name: palm
 
 gc_limits_lower : [
+  -80.0,    # tower2root
   -75.0,  # root2thumb_base
   -45.0,  # thumb_base2pp
   -10.0,  # thumb_pp2mp
@@ -52,6 +55,7 @@ gc_limits_lower : [
 ]
 
 gc_limits_upper : [
+  80.0,  # tower2root
   75.0,  # root2thumb_base
   45.0,  # thumb_base2pp
   90.0,  # thumb_pp2mp

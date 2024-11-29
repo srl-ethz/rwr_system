@@ -7,7 +7,7 @@ import cv2
 import time
 import open3d as o3d
 import threading
-from oakd_utils import PointCloudVisualizer
+from oakd_utils import PointCloudVisualizer, calibrate_with_aruco, compute_projection_matrix
 import numpy as np
 import yaml
 import os
@@ -159,6 +159,16 @@ class OakDDriver:
         self.intrinsics = None
         self.inv_intrinsics = None
         self.distortion_coeff = None
+        self.calibrated = False
+    
+    def calibrate(self, frame):
+        T_camera_marker = calibrate_with_aruco(frame, self.intrinsics, self.distortion_coeff)
+        if T_camera_marker is None:
+            print("Calibration failed")
+            return
+        self.extrinsics = T_camera_marker
+        self.projection_matrix = compute_projection_matrix(self.intrinsics, T_camera_marker)
+        self.calibrated = True
 
     def print_devices(self):
         for device in dai.Device.getAllAvailableDevices():
@@ -225,6 +235,7 @@ class OakDDriver:
             self.inv_intrinsics = np.linalg.inv(intrinsics)
             self.distortion_coeff = distortion_coeff
             
+            
             if has_depth:
                 pcl_converter = PointCloudVisualizer(intrinsics, w, h, self.visualize)
 
@@ -248,6 +259,8 @@ class OakDDriver:
                                     print(e)
                                     continue
                             color = msgs["colorize"].getCvFrame()
+                            if self.calibrated == False:
+                                self.calibrate(color)
 
                             if self.visualize:
                                 cv2.imshow("color", color)
