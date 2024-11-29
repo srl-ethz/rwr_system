@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from rokoko_ingress import RokokoTracker
-from src.common.utils import numpy_to_float32_multiarray    
+from faive_system.src.common.utils import numpy_to_float32_multiarray    
 
 class RokokoNode(Node):
     def __init__(self, debug=False):
@@ -39,8 +39,8 @@ class RokokoNode(Node):
         key_points = self.tracker.get_keypoint_positions()
         wait_cnt = 1
         while (key_points is None):
-            if (wait_cnt % 10):
-                print("waiting for hand tracker")
+            if (not (wait_cnt % 100000)):
+                print("waiting for hand tracker", wait_cnt//100000)
             wait_cnt+=1
             key_points = self.tracker.get_keypoint_positions()
         keypoint_positions, timestamp = key_points

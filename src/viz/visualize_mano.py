@@ -24,6 +24,19 @@ class ManoHandVisualizer:
     def generate_hand_markers(self, joints, stamp):
         markers = []
 
+        # # Shorten only the last joint of the thumb
+        # thumb_tip_index = 4  # Thumb tip
+        # thumb_base_index = 3  # Joint before the thumb tip
+
+        # # Scale factor for shortening the thumb tip
+        # thumb_tip_scale_factor = 0.6
+
+        # # Update the thumb tip position
+        # base_joint = np.array(joints[thumb_base_index])
+        # thumb_tip = np.array(joints[thumb_tip_index])
+        # offset = thumb_tip - base_joint
+        # joints[thumb_tip_index] = tuple(base_joint + thumb_tip_scale_factor * offset)
+
         # Create marker for joints
         joint_marker = Marker()
         joint_marker.header.frame_id = "hand_root"
@@ -49,23 +62,24 @@ class ManoHandVisualizer:
             (0, 1),
             (1, 2),
             (2, 3),
-            (3, 4),  # Thumb
-            (0, 5),
-            (5, 6),
+            (3, 4),  
+            (4, 5), # Thumb
+            (1, 6),
             (6, 7),
-            (7, 8),  # Index finger
-            (0, 9),
-            (9, 10),
+            (7, 8),  
+            (8, 9), # Index finger
+            (1, 10),
             (10, 11),
-            (11, 12),  # Middle finger
-            (0, 13),
-            (13, 14),
+            (11, 12),  
+            (12, 13), # Middle finger
+            (1, 14),
             (14, 15),
-            (15, 16),  # Ring finger
-            (0, 17),
-            (17, 18),
+            (15, 16),  
+            (16, 17), # Ring finger
+            (1, 18),
             (18, 19),
-            (19, 20),  # Pinky
+            (19, 20), 
+            (20, 21), # Pinky
         ]
 
         bone_marker = Marker()
@@ -91,7 +105,7 @@ class ManoHandVisualizer:
 
         markers.append(bone_marker)
 
-        self.markers.extend(markers)
+        self.markers.extend(markers)    
 
     def generate_frame_markers(self, origin, x_axis, y_axis, z_axis, stamp):
         markers = []

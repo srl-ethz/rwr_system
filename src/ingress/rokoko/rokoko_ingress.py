@@ -8,6 +8,7 @@ from scipy.spatial.transform import Rotation
 
 
 MANO_KEYPOINTS_LIST = [
+    "rightLowerArm",
     "rightHand",
     "rightThumbProximal",
     "rightThumbMedial",

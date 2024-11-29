@@ -14,4 +14,4 @@ launch:
         - name: "retarget/mjcf_filepath"
           value: "$(find-pkg-share viz)/models/orca1_hand/hand_orca1.xml"
         - name: "retarget/hand_scheme"
-          value: "orca1"
+          value: "$(find-pkg-share viz)/models/orca1_hand/scheme_orca1.yaml"

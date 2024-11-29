@@ -6,11 +6,12 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from geometry_msgs.msg import PoseStamped, Point, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
-from src.retargeter import Retargeter
-from src.common.utils import numpy_to_float32_multiarray
+from faive_system.src.retargeter import Retargeter # type: ignore
+from faive_system.src.common.utils import numpy_to_float32_multiarray # type: ignore
 import os
-from src.viz.visualize_mano import ManoHandVisualizer
+from faive_system.src.viz.visualize_mano import ManoHandVisualizer # type: ignore
 import torch
+import time
 
 class RetargeterNode(Node):
     def __init__(self, debug=False):
@@ -20,7 +21,10 @@ class RetargeterNode(Node):
         self.declare_parameter("retarget/mjcf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/urdf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/hand_scheme", rclpy.Parameter.Type.STRING)
-        self.declare_parameter("debug", rclpy.Parameter.Type.BOOL)
+        self.declare_parameter("retarget/mano_adjustments", "")
+        self.declare_parameter("retarget/retargeter_cfg", "")
+        self.declare_parameter("debug", True)
+        self.declare_parameter("include_wrist_and_tower", True)
 
         try:
             mjcf_filepath = self.get_parameter("retarget/mjcf_filepath").value
@@ -32,8 +36,18 @@ class RetargeterNode(Node):
         except:
             urdf_filepath = None
         hand_scheme = self.get_parameter("retarget/hand_scheme").value
+        # mano_adjustments's default value is None
+        mano_adjustments = self.get_parameter("retarget/mano_adjustments").value
+        if mano_adjustments == "":
+            mano_adjustments = None
+
+        retargeter_cfg = self.get_parameter("retarget/retargeter_cfg").value
+        if retargeter_cfg == "":
+            retargeter_cfg = None
+
         debug = self.get_parameter("debug").value
         device = "cuda" if torch.cuda.is_available() else "cpu"
+        include_wrist_and_tower = self.get_parameter("include_wrist_and_tower").value
 
         
         # subscribe to ingress topics
@@ -42,7 +56,9 @@ class RetargeterNode(Node):
         )
         
         self.retargeter = Retargeter(
-            device=device,  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, hand_scheme=hand_scheme
+            device=device,  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, 
+            hand_scheme=hand_scheme, mano_adjustments=mano_adjustments, retargeter_cfg=retargeter_cfg,
+            include_wrist_and_tower=include_wrist_and_tower
         )
         
         self.joints_pub = self.create_publisher(
@@ -55,12 +71,17 @@ class RetargeterNode(Node):
             
         
         self.timer = self.create_timer(0.005, self.timer_publish_cb)
+        self.keypoint_positions = None
     
     def ingress_mano_cb(self, msg):
         self.keypoint_positions = np.array(msg.data).reshape(-1, 3)
     
         
     def timer_publish_cb(self):
+        if self.keypoint_positions is None:
+            print("No keypoints received yet")
+            time.sleep(1)
+            return
         try:
             if self.debug:
                 self.mano_hand_visualizer.reset_markers()

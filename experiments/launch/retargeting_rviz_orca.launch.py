@@ -8,9 +8,9 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca1_hand",
+    "orca2_hand",
     "urdf",
-    "orca1.urdf")
+    "orca2.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
@@ -29,11 +29,11 @@ def generate_launch_description():
                 package="ingress",
                 executable="rokoko_node.py",
                 name="rokoko_node",
-                output="log",
+                output="screen",
                 parameters=[
                     {"rokoko_tracker/ip": "0.0.0.0"},
                     {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": True}
+                    {"rokoko_tracker/use_coil": False}
                 ],
             ),
 
@@ -45,14 +45,6 @@ def generate_launch_description():
                 output="screen",
                 # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
-                    # {
-                    #     "retarget/mjcf_filepath": os.path.join(
-                    #         get_package_share_directory("viz"),
-                    #         "models",
-                    #         "faive_hand_p4",
-                    #         "hand_p4.xml",
-                    #     )
-                    # },
                     {
                         "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
@@ -60,12 +52,37 @@ def generate_launch_description():
                             "orca1_hand",
                             "urdf",
                             "orca1.urdf",
-                        )
+                        ),
+                        "retarget/hand_scheme": os.path.join(
+                            get_package_share_directory("viz"),
+                            "models",
+                            "orca1_hand",
+                            "scheme_orca1.yaml",
+                        ),
+                        "retarget/mano_adjustments": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_adjustment.yaml"
+                        ),
+                        "retarget/retargeter_cfg": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_cfgs_orca1.yaml"
+                        ),
                     },
-                    {"retarget/hand_scheme": "orca1"},
                     {"debug": True},
+                    {"include_wrist_and_tower": True},
                 ],
             ),
+
+           # HAND CONTROLLER NODE
+            Node(
+                package="hand_control",
+                executable="hand_control_node.py",
+                name="hand_control_node",
+                output="screen"
+            ),
+
             
             # VISUALIZATION NODE
             Node(
@@ -77,8 +94,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca1_hand",
-                            "scheme_orca1.yaml",
+                            "orca2_hand",
+                            "scheme_orca2.yaml",
                         )
                     }
                 ],
@@ -99,7 +116,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca1.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
                 ),
 
         ]

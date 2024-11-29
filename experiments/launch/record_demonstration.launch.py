@@ -5,24 +5,24 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": True, "side_view": True, "wrist_view": True}
+cameras = {"front_view": False, "side_view": False, "wrist_view": False}
 
 
 def generate_launch_description():
     return LaunchDescription(
         [
             # CAMERA INGRESS NODE
-            Node(
-                package="ingress",
-                executable="oakd_node.py",
-                name="oakd_node",
-                output="log",
-                parameters=[
-                    {"enable_front_camera": cameras["front_view"]},
-                    {"enable_side_camera": cameras["side_view"]},
-                    {"enable_wrist_camera": cameras["wrist_view"]},
-                ],
-            ),
+            # Node(
+            #     package="ingress",
+            #     executable="oakd_node.py",
+            #     name="oakd_node",
+            #     output="log",
+            #     parameters=[
+            #         {"enable_front_camera": cameras["front_view"]},
+            #         {"enable_side_camera": cameras["side_view"]},
+            #         {"enable_wrist_camera": cameras["wrist_view"]},
+            #     ],
+            # ),
             
             Node(
                 package="ingress",
@@ -49,21 +49,41 @@ def generate_launch_description():
                 package="retargeter",
                 executable="retargeter_node.py",
                 name="retargeter_node",
-                output="log",
+                output="screen",
+                # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
                     {
-                        "retarget/mjcf_filepath": os.path.join(
+                        "retarget/urdf_filepath": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
-                            "hand_p4.xml",
-                        )
+                            "orca1_hand",
+                            "urdf",
+                            "orca1.urdf",
+                        ),
+                        "retarget/hand_scheme": os.path.join(
+                            get_package_share_directory("viz"),
+                            "models",
+                            "orca1_hand",
+                            "scheme_orca1.yaml",
+                        ),
+                        "retarget/mano_adjustments": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_adjustment.yaml"
+                        ),
+                        "retarget/retargeter_cfg": os.path.join(
+                            get_package_share_directory("experiments"),
+                            "cfgs",
+                            "retargeter_cfgs_orca1.yaml"
+                        ),
                     },
-                    {"retarget/hand_scheme": "p4"},
+                    {"debug": True},
+                    {"include_wrist_and_tower": True},
                 ],
-            ),
+            ), 
             
             # VISUALIZATION NODE
+            
             Node(
                 package="viz",
                 executable="visualize_joints.py",
@@ -73,11 +93,12 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
-                            "scheme_p4.yaml",
+                            "orca1_hand",
+                            "scheme_orca1.yaml",
                         )
                     }
                 ],
+                output="screen",
             ),
         ]
     )

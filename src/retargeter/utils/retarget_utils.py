@@ -13,38 +13,46 @@ def get_mano_joints_dict(
     if not batch_processing:
         if not include_wrist:
             return {
-                "thumb": joints[1:5, :],
-                "index": joints[5:9, :],
-                "middle": joints[9:13, :],
-                "ring": joints[13:17, :],
-                "pinky": joints[17:21, :],
+                "wrist": joints[1, :],
+                "thumb": joints[2:6, :],
+                "index": joints[6:10, :],
+                "middle": joints[10:14, :],
+                "ring": joints[14:18, :],
+                "pinky": joints[18:22, :],
+
             }
         else:
             return {
-                "wrist": joints[0, :],
-                "thumb": joints[1:5, :],
-                "index": joints[5:9, :],
-                "middle": joints[9:13, :],
-                "ring": joints[13:17, :],
-                "pinky": joints[17:21, :],
+                "forearm": joints[0, :],
+                "wrist": joints[1, :],
+                "thumb": joints[2:6, :],
+                "index": joints[6:10, :],
+                "middle": joints[10:14, :],
+                "ring": joints[14:18, :],
+                "pinky": joints[18:22, :],
+
             }
     else:
         if not include_wrist:
             return {
-                "thumb": joints[:, 1:5, :],
-                "index": joints[:, 5:9, :],
-                "middle": joints[:, 9:13, :],
-                "ring": joints[:, 13:17, :],
-                "pinky": joints[:, 17:21, :],
+                "wrist": joints[:, 1, :],
+                "thumb": joints[:, 2:6, :],
+                "index": joints[:, 6:10, :],
+                "middle": joints[:, 10:14, :],
+                "ring": joints[:, 14:18, :],
+                "pinky": joints[:, 18:22, :],
+
             }
         else:
             return {
-                "wrist": joints[:, 0, :],
-                "thumb": joints[:, 1:5, :],
-                "index": joints[:, 5:9, :],
-                "middle": joints[:, 9:13, :],
-                "ring": joints[:, 13:17, :],
-                "pinky": joints[:, 17:21, :],
+                "forearm": joints[:, 0, :],
+                "wrist": joints[:, 1, :],
+                "thumb": joints[:, 2:6, :],
+                "index": joints[:, 6:10, :],
+                "middle": joints[:, 10:14, :],
+                "ring": joints[:, 14:18, :],
+                "pinky": joints[:, 18:22, :],
+
             }
 
 
@@ -123,6 +131,41 @@ def rotation_matrix_x(angle):
     )
     return rot_mat
 
+def correct_rokoko_offset(joint_pos, offset_angle, scaling_factor=2):
+    """
+    Param: joint_pos, a numpy array of 3
+    Param: offset_angle, the angle by which the rokoko hand is offset about z in degrees
+    Param: scaling_factor, which is added at each outer_going joint. This is because the rotation for
+    some reason generates kinked lines. This factor accounts for that.
+    The PIP joint Dip joint gets rotated by offset_angle + scaling_factor and the 
+    enf-of-finger joint gets rotated by offset_angle + 2*scaling_factor
+    
+    Corrects the offset of the rokoko hand by rotating the 3 
+    upmost positions of the hand around the z-axis by the offset_angle
+    """
+    
+    joint_dict = get_mano_joints_dict(joint_pos, include_wrist=True)
+    
+    # Special offset, see the description above
+    R1 = rotation_matrix_z(np.deg2rad(-offset_angle))
+    R2 = rotation_matrix_z(np.deg2rad(-offset_angle - scaling_factor))
+    R3 = rotation_matrix_z(np.deg2rad(-offset_angle - 2*scaling_factor))
+    
+    R = [R1, R2, R3]
+    
+    # Rotate the last 3 joints of the specified fingers
+    for finger in ["pinky", "ring", "middle", "index", "thumb"]:
+        for i in range(-3, 0):
+            joint_dict[finger][i] = np.dot(R[i], joint_dict[finger][i])
+            
+    # Update the joint positions in the original array
+    joint_pos[6:10, :] = joint_dict["index"]
+    joint_pos[10:14, :] = joint_dict["middle"]
+    joint_pos[14:18, :] = joint_dict["ring"]
+    joint_pos[18:22, :] = joint_dict["pinky"]
+    joint_pos[2:6, :] = joint_dict["thumb"]
+    
+    return joint_pos
 
 def get_hand_center_and_rotation(
     thumb_base, index_base, middle_base, ring_base, pinky_base, wrist=None
@@ -150,6 +193,49 @@ def get_hand_center_and_rotation(
         (x_axis.reshape(1, 3), y_axis.reshape(1, 3), z_axis.reshape(1, 3)), axis=0
     ).T
     return hand_center, rot_matrix
+
+def rotate_points_around_y(joints, angle_degrees):
+    joint_dict = get_mano_joints_dict(joints, include_wrist=True)
+    wrist = joint_dict["wrist"]
+    # Convert angle to radians
+    angle_radians = -np.radians(angle_degrees)
+    
+    # Define the rotation matrix around the z-axis
+    
+    rotation_matrix = np.array([
+        [np.cos(angle_radians), -np.sin(angle_radians), 0],
+        [np.sin(angle_radians), np.cos(angle_radians), 0],
+        [0, 0, 1]
+    ])
+    
+    # Translate points to the origin
+    translated_joints = joints - wrist
+    
+    # Apply the rotation
+    rotated_joints = translated_joints @ rotation_matrix.T
+    
+    # Translate points back to their original position
+    rotated_joints += wrist
+    
+    return rotated_joints
+
+
+def get_wrist_angle(joint_pos):
+    joint_dict = get_mano_joints_dict(joint_pos, include_wrist=True)
+    wrist=joint_dict["wrist"]
+    forearm=joint_dict["forearm"]
+    arm = wrist - forearm
+
+    # Project the arm vector onto the xz-plane (ignore the y component)
+    arm_xz = np.array([arm[0], 0, arm[2]])
+
+    # Calculate the angle between the arm vector and its projection onto the xz-plane
+    angle = np.arctan2(arm[1], np.linalg.norm(arm_xz))
+
+    # Convert the angle to degrees
+    angle_degrees = np.degrees(angle)
+    
+    return angle_degrees
 
 
 def normalize_points_to_hands_local(joint_pos):
