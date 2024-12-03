@@ -43,9 +43,11 @@ class PolicyPlayerAgent(Node):
         self.declare_parameter("camera_topics", rclpy.Parameter.Type.STRING_ARRAY)
         self.declare_parameter("camera_names", rclpy.Parameter.Type.STRING_ARRAY)
         self.declare_parameter("policy_ckpt_path", "")   # assume the policy ckpt is saved with its config
+        self.declare_parameter("hand_qpos_dim", 16) # The dimension of the hand_qpos, we need this because we need to broadcast an all zero command to the hand at the beginning
         self.camera_topics = self.get_parameter("camera_topics").value
         self.camera_names = self.get_parameter("camera_names").value
         self.policy_ckpt_path = self.get_parameter("policy_ckpt_path").value
+        self.hand_qpos_dim = self.get_parameter("hand_qpos_dim").value
         
         self.lock = Lock()
 
@@ -75,6 +77,11 @@ class PolicyPlayerAgent(Node):
         self.policy = get_policy_from_ckpt(self.policy_ckpt_path)
         self.policy.reset_policy()
         self.policy_run = self.create_timer(0.05, self.run_policy_cb) # 20hz
+
+
+        hand_msg = numpy_to_float32_multiarray(np.zeros(self.hand_qpos_dim))
+        self.hand_pub.publish(hand_msg)
+
 
     def publish(self, wrist_policy: np.ndarray, hand_policy: np.ndarray):
         # publish hand policy
