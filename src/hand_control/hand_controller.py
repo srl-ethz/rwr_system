@@ -227,12 +227,9 @@ class HandController:
             joint_angles_of_muscle_group = self.get_joint_angles_for_joint(joint_angles, muscle_group.name)
             
             if muscle_group.name == "wrist":
-                print("YESS")
                 tendon_lengths[t_s:t_e+1] = fk.pose2wrist(*joint_angles_of_muscle_group)
             else:
-                print("NOOO     ")
                 tendon_lengths[t_s:t_e+1] = fk.pose2tendon_length(muscle_group.name, *joint_angles_of_muscle_group)
-                print(f"Joint Angles: {joint_angles_of_muscle_group}")
         return self.tendon_pos2motor_pos(tendon_lengths)
 
     def get_tendon_id_ranges(self):

@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": False, "side_view": False, "wrist_view": False}
+cameras = {"front_view": False, "side_view": True, "wrist_view": False}
 
 
 def generate_launch_description():
@@ -36,7 +36,7 @@ def generate_launch_description():
                 ],
             ),
 
-            # HAND CONTROLLER NODE
+            #  HAND CONTROLLER NODE
             Node(
                 package="hand_control",
                 executable="hand_control_node.py",
@@ -84,21 +84,21 @@ def generate_launch_description():
             
             # VISUALIZATION NODE
             
-            Node(
-                package="viz",
-                executable="visualize_joints.py",
-                name="visualize_joints",
-                parameters=[
-                    {
-                        "scheme_path": os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            "orca1_hand",
-                            "scheme_orca1.yaml",
-                        )
-                    }
-                ],
-                output="screen",
-            ),
+            # Node(
+            #     package="viz",
+            #     executable="visualize_joints.py",
+            #     name="visualize_joints",
+            #     parameters=[
+            #         {
+            #             "scheme_path": os.path.join(
+            #                 get_package_share_directory("viz"),
+            #                 "models",
+            #                 "orca1_hand",
+            #                 "scheme_orca1.yaml",
+            #             )
+            #         }
+            #     ],
+            #     output="screen",
+            # ),
         ]
     )

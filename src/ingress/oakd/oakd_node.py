@@ -11,7 +11,7 @@ from rclpy.qos import QoSProfile, DurabilityPolicy
 from std_msgs.msg import Header
 from cv_bridge import CvBridge, CvBridgeError
 from threading import RLock
-from oakd_ingress import OakDDriver, OAK_CAMS_LIST
+from faive_system.src.ingress.oakd.oakd_ingress import OakDDriver, OAK_CAMS_LIST
 from copy import deepcopy
 import time
 from faive_system.src.common.utils import numpy_to_float32_multiarray
@@ -73,6 +73,7 @@ class OakDPublisher(Node):
                 "projection_pub": self.create_publisher(
                     Float32MultiArray, f"/oakd_{camera_name}/projection", qos_profile
                 ),
+                "calibrated" : False
             }
 
     def recv_oakd_images(self, color, depth, camera_name):
@@ -94,10 +95,6 @@ class OakDPublisher(Node):
                 color, depth = deepcopy(
                     self.camera_dict[camera_name]["color"]
                 ), deepcopy(self.camera_dict[camera_name]["depth"])
-
-                # 180 flip (need to do it for all oakd cameras for now)
-                color = cv2.rotate(color, cv2.ROTATE_180)
-                depth = cv2.rotate(depth, cv2.ROTATE_180)
 
                 # publish normal images
                 try:
@@ -127,9 +124,9 @@ class OakDPublisher(Node):
                 except CvBridgeError as e:
                     self.get_logger().error(f"Error publishing depth image: {e}")
 
-                # publish camera info
-                if self.calibrated:
+                if self.camera_dict[camera_name]["calibrated"]:
                     continue
+                # publish camera info
                 try:
                     projection_matrix = np.array(self.camera_dict[camera_name]["driver"].projection_matrix)
                     print(f"Projection matrix for {camera_name}: {projection_matrix}")
@@ -155,7 +152,8 @@ class OakDPublisher(Node):
                     self.camera_dict[camera_name]["extrinsics_pub"].publish(
                         extrinsic_matrix_msg
                     )
-                    self.calibrated = True
+                    
+                    self.camera_dict[camera_name]["calibrated"] = True
                     
                 except Exception as e:
                     self.get_logger().error(f"Error publishing camera infos: {e}")

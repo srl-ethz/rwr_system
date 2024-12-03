@@ -109,6 +109,7 @@ class PolicyPlayerAgent(Node):
         images = {camera.name: camera.get_im() for camera in self.camera_listeners}
         if any([im is None for im in images.values()]):
             get_data_success = False
+            print("Missing camera images", [im is not None for im in images.values()])
             return get_data_success, obs_dict
 
         images = {
@@ -120,6 +121,8 @@ class PolicyPlayerAgent(Node):
             qpos_franka = self.current_wrist_state
             qpos_hand = self.current_hand_state
         if qpos_franka is None or qpos_hand is None:
+            print("missing qpos_franka", qpos_franka is None)
+            print("missing qpos_hand", qpos_hand is None)
             return False, obs_dict
         
         
@@ -137,9 +140,9 @@ class PolicyPlayerAgent(Node):
             return
         with torch.inference_mode():
             obs_dict = {k: torch.tensor(v).float().unsqueeze(0) for k, v in obs_dict.items()} # add batch dimension
-            action = self.policy.predict_action(obs_dict).cpu().numpy()
-            wrist_action = action[0, :7]
-            hand_action = action[0, 7:]
+            actions = self.policy.predict_action(obs_dict)
+            wrist_action = actions["actions_franka"][0].cpu().numpy()
+            hand_action = actions["actions_hand"][0].cpu().numpy()
         self.publish(wrist_action, hand_action)
 
 def main(args=None):
