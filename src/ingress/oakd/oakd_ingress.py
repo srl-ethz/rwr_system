@@ -120,6 +120,7 @@ class HostSync:
 # Detect cameras and asign them according to oakd_cams.yaml
 available_cams = dai.Device.getAllAvailableDevices()
 print(f"Available devices: \n")
+
 for c in available_cams:
     print(c)
 

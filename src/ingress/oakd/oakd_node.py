@@ -31,6 +31,7 @@ class OakDPublisher(Node):
 
         self.bridge = CvBridge()
         camera_dict = {}
+        
         if enable_front_camera:
             camera_dict["front_view"] = OAK_CAMS_LIST["FRONT_CAMERA"]
         if enable_side_camera:
