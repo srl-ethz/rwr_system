@@ -15,13 +15,13 @@ class HandControllerNode(Node):
         self.declare_parameter("hand_controller/port", "/dev/ttyUSB0")
         self.declare_parameter("hand_controller/baudrate", 3000000)
 
-
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
+        auto_calibrate = self.get_parameter("hand_controller/auto_calibrate").value
 
         # self._hc = HandController(port=port, baudrate=baudrate)
 
-        self._hc = HandController(port=port, auto_calibrate= True)
+        self._hc = HandController(port=port, auto_calibrate= auto_calibrate)
         # self.get_logger().info("Hand Controller Before INIT =========================")
 
         self._hc.init_joints(calibrate=False)
