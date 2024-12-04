@@ -51,21 +51,21 @@ def generate_launch_description():
                 ],
             ),
             
-            # VISUALIZATION NODE
-            Node(
-                package="viz",
-                executable="visualize_joints.py",
-                name="visualize_joints",
-                parameters=[
-                    {
-                        "scheme_path": os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            "faive_hand_p4",
-                            "scheme_p4.yaml",
-                        )
-                    }
-                ],
-            ),
+                # # VISUALIZATION NODE
+                # Node(
+                #     package="viz",
+                #     executable="visualize_joints.py",
+                #     name="visualize_joints",
+                #     parameters=[
+                #         {
+                #             "scheme_path": os.path.join(
+                #                 get_package_share_directory("viz"),
+                #                 "models",
+                #                 "faive_hand_p4",
+                #                 "scheme_p4.yaml",
+                #             )
+                #         }
+                #     ],
+                # ),
         ]
     )

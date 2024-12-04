@@ -35,7 +35,7 @@ class HandControllerNode(Node):
             len(msg.data)
         )
         joint_angles = np.array(msg.data)
-        print(f"Node thumb angles: {joint_angles[0:4]}")
+        # print(f"Node thumb angles: {joint_angles[0:4]}")
         joint_angles_deg = joint_angles * 180 / np.pi
         # self._hc.command_joint_angles(joint_angles_deg)
 

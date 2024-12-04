@@ -5,24 +5,24 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": False, "side_view": True, "wrist_view": False}
+cameras = {"front_view": True, "side_view": True, "wrist_view": False}
 
 
 def generate_launch_description():
     return LaunchDescription(
         [
             # CAMERA INGRESS NODE
-            # Node(
-            #     package="ingress",
-            #     executable="oakd_node.py",
-            #     name="oakd_node",
-            #     output="log",
-            #     parameters=[
-            #         {"enable_front_camera": cameras["front_view"]},
-            #         {"enable_side_camera": cameras["side_view"]},
-            #         {"enable_wrist_camera": cameras["wrist_view"]},
-            #     ],
-            # ),
+            Node(
+                package="ingress",
+                executable="oakd_node.py",
+                name="oakd_node",
+                output="log",
+                parameters=[
+                    {"enable_front_camera": cameras["front_view"]},
+                    {"enable_side_camera": cameras["side_view"]},
+                    {"enable_wrist_camera": cameras["wrist_view"]},
+                ],
+            ),
             
             Node(
                 package="ingress",

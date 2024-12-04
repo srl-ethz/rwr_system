@@ -128,17 +128,17 @@ class RokokoCoilDemo(Node):
             [[0, 0, -1, 0], [-1, 0, 0, 0], [0, 1, 0, 0], [0.40, -0.07, 0.21, 1]]
         ).T
         
-        # YAW rotation (45 deg) such that our mounted hand is pointing down straight
-        theta_z = np.radians(45) 
-        R_z = np.array([
-            [np.cos(theta_z), -np.sin(theta_z), 0, 0],
-            [np.sin(theta_z), np.cos(theta_z), 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
+        # # YAW rotation (45 deg) such that our mounted hand is pointing down straight
+        # theta_z = np.radians(45) 
+        # R_z = np.array([
+        #     [np.cos(theta_z), -np.sin(theta_z), 0, 0],
+        #     [np.sin(theta_z), np.cos(theta_z), 0, 0],
+        #     [0, 0, 1, 0],
+        #     [0, 0, 0, 1]
+        # ])
 
-        # Apply the z-axis rotation
-        start_target = np.dot(start_target, R_z)
+        # # Apply the z-axis rotation
+        # start_target = np.dot(start_target, R_z)
 
         R_z_neg90 = np.array([
             [0, 1, 0, 0],
