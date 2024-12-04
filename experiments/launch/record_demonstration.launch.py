@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 # select the cameras to be used
 
-cameras = {"front_view": True, "side_view": True, "wrist_view": False}
+cameras = {"front_view": True, "side_view": True, "wrist_view": True}
 
 
 def generate_launch_description():
@@ -36,7 +36,7 @@ def generate_launch_description():
                 ],
             ),
 
-            #  HAND CONTROLLER NODE
+            # HAND CONTROLLER NODE
             Node(
                 package="hand_control",
                 executable="hand_control_node.py",
@@ -44,13 +44,13 @@ def generate_launch_description():
                 output="screen"
             ),
             
-            # RETARGET NODE
+            #RETARGET NODE
             Node(
                 package="retargeter",
                 executable="retargeter_node.py",
                 name="retargeter_node",
                 output="screen",
-                # COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
+                #COMMENT OR UNCOMMENT THE FOLLOWING LINES TO SWITCH BETWEEN MJCF AND URDF, JUST ONE OF THEM SHOULD BE ACTIVE TODO: Make this a parameter
                 parameters=[
                     {
                         "retarget/urdf_filepath": os.path.join(
@@ -80,7 +80,7 @@ def generate_launch_description():
                     {"debug": True},
                     {"include_wrist_and_tower": True},
                 ],
-            ), 
+            ),
             
             # VISUALIZATION NODE
             

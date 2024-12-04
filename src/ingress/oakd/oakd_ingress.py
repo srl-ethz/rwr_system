@@ -195,7 +195,7 @@ class OakDDriver:
                 print("Trying to get depth stream")
                 if device.getOutputQueue("depth", maxSize=1, blocking=False).tryGet() is not None:
                     has_depth = True
-                    depthprint("OAK-D detected")
+                    print("OAK-D detected")
                     break
                 time.sleep(0.1)
 
