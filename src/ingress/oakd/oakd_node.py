@@ -157,7 +157,10 @@ class OakDPublisher(Node):
                     self.camera_dict[camera_name]["calibrated"] = True
                     
                 except Exception as e:
-                    self.get_logger().error(f"Error publishing camera infos: {e}")
+                    if camera_name == "wrist_view":
+                        pass
+                    else:
+                        self.get_logger().error(f"Error publishing camera infos: {e}")
                     
 
 def main():
