@@ -38,3 +38,5 @@ def generate_launch_description():
         policy_ckpt_arg,
         policy_node
 ])
+
+# ros2 launch experiments run_policy_inference.launch.py policy_ckpt_path:=/home/arturo/Workspaces/rwr_workspace/src/rwr_system/policies/yellow_big_orca_BS64_20241202-215100/checkpoint_20.pth
