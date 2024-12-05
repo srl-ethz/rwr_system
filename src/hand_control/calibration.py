@@ -13,7 +13,7 @@ class CalibrationClass():
         if type(self) is CalibrationClass:
             raise TypeError("CalibrationClass cannot be instantiated directly. It must be inherited.")
     
-    def move_to_desired_positions(self, desired_positions, calibration_current=190, position_increment=0.2, threshold=0.2):
+    def move_to_desired_positions(self, desired_positions, position_increment=0.2, threshold=0.2):
         """
         Incrementally move motors to their desired positions.
 
@@ -26,10 +26,10 @@ class CalibrationClass():
         # Get the initial positions of all motors
         current_positions = self.get_motor_pos()
 
-        # Apply the desired calibration current to all motors
-        self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
-
-        while True:
+        # Run up to 10 seconds to reach the desired position. This is done because is oftens get stuch to a close 
+        # enough position it cannot reach.
+        start_time = time.time()
+        while time.time() - start_time < 10:
             # Compute the difference between desired and current positions
             position_differences = desired_positions - current_positions
 
@@ -52,51 +52,6 @@ class CalibrationClass():
 
         return current_positions
 
-    def move_to_limit_with_velocity(self, motor_start, base_velocity=0.05, current_threshold=200, sleep_time=0.08):
-        """
-        Move motors to their limits using velocity control.
-        Stop when the current exceeds a specified threshold for each motor.
-
-        :param motor_start: List of direction values for motors (positive/negative for direction, 0 to ignore).
-        :param base_velocity: Base velocity magnitude to apply (positive value).
-        :param current_threshold: Current threshold in mA to determine when a motor has reached its limit.
-        :param sleep_time: Time delay between updates in seconds.
-        :return: Final motor positions.
-        """
-        # Initialize the velocity command for all motors
-        motor_velocities = base_velocity * np.sign(motor_start)  # Apply direction based on motor_start
-
-        # Continuously update velocities until limits are reached
-        while True:
-            # Command all motors to move with the specified velocities
-            self.write_desired_motor_velocity(motor_velocities)
-            time.sleep(sleep_time)
-
-            # Get the current feedback for positions and currents
-            current_positions = self.get_motor_pos()
-            current_feedback = self.get_motor_current()
-
-            # Check for motors exceeding the current threshold
-            motors_at_limit = current_feedback >= current_threshold
-            motor_start[motors_at_limit] = 0  # Stop motors that have reached the limit
-            motor_velocities[motors_at_limit] = 0  # Set velocity to zero for those motors
-
-            print(f"Current Positions: {current_positions}")
-            print(f"Current Feedback: {current_feedback}")
-            print(f"Motors at Limit: {motors_at_limit}")
-            print("=" * 40)
-
-            # If all motors have stopped, exit the loop
-            if not any(motor_start):
-                break
-
-        # Stop all motors once the process is complete
-        self.write_desired_motor_velocity(np.zeros(len(self.motor_ids)))
-
-        # Return the final positions of all motors
-        return self.get_motor_pos()
-
-
     def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.1, threshold=0.0002):
         """
         Incrementally move motors to their limits based on the directions in motor_start.
@@ -110,10 +65,11 @@ class CalibrationClass():
         # Initialize the target positions for all motors
         motor_positions = self.get_motor_pos()
         target_positions = motor_positions.copy()
-        calibration_current = 200
         self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
 
-        while True:
+        # while True:
+        start_time = time.time()
+        while time.time() - start_time < 10:
             # Increment or decrement the target positions based on motor_start directions
             target_positions += position_increment * (motor_start > 0) - position_increment * (motor_start < 0)
             
@@ -128,13 +84,15 @@ class CalibrationClass():
             position_changes = abs(current_positions - motor_positions)
             all_motors_stopped = (position_changes <= threshold).all()
             motor_start[position_changes <= threshold] = 0
-            print("Changed Motor pos BEFOR: {}".format(motor_positions[position_changes > threshold]))
-            print("CHanged Motor pos AFTER: {}".format(current_positions[position_changes > threshold]))
-            print("=====================================")
+
             # Update the motor positions for the next iteration
             motor_positions = current_positions
             if all_motors_stopped:
+                print("All motors stopped | It reached the limits")
                 break  # Exit the loop when all motors have reached their limits
+        
+        if time.time() - start_time >= 10:
+            print("Time limit reached")
 
         return self.get_motor_pos()
 
@@ -155,6 +113,7 @@ class CalibrationClass():
             # pinky_motor_ids = self.motor_ids_dict["pinky"]
             # pinky_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in pinky_motor_ids]    
             
+            # Move the index and middle finger ABD in the opposite direction
             motors_directions[middle_motor_idxs[0]] = -1
             motors_directions[index_motor_idxs[0]] = -1
 
@@ -164,7 +123,7 @@ class CalibrationClass():
             
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
-            # Calibrate the wrist pitch joint
+            # Calibrate the wrist pitch joint and keep it's initial position value.
             wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, calib_current, maxCurrent)
             
             # Open the YAML file
@@ -177,17 +136,16 @@ class CalibrationClass():
             motor_pos_calib = np.ones(len(self.motor_ids))*calib_current
             motor_pos_calib[wrist_motor_idx] = 0
 
-            # motor_zero_current = np.zeros(len(self.motor_ids))
-            # motor_zero_current[wrist_motor_idx] = 0
-
             self.motor_id2init_pos = self.move_to_limit_and_get_pos(-1*motor_pos_calib*motors_directions, calibration_current=calib_current)
             
             # Give fully extended position of wrist found before
             self.motor_id2init_pos[wrist_motor_idx] = wrist_init_pos
+
             # This is the inital position of the hand. --> This is the .cal file
             self.update_motorinitpos(self.motor_id2init_pos)
 
             # All motors should be fully extended in one direction at this point
+            # TODO: Delete these and there instances to clean up the code
             abd_pos_mean_list = []
             abd_motors_id_map_idx_list = []
             mcp_pos_mean_list = []
@@ -196,12 +154,13 @@ class CalibrationClass():
             pip_motors_id_map_idx_list = []
             for muscle_group in self.muscle_groups:
                 # For the moment we exclude thumb because probably different way to calibrate that
-                abd_joint_index = 0  # Assuming MCP joint is the first joint in each muscle group
+                abd_joint_index = 0  # Assuming ABD joint is the first joint in each muscle group
                 mcp_joint_index = 1  # Assuming MCP joint is the second joint in each muscle group
                 pip_joint_index = 2  # Assuming PIP joint is the third joint in each muscle group
                 if muscle_group.name in ["index", "middle", "ring", "pinky", "thumb"]:
 
                     if muscle_group.name == "thumb":
+                        # MCP is before ABD in thumb
                         abd_joint_index, mcp_joint_index = mcp_joint_index, abd_joint_index
                         dip_joint_index = 3  
                         # DIP
@@ -232,23 +191,25 @@ class CalibrationClass():
                     pip_motors_id_map_idx = self.motor_ids.tolist().index(pip_motor_id)
                     pip_motors_id_map_idx_list.append(pip_motors_id_map_idx)
 
-                    # Get extended motor position for both MCP and PIP joint
-
+                    # Get extended motor position for both ABD,MCP and PIP joint
                     abd_pos_extended = self.motor_id2init_pos[abd_motors_id_map_idx]
                     mcp_pos_extended = self.motor_id2init_pos[mcp_motors_id_map_idx]
                     pip_pos_extended = self.motor_id2init_pos[pip_motors_id_map_idx]
 
+                    # Move the MCP joint to the opposite direction
                     motor_pos = np.zeros(len(self.motor_ids))
                     motor_pos[mcp_motors_id_map_idx] = -calib_current
                     motor_pos[wrist_motor_idx] = 0
 
                     mcp_pos_flexed = self.move_to_limit_and_get_pos(-1*motor_pos*motors_directions, calibration_current=calib_current)[mcp_motors_id_map_idx]
+                    
                     mcp_pos_mean_list.append(np.mean([mcp_pos_extended, mcp_pos_flexed]))
                     mcp_pos_diff = np.rad2deg(np.abs(mcp_pos_extended - mcp_pos_flexed))
-                    # mcp_pos_diff = np.rad2deg(mcp_pos_extended - mcp_pos_flexed)
 
                     mcp_rom_range = muscle_group.joint_roms[mcp_joint_index][1] - muscle_group.joint_roms[mcp_joint_index][0]
 
+                    # Move MCP back to fully extened position. 
+                    # Flex the PIP joints and move the ABD joint to the opposite direction.
                     motor_pos[abd_motors_id_map_idx] = -calib_current
                     motor_pos[mcp_motors_id_map_idx] = calib_current
                     motor_pos[pip_motors_id_map_idx] = -calib_current
@@ -263,7 +224,6 @@ class CalibrationClass():
                     # Get flexed ABD flexed motor position
                     abd_pos_flexed = motor_pos_res[abd_motors_id_map_idx]
                     abd_pos_diff = np.rad2deg(np.abs(abd_pos_extended-abd_pos_flexed))
-                    # abd_pos_diff = np.rad2deg(abd_pos_extended-abd_pos_flexed)
 
                     # Get mean value in order to put the findger in the midle after calibration
                     abd_pos_mean_list.append(np.mean([abd_pos_extended, abd_pos_flexed]))
@@ -272,7 +232,6 @@ class CalibrationClass():
                     # Get flexed PIP flexed motor position
                     pip_pos_flexed = motor_pos_res[pip_motors_id_map_idx]
                     pip_pos_diff = np.rad2deg(np.abs(pip_pos_extended-pip_pos_flexed))
-                    # pip_pos_diff = np.rad2deg(pip_pos_extended-pip_pos_flexed)
 
                     pip_pos_mean_list.append(np.mean([pip_pos_extended, pip_pos_flexed]))
                     pip_rom_range = muscle_group.joint_roms[pip_joint_index][1] - muscle_group.joint_roms[pip_joint_index][0]
@@ -292,7 +251,6 @@ class CalibrationClass():
                     if muscle_group.name == "thumb":
                         dip_pos_flexed = motor_pos_res[dip_motors_id_map_idx]
                         dip_pos_diff = np.rad2deg(np.abs(dip_pos_extended-dip_pos_flexed))
-                        # dip_pos_diff = np.rad2deg(dip_pos_extended-dip_pos_flexed)
                         dip_rom_range = muscle_group.joint_roms[dip_joint_index][1] - muscle_group.joint_roms[dip_joint_index][0]
                         calibration_defs[muscle_group.name]["DIP"]["value"] = [float(dip_pos_flexed), float(dip_pos_extended)]
                         calibration_defs[muscle_group.name]["DIP"]["ratio"] = float(dip_pos_diff/dip_rom_range)
@@ -304,11 +262,10 @@ class CalibrationClass():
 
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
-
             time.sleep(0.2)
 
 
-    def calibrate_wrist_pitch_pos(self, yaml_file_path, calib_current=40, maxCurrent: int = 150):
+    def calibrate_wrist_pitch_pos(self, yaml_file_path, calib_current=160, maxCurrent: int = 150):
         """
         Calibrate the wrist joint by extending the pitch movement fully in both directions
         and recording the motor positions. Reads and writes results to the provided YAML file.
@@ -330,11 +287,11 @@ class CalibrationClass():
 
         # Apply calibration current in one direction and record position
         motor_pos_calib[wrist_motor_idx] = calib_current
-        wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib)[wrist_motor_idx]
+        wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current)[wrist_motor_idx]
 
         # Apply calibration current in the opposite direction and record position
         motor_pos_calib[wrist_motor_idx] = -calib_current
-        wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib)[wrist_motor_idx]
+        wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current)[wrist_motor_idx]
 
         # Calculate the range of motion (ROM) for the wrist joint
         wrist_pos_diff = np.rad2deg(np.abs(wrist_pos_extended - wrist_pos_flexed))
@@ -597,3 +554,47 @@ class CalibrationClass():
         self.set_operating_mode(5)
         self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
         time.sleep(0.2)
+
+    def move_to_limit_with_velocity(self, motor_start, base_velocity=0.05, current_threshold=200, sleep_time=0.08):
+        """
+        Move motors to their limits using velocity control.
+        Stop when the current exceeds a specified threshold for each motor.
+
+        :param motor_start: List of direction values for motors (positive/negative for direction, 0 to ignore).
+        :param base_velocity: Base velocity magnitude to apply (positive value).
+        :param current_threshold: Current threshold in mA to determine when a motor has reached its limit.
+        :param sleep_time: Time delay between updates in seconds.
+        :return: Final motor positions.
+        """
+        # Initialize the velocity command for all motors
+        motor_velocities = base_velocity * np.sign(motor_start)  # Apply direction based on motor_start
+
+        # Continuously update velocities until limits are reached
+        while True:
+            # Command all motors to move with the specified velocities
+            self.write_desired_motor_velocity(motor_velocities)
+            time.sleep(sleep_time)
+
+            # Get the current feedback for positions and currents
+            current_positions = self.get_motor_pos()
+            current_feedback = self.get_motor_current()
+
+            # Check for motors exceeding the current threshold
+            motors_at_limit = current_feedback >= current_threshold
+            motor_start[motors_at_limit] = 0  # Stop motors that have reached the limit
+            motor_velocities[motors_at_limit] = 0  # Set velocity to zero for those motors
+
+            print(f"Current Positions: {current_positions}")
+            print(f"Current Feedback: {current_feedback}")
+            print(f"Motors at Limit: {motors_at_limit}")
+            print("=" * 40)
+
+            # If all motors have stopped, exit the loop
+            if not any(motor_start):
+                break
+
+        # Stop all motors once the process is complete
+        self.write_desired_motor_velocity(np.zeros(len(self.motor_ids)))
+
+        # Return the final positions of all motors
+        return self.get_motor_pos()

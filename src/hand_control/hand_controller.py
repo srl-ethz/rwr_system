@@ -6,8 +6,6 @@ import os
 from threading import RLock
 import faive_system.src.hand_control.finger_kinematics as fk
 from faive_system.src.hand_control.dynamixel_client import *
-# import finger_kinematics as fk
-# from dynamixel_client import *
 from calibration import CalibrationClass
 
 class MuscleGroup:
@@ -40,6 +38,7 @@ class HandController(CalibrationClass):
 
         maxCurrent = 160
         calibration_current = 160
+        
         baudrate = 3000000
 
         # Mapping of joint names to their index ranges from the joint_angles array
@@ -299,7 +298,8 @@ class HandController(CalibrationClass):
         :param calibrate: if True, perform calibration and set the offsets else move to the initial position
         """
         self.motor_pos_norm = np.zeros(len(self.joint_ids))
-
+        
+        # Find calibration file
         cal_yaml_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cal.yaml")
         cal_exists = os.path.isfile(cal_yaml_fname)
 
@@ -312,23 +312,31 @@ class HandController(CalibrationClass):
              # Set to current based position control mode
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
+            # This is in order to grecefully reached the desired position when starting the hand
             self.move_to_desired_positions(self.motor_id2init_pos)
             self.write_desired_motor_pos(self.motor_id2init_pos)
             time.sleep(0.1)   
 
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
             if auto_calibrate:
-                self.auto_calibrate_fingers_with_pos(calib_current) # Demo script for calibrating based on hardstops of design
-                # Load the calibration file
+                self.auto_calibrate_fingers_with_pos(calib_current, maxCurrent) # Demo script for calibrating based on hardstops of design
+                time.sleep(0.3)
+
+                # Load the calibration file that have just been written by the previous function
                 with open(cal_yaml_fname, 'r') as cal_file:
                     cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
+
                 self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
-                # self.write_desired_motor_pos(self.motor_id2init_pos)
-                time.sleep(0.5)
+                # This is called now that the self calibration has been done.
+                # It can be called after the init_joints function
                 self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+                
+                # Write zero angles for all joints 
+                # TODO: Maybe put a different default position
                 joint_angles = np.zeros(len(self.motor_ids)) 
                 self.write_desired_joint_angles(joint_angles, calibrate=True)
             else:
+                # Manual calibration code
                 # Disable torque to allow the motors to move freely
                 self.disable_torque()
                 input("Move fingers to init position and press Enter to continue...")
@@ -352,7 +360,7 @@ class HandController(CalibrationClass):
             os.path.dirname(os.path.abspath(__file__)), "cal.yaml"
         )
 
-        # get current motor positions
+        # Get current motor positions or the ones passed to the function
         if motor_init_pos is None:
             self.motor_init_pos = self.get_motor_pos()
         else:
@@ -373,37 +381,46 @@ class HandController(CalibrationClass):
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
 
         """
+
         # Pinky is mapped in reverse order
         joint_angles[14] *= -1
         # Thumb ABD and PIP mapped in reverse order
         joint_angles[1] *= -1
         joint_angles[2] *= -1 # Not 100% sure about this one
 
+        # TODO: Check thumb DIP function
+
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
 
         joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
+        
+        # DIP for thumb is mapped in reverse order and the value is negative 
         joint_angles_normalized[4] = joint_angles[4]
         joint_angles_normalized[4] *=-1
 
-        joint_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
+        motor_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
         
         # Map Mano indexes to the corresponding motor_ids index
         mano_to_motor_ids_mapping =self.get_mano_to_motor_ids_mapping()
 
         motor_pos_mapped = np.zeros(len(self.motor_ids))
         for i,idx in enumerate(mano_to_motor_ids_mapping):
-            motor_pos_mapped[idx] = joint_anlges_from_ratio[i]
+            motor_pos_mapped[idx] = motor_anlges_from_ratio[i]
 
         # Abduction of Index and Middle finger are mapped in reverse order
+        # TODO: Move in beggining of the function
         motor_pos_mapped[4] *=-1 
         motor_pos_mapped[7] *=-1 
         
         motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
 
-        if calibrate:        
+        if calibrate:
+            # Move like this because the movement is big and joints will move too fast.
+            # Creates overload error or breaks a tendon.
             self.move_to_desired_positions(motor_pos_des)
         else:
             self.write_desired_motor_pos(motor_pos_des)
+
         time.sleep(0.01) # wait for the command to be sent
 
 
