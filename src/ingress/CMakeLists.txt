@@ -49,4 +49,10 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    sensing/sensing_node.py
+    sensing/sensing_ingress.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
