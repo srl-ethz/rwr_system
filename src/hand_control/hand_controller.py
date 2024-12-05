@@ -38,8 +38,8 @@ class HandController(CalibrationClass):
         
         ### All configurations are here ### 
 
-        maxCurrent = 170
-        calibration_current = 170
+        maxCurrent = 160
+        calibration_current = 160
         baudrate = 3000000
 
         # Mapping of joint names to their index ranges from the joint_angles array
@@ -312,42 +312,22 @@ class HandController(CalibrationClass):
              # Set to current based position control mode
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
+            self.move_to_desired_positions(self.motor_id2init_pos)
             self.write_desired_motor_pos(self.motor_id2init_pos)
             time.sleep(0.1)   
 
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
             if auto_calibrate:
-                # self.auto_calibrate_fingers_with_pos(calib_current) # Demo script for calibrating based on hardstops of design
+                self.auto_calibrate_fingers_with_pos(calib_current) # Demo script for calibrating based on hardstops of design
                 # Load the calibration file
                 with open(cal_yaml_fname, 'r') as cal_file:
                     cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
                 self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
                 # self.write_desired_motor_pos(self.motor_id2init_pos)
                 time.sleep(0.5)
-                joint_angles = np.zeros(len(self.motor_ids)) 
                 self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
-
-                joint_angles[0] = 45
-
-
-                joint_angles[1] = -45
-                joint_angles[2] = -20
-                joint_angles[3] = 45
-                joint_angles[4] = -50
-
-                # joint_angles[8] = 0
-                # joint_angles[9] = 0
-                # joint_angles[10] = 90
-
-                # # joint_angles[11] = 30
-                # joint_angles[12] = 0
-                # joint_angles[13] = 90
-
-                # # joint_angles[14] = 30
-                # joint_angles[15] = 0
-                # joint_angles[16] = 90
-
-                self.write_desired_joint_angles(joint_angles)
+                joint_angles = np.zeros(len(self.motor_ids)) 
+                self.write_desired_joint_angles(joint_angles, calibrate=True)
             else:
                 # Disable torque to allow the motors to move freely
                 self.disable_torque()
@@ -387,17 +367,23 @@ class HandController(CalibrationClass):
         with open(cal_yaml_fname, "w") as cal_file:
             yaml.dump(cal_data, cal_file, default_flow_style=False)
 
-    def write_desired_joint_angles(self, joint_angles: np.array):
+    def write_desired_joint_angles(self, joint_angles: np.array, calibrate: bool = False):
         """
         Command joint angles in deg
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
 
         """
+        # Pinky is mapped in reverse order
+        joint_angles[14] *= -1
+        # Thumb ABD and PIP mapped in reverse order
+        joint_angles[1] *= -1
+        joint_angles[2] *= -1 # Not 100% sure about this one
+
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
 
         joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
-        # joint_angles_normalized[4] = joint_angles[4]
-        # joint_angles_normalized[4] *=-1
+        joint_angles_normalized[4] = joint_angles[4]
+        joint_angles_normalized[4] *=-1
 
         joint_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
         
@@ -408,16 +394,16 @@ class HandController(CalibrationClass):
         for i,idx in enumerate(mano_to_motor_ids_mapping):
             motor_pos_mapped[idx] = joint_anlges_from_ratio[i]
 
-        # Only for index and middle finger ABD. However again this could be amended if needed.
+        # Abduction of Index and Middle finger are mapped in reverse order
         motor_pos_mapped[4] *=-1 
         motor_pos_mapped[7] *=-1 
         
         motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
 
-        # if calibrate:        
-        self.move_to_desired_positions(motor_pos_des)
-        # else:
-        # self.write_desired_motor_pos(motor_pos_des)
+        if calibrate:        
+            self.move_to_desired_positions(motor_pos_des)
+        else:
+            self.write_desired_motor_pos(motor_pos_des)
         time.sleep(0.01) # wait for the command to be sent
 
 

@@ -144,16 +144,16 @@ class CalibrationClass():
             """
             motors_directions = np.ones(len(self.motor_ids))
 
-            thumb_motor_ids = self.motor_ids_dict["thumb"]
-            thumb_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in thumb_motor_ids]      
+            # thumb_motor_ids = self.motor_ids_dict["thumb"]
+            # thumb_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in thumb_motor_ids]      
             index_motor_ids = self.motor_ids_dict["index"]
             index_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in index_motor_ids]    
             middle_motor_ids = self.motor_ids_dict["middle"]
             middle_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in middle_motor_ids]    
-            ring_motor_ids = self.motor_ids_dict["ring"]
-            ring_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in ring_motor_ids]    
-            pinky_motor_ids = self.motor_ids_dict["pinky"]
-            pinky_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in pinky_motor_ids]    
+            # ring_motor_ids = self.motor_ids_dict["ring"]
+            # ring_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in ring_motor_ids]    
+            # pinky_motor_ids = self.motor_ids_dict["pinky"]
+            # pinky_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in pinky_motor_ids]    
             
             motors_directions[middle_motor_idxs[0]] = -1
             motors_directions[index_motor_idxs[0]] = -1
@@ -162,7 +162,7 @@ class CalibrationClass():
             date_created = datetime.now().strftime("%m-%d--%Hh")
             file_path = os.path.join("src/hand_control/calibration_yaml","calibration_"+ date_created+".yaml")        
             
-            # self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
+            self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
             # Calibrate the wrist pitch joint
             wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, calib_current, maxCurrent)
@@ -177,14 +177,16 @@ class CalibrationClass():
             motor_pos_calib = np.ones(len(self.motor_ids))*calib_current
             motor_pos_calib[wrist_motor_idx] = 0
 
-            motor_zero_current = np.zeros(len(self.motor_ids))
-            motor_zero_current[wrist_motor_idx] = 0
+            # motor_zero_current = np.zeros(len(self.motor_ids))
+            # motor_zero_current[wrist_motor_idx] = 0
 
             self.motor_id2init_pos = self.move_to_limit_and_get_pos(-1*motor_pos_calib*motors_directions, calibration_current=calib_current)
+            
+            # Give fully extended position of wrist found before
             self.motor_id2init_pos[wrist_motor_idx] = wrist_init_pos
+            # This is the inital position of the hand. --> This is the .cal file
             self.update_motorinitpos(self.motor_id2init_pos)
 
-            print(self.motor_id2init_pos)
             # All motors should be fully extended in one direction at this point
             abd_pos_mean_list = []
             abd_motors_id_map_idx_list = []
@@ -461,8 +463,8 @@ class CalibrationClass():
         motor_pos_calib = np.ones(len(self.motor_ids))*calib_current
         motor_pos_calib[wrist_motor_idx] = 0
 
-        motor_zero_current = np.zeros(len(self.motor_ids))
-        motor_zero_current[wrist_motor_idx] = 0
+        # motor_zero_current = np.zeros(len(self.motor_ids))
+        # motor_zero_current[wrist_motor_idx] = 0
 
         wrist_motor_id = self.motor_ids_dict["wrist"][0]
         wrist_motor_idx = self.motor_ids.tolist().index(wrist_motor_id)

@@ -36,7 +36,7 @@ muscle_groups:
   pinky: # These are randomly allocated do not change
     joint_ids: [8, 6, 9] # [ABD, MCP, PIP]             
     motor_ids: [8, 6, 9]          
-    joint_roms: [[-35, 25], [-10, 115], [0, 120]]
+    joint_roms: [[-25, 35], [-10, 115], [0, 120]]
     tendon_ids: [27, 28, 29, 30, 31, 32]    
     motor_map: [8, 8, 6, 6, 9, 9]     
     spool_rad: [-7.5, 7.5, 7.5, -7.5, 7.5, -7.5] 
