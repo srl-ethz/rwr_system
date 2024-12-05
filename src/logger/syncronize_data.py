@@ -90,11 +90,11 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     closest_timestamp = topic_timestamps[closest_idx]
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
                 sampled_images = np.array(sampled_images)  # TxHxWxC
+                chunk_size = (1,) + tuple(sampled_images.shape[1:])
                 if compress:
-                    chunk_size = (1,) + tuple(sampled_images.shape[1:])
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size, compression="lzf")
                 else:
-                    output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images)
+                    output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size)
 
             elif TOPIC_TO_STRING[topic_type] == "PoseStamped":
                 # Interpolate PoseStamped data
