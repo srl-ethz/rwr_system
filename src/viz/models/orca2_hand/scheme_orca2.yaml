@@ -39,7 +39,7 @@ gc_limits_lower : [
   -75.0,  # root2thumb_base
   -45.0,  # thumb_base2pp
   -10.0,  # thumb_pp2mp
-  -100.0,  # thumb_mp2dp
+   0.0,  # thumb_mp2dp
   -25.0,  # index_abd
   -10.0,  # root2index_pp
    0.0,  # index_pp2mp
@@ -59,7 +59,7 @@ gc_limits_upper : [
   75.0,  # root2thumb_base
   45.0,  # thumb_base2pp
   90.0,  # thumb_pp2mp
-  0.0,  # thumb_mp2dp
+  90.0,  # thumb_mp2dp
   35.0,  # index_abd
   115.0,  # root2index_pp
   120.0,  # index_pp2mp
