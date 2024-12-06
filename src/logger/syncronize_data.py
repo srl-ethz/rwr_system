@@ -7,10 +7,38 @@ from scipy.spatial.transform import Rotation as R
 from scipy.interpolate import interp1d
 import numpy as np
 import h5py
-from logger_node import TOPICS_TYPES  # Import the predefined topic types
+#from logger_node import TOPICS_TYPES  # Import the predefined topic types
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
+
+TOPICS_TYPES = {
+    # FRANKA ROBOT
+    "/franka/end_effector_pose": PoseStamped,
+    "/franka/end_effector_pose_cmd": PoseStamped,
+    
+    # HAND POLICY OUTPUT
+    "/hand/policy_output": Float32MultiArray,
+    
+    # CAMERA IMAGES
+    "/oakd_front_view/color": Image,
+    "/oakd_side_view/color": Image,
+    "/oakd_wrist_view/color": Image,
+    
+    "/task_description": String,  # New topic for task description
+    
+    # CAMERA PARAMETERS
+    "/oakd_front_view/intrinsics": Float32MultiArray,
+    "/oakd_side_view/intrinsics": Float32MultiArray,
+    "/oakd_wrist_view/intrinsics": Float32MultiArray,
+    "/oakd_front_view/extrinsics": Float32MultiArray,
+    "/oakd_side_view/extrinsics": Float32MultiArray,
+    "/oakd_wrist_view/extrinsics": Float32MultiArray,
+    "/oakd_front_view/projection": Float32MultiArray,
+    "/oakd_side_view/projection": Float32MultiArray,
+    "/oakd_wrist_view/projection": Float32MultiArray,
+}
+
 
 TOPIC_TO_STRING = {
     Float32MultiArray: "Float32MultiArray",
@@ -179,7 +207,8 @@ def process_folder(input_folder, sampling_frequency, topic_types):
 def main():
     parser = argparse.ArgumentParser(description="Process and synchronize HDF5 files.")
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
-    parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
+    # parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
+    parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
     args = parser.parse_args()
 
     # Process all files in the folder
