@@ -9,8 +9,19 @@ cameras = {"front_view": True, "side_view": True, "wrist_view": True}
 
 
 def generate_launch_description():
+    urdf = os.path.join(
+    get_package_share_directory('viz'),
+    "models",
+    "orca2_hand",
+    "urdf",
+    "orca2.urdf")
+
+    with open(urdf, 'r') as infp:
+        robot_desc = infp.read()
+
     return LaunchDescription(
         [
+
             # CAMERA INGRESS NODE
             Node(
                 package="ingress",
@@ -19,7 +30,7 @@ def generate_launch_description():
                 output="log",
                 parameters=[
                     {"enable_front_camera": cameras["front_view"]},
-                    {"enable_side_camera": cameras["side_view"]},
+                     {"enable_side_camera": cameras["side_view"]},
                     {"enable_wrist_camera": cameras["wrist_view"]},
                 ],
             ),
@@ -33,8 +44,7 @@ def generate_launch_description():
                 output="screen"
             ),
             
-
-            # VISUALIZATION NODE
+ # VISUALIZATION NODE
             Node(
                 package="viz",
                 executable="visualize_joints.py",
@@ -44,11 +54,28 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "faive_hand_p4",
-                            "scheme_p4.yaml",
+                            "orca2_hand",
+                            "scheme_orca2.yaml",
                         )
                     }
                 ],
+                output="screen",
             ),
+
+            Node(
+                package='robot_state_publisher',
+                executable='robot_state_publisher',
+                name='robot_state_publisher',
+                output='screen',
+                parameters=[{'robot_description': robot_desc,}],
+                arguments=[urdf]),
+            
+            Node(
+                package='rviz2',
+                executable='rviz2',
+                name='rviz2',
+                output='screen', 
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
+                ),
         ]
     )

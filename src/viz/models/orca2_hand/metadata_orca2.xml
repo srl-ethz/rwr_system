@@ -40,22 +40,22 @@
 	
 	<actuator>
 		<position name="tower2root" joint="tower2root" ctrlrange="-1.3962634015954636 1.3962634015954636"/>
-		<position name="middle_abd" joint="middle_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
-		<position name="root2middle_pp" joint="root2middle_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
-		<position name="middle_pp2mp" joint="middle_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
 		<position name="root2thumb_base" joint="root2thumb_base" ctrlrange="-1.3089969389957472 1.3089969389957472"/>
 		<position name="thumb_base2pp" joint="thumb_base2pp" ctrlrange="-0.7853981633974483 0.7853981633974483"/>
 		<position name="thumb_pp2mp" joint="thumb_pp2mp" ctrlrange="-0.17453292519943295 1.5707963267948966"/>
-		<position name="thumb_mp2dp" joint="thumb_mp2dp" ctrlrange="-1.7453292519943295 0.0"/>
+		<position name="thumb_mp2dp" joint="thumb_mp2dp" ctrlrange="0.0 1.57"/>
+		<position name="index_abd" joint="index_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
+		<position name="root2index_pp" joint="root2index_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
+		<position name="index_pp2mp" joint="index_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
+		<position name="middle_abd" joint="middle_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
+		<position name="root2middle_pp" joint="root2middle_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
+		<position name="middle_pp2mp" joint="middle_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
 		<position name="ring_abd" joint="ring_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
 		<position name="root2ring_pp" joint="root2ring_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
 		<position name="ring_pp2mp" joint="ring_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
 		<position name="pinky_abd" joint="pinky_abd" ctrlrange="-0.6108652381980153 0.4363323129985824"/>
 		<position name="root2pinky_pp" joint="root2pinky_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
 		<position name="pinky_pp2mp" joint="pinky_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
-		<position name="index_abd" joint="index_abd" ctrlrange="-0.4363323129985824 0.6108652381980153"/>
-		<position name="root2index_pp" joint="root2index_pp" ctrlrange="-0.17453292519943295 2.007128639793479"/>
-		<position name="index_pp2mp" joint="index_pp2mp" ctrlrange="0.0 2.0943951023931953"/>
 	</actuator>
 
 	<contact>
