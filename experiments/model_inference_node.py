@@ -43,7 +43,7 @@ class PolicyPlayerAgent(Node):
         self.declare_parameter("camera_topics", rclpy.Parameter.Type.STRING_ARRAY)
         self.declare_parameter("camera_names", rclpy.Parameter.Type.STRING_ARRAY)
         self.declare_parameter("policy_ckpt_path", "")   # assume the policy ckpt is saved with its config
-        self.declare_parameter("hand_qpos_dim", 16) # The dimension of the hand_qpos, we need this because we need to broadcast an all zero command to the hand at the beginning
+        self.declare_parameter("hand_qpos_dim", 17) # The dimension of the hand_qpos, we need this because we need to broadcast an all zero command to the hand at the beginning
         self.camera_topics = self.get_parameter("camera_topics").value
         self.camera_names = self.get_parameter("camera_names").value
         self.policy_ckpt_path = self.get_parameter("policy_ckpt_path").value
