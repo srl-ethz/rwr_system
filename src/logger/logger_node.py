@@ -30,13 +30,13 @@ TOPICS_TYPES = {
     # CAMERA PARAMETERS
     "/oakd_front_view/intrinsics": Float32MultiArray,
     "/oakd_side_view/intrinsics": Float32MultiArray,
-    "/oakd_wrist_view/intrinsics": Float32MultiArray,
+    # "/oakd_wrist_view/intrinsics": Float32MultiArray,
     "/oakd_front_view/extrinsics": Float32MultiArray,
     "/oakd_side_view/extrinsics": Float32MultiArray,
-    "/oakd_wrist_view/extrinsics": Float32MultiArray,
+    # "/oakd_wrist_view/extrinsics": Float32MultiArray,
     "/oakd_front_view/projection": Float32MultiArray,
     "/oakd_side_view/projection": Float32MultiArray,
-    "/oakd_wrist_view/projection": Float32MultiArray,
+    # "/oakd_wrist_view/projection": Float32MultiArray,
 }
 
 class DemoLogger(Node):
@@ -163,9 +163,10 @@ class DemoLogger(Node):
 
     def stop_recording(self):
         if self.writer:
-            self.writer = None
             for sub in self.subscribers:
                 self.destroy_subscription(sub)
+            self.get_logger().info("Subscribers destroyed")
+            self.writer = None
             self.get_logger().info("Stopped recording.")
         else:
             self.get_logger().warn("No active recording to stop.")

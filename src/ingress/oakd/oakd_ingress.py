@@ -120,6 +120,7 @@ class HostSync:
 # Detect cameras and asign them according to oakd_cams.yaml
 available_cams = dai.Device.getAllAvailableDevices()
 print(f"Available devices: \n")
+
 for c in available_cams:
     print(c)
 
@@ -188,7 +189,7 @@ class OakDDriver:
     def run(self, device):
         with device:
             print("Starting pipeline...")
-            attempts = 1000
+            attempts = 10
             has_depth = False
             for _ in range(attempts):
                 print("Trying to get depth stream")
@@ -282,12 +283,20 @@ class OakDDriver:
 
                             if self.visualize and has_depth:
                                 pcl_converter.visualize_pcd()
+                                
+                            if not has_depth:
+                                # Special case, for wrist camera, when no depth information is avaliable,
+                                # create dummy depth image
+                                if color is not None:
+                                    height, width, _ = color.shape
+                                    depth = np.zeros((height, width), dtype=np.uint16)
 
                             if self.callback is not None:
                                 if self.camera_name is not None:
                                     self.callback(color, depth, self.camera_name)
                                 else:
                                     self.callback(color, depth)
+                        
 
                 key = cv2.waitKey(1)
                 if key == ord("s"):

@@ -125,9 +125,9 @@ class RokokoTracker:
             if self.use_coil:
                 wrist_position = np.array(
                     [
-                        body_data["rightLowerArm"]["position"]["x"],
-                        body_data["rightLowerArm"]["position"]["y"],
-                        body_data["rightLowerArm"]["position"]["z"],
+                        body_data["rightHand"]["position"]["x"],
+                        body_data["rightHand"]["position"]["y"],
+                        body_data["rightHand"]["position"]["z"],
                     ]
                 )
                 # invert z axis since rokoko uses left handed coordinate system

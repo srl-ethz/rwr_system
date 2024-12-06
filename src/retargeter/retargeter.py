@@ -163,6 +163,7 @@ class Retargeter:
         self.opt = torch.optim.RMSprop([self.gc_joints], lr=self.lr)
 
         self.root = torch.zeros(1, 3).to(self.device)
+        self.frames_we_care_about = None
 
         if self.use_scalar_distance_palm:
             self.use_scalar_distance = [False, True, True, True, True]
@@ -267,7 +268,13 @@ class Retargeter:
         """
 
         # print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
-        # print(f"Retargeting: Warm: {warm} Opt steps: {opt_steps}")
+        if self.frames_we_care_about is None:
+            frames_names = []
+            frames_names.append(self.finger_to_base["thumb"])
+            frames_names.append(self.finger_to_base["pinky"])
+            for finger, finger_tip in self.finger_to_tip.items():
+                frames_names.append(finger_tip)
+            self.frames_we_care_about = self.chain.get_frame_indices(*frames_names)
 
         start_time = time.time()
         if not warm:
@@ -303,7 +310,8 @@ class Retargeter:
 
         for step in range(opt_steps):
             chain_transforms = self.chain.forward_kinematics(
-                self.joint_map @ (self.gc_joints / (180 / np.pi))
+                self.joint_map @ (self.gc_joints / (180 / np.pi)),
+                frame_indices=self.frames_we_care_about
             )
             fingertips = {}
             for finger, finger_tip in self.finger_to_tip.items():
