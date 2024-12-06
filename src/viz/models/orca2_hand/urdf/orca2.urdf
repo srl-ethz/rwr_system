@@ -1,36 +1,12 @@
 <?xml version="1.0" ?>
 <robot name="converted_robot">
-   <link name="world">
+   <link name="hand_root">
       <inertial>
          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
          <mass value="0.0"/>
          <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
       </inertial>
    </link>
-   <link name="root">
-      <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-         <mass value="0.0"/>
-         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
-      </inertial>
-   </link>
-   <link name="world2root_fixed_jointbody">
-      <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-         <mass value="0.001"/>
-         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
-      </inertial>
-   </link>
-   <joint type="fixed" name="world2root_fixed">
-      <parent link="world"/>
-      <child link="world2root_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-   </joint>
-   <joint type="fixed" name="world2root_fixed_offset">
-      <parent link="world2root_fixed_jointbody"/>
-      <child link="root"/>
-      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
-   </joint>
    <link name="tower">
       <inertial>
          <origin xyz="0.06437901782600965 1.780279318620321e-05 -0.0003231375226686683" rpy="1.5837086827349487 -0.0029817795619724308 1.5715354932140642"/>
@@ -53,7 +29,7 @@
       </inertial>
    </link>
    <joint type="fixed" name="root2tower_fixed">
-      <parent link="root"/>
+      <parent link="hand_root"/>
       <child link="root2tower_fixed_jointbody"/>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
    </joint>
