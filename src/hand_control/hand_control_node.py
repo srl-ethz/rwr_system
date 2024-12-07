@@ -17,7 +17,7 @@ class HandControllerNode(Node):
 
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
-        auto_calibrate = self.get_parameter("hand_controller/auto_calibrate").value
+        # auto_calibrate = self.get_parameter("hand_controller/auto_calibrate").value
 
         # self._hc = HandController(port=port, baudrate=baudrate)
 

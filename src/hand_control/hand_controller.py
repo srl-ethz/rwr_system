@@ -36,8 +36,8 @@ class HandController(CalibrationClass):
         
         ### All configurations are here ### 
 
-        maxCurrent = 160
-        calibration_current = 160
+        maxCurrent = 180
+        calibration_current = 180
         
         baudrate = 3000000
 
@@ -73,10 +73,12 @@ class HandController(CalibrationClass):
         if auto_calibrate:
             calibration = False
         
+
+        self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+
         #TODO: Auto calibrate is always False for now because we want to start in specific position to test our calibration functions.
         self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
         
-        self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
 
     def terminate(self):
         '''
@@ -313,8 +315,9 @@ class HandController(CalibrationClass):
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
             # This is in order to grecefully reached the desired position when starting the hand
-            self.move_to_desired_positions(self.motor_id2init_pos)
-            self.write_desired_motor_pos(self.motor_id2init_pos)
+            joint_angles = np.zeros(len(self.motor_ids)) 
+            self.write_desired_joint_angles(joint_angles, calibrate=True)
+            # self.write_desired_motor_pos(self.motor_id2init_pos)
             time.sleep(0.1)   
 
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
@@ -384,6 +387,10 @@ class HandController(CalibrationClass):
 
         # Pinky is mapped in reverse order
         joint_angles[14] *= -1
+        joint_angles[3] += joint_angles[3] + (0.3*joint_angles[1] if joint_angles[1]>0 else 0)
+ 
+        # joint_angles[1:] *= 1.2
+
         # Thumb ABD and PIP mapped in reverse order
         joint_angles[1] *= -1
         joint_angles[2] *= -1 # Not 100% sure about this one
@@ -395,8 +402,8 @@ class HandController(CalibrationClass):
         joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
         
         # DIP for thumb is mapped in reverse order and the value is negative 
-        joint_angles_normalized[4] = joint_angles[4]
-        joint_angles_normalized[4] *=-1
+        # joint_angles_normalized[4] = joint_angles[4]
+        # joint_angles_normalized[4] *=-1
 
         motor_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
         
@@ -411,7 +418,7 @@ class HandController(CalibrationClass):
         # TODO: Move in beggining of the function
         motor_pos_mapped[4] *=-1 
         motor_pos_mapped[7] *=-1 
-        
+        motor_pos_mapped[-1] *=-1
         motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
 
         if calibrate:

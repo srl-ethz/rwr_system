@@ -42,7 +42,9 @@ class MediaPipeTracker:
 
     def get_keypoint_positions(self):
         if self.estimated_wrist_position is not None and self.elbow_position is not None:
-            return np.vstack((self.keypoint_positions, self.estimated_wrist_position))
+            z = self.keypoint_positions[0][2]
+            self.estimated_wrist_position = np.array([self.estimated_wrist_position[0],self.estimated_wrist_position[1],z])
+            return np.vstack((self.estimated_wrist_position, self.keypoint_positions))
         else:
             return None
 
@@ -72,6 +74,7 @@ class MediaPipeTracker:
                 right_elbow = landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value]
                 self.elbow_position = np.array([right_elbow.x, right_elbow.y, right_elbow.z])
 
+            
             if hand_results.multi_hand_landmarks:
                 for hand_landmarks, hand_handedness in zip(
                     hand_results.multi_hand_landmarks, hand_results.multi_handedness
@@ -124,7 +127,6 @@ class MediaPipeTracker:
             # Update the frame for display
             self.frame = cv2.flip(image, 1) if self.show else None
         self.cap.release()
-
 
 def main():
     tracker = MediaPipeTracker(show=True)

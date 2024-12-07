@@ -29,7 +29,7 @@ class CalibrationClass():
         # Run up to 10 seconds to reach the desired position. This is done because is oftens get stuch to a close 
         # enough position it cannot reach.
         start_time = time.time()
-        while time.time() - start_time < 10:
+        while time.time() - start_time < 4:
             # Compute the difference between desired and current positions
             position_differences = desired_positions - current_positions
 
@@ -69,7 +69,7 @@ class CalibrationClass():
 
         # while True:
         start_time = time.time()
-        while time.time() - start_time < 10:
+        while time.time() - start_time < 5:
             # Increment or decrement the target positions based on motor_start directions
             target_positions += position_increment * (motor_start > 0) - position_increment * (motor_start < 0)
             
@@ -238,22 +238,28 @@ class CalibrationClass():
 
                     # Save the end and start value of the motor position and save the ration
                     calibration_defs[muscle_group.name]["ABD"]["value"] = [float(abd_pos_flexed), float(abd_pos_extended)]
-                    calibration_defs[muscle_group.name]["ABD"]["ratio"] = float(abd_pos_diff/abd_rom_range)
+                    # calibration_defs[muscle_group.name]["ABD"]["ratio"] = float(abd_pos_diff/abd_rom_range)
+                    calibration_defs[muscle_group.name]["ABD"]["ratio"] = float(np.ceil((abd_pos_diff/abd_rom_range)*10) / 10)
 
+                    
                     # Save the end and start value of the motor position and save the ration
                     calibration_defs[muscle_group.name]["MCP"]["value"] = [float(mcp_pos_flexed), float(mcp_pos_extended)]
-                    calibration_defs[muscle_group.name]["MCP"]["ratio"] = float(mcp_pos_diff/mcp_rom_range)
+                    # calibration_defs[muscle_group.name]["MCP"]["ratio"] = float(mcp_pos_diff/mcp_rom_range)
+                    calibration_defs[muscle_group.name]["MCP"]["ratio"] = float(np.ceil((mcp_pos_diff/mcp_rom_range)*10) / 10)
+
 
                     # Save the end and start value of the motor position and save the ration
                     calibration_defs[muscle_group.name]["PIP"]["value"] = [float(pip_pos_flexed), float(pip_pos_extended)]
-                    calibration_defs[muscle_group.name]["PIP"]["ratio"] = float(pip_pos_diff/pip_rom_range)
+                    # calibration_defs[muscle_group.name]["PIP"]["ratio"] = float(pip_pos_diff/pip_rom_range)
+                    calibration_defs[muscle_group.name]["PIP"]["ratio"] = float(np.ceil((pip_pos_diff/pip_rom_range)*10) / 10)
 
                     if muscle_group.name == "thumb":
                         dip_pos_flexed = motor_pos_res[dip_motors_id_map_idx]
                         dip_pos_diff = np.rad2deg(np.abs(dip_pos_extended-dip_pos_flexed))
                         dip_rom_range = muscle_group.joint_roms[dip_joint_index][1] - muscle_group.joint_roms[dip_joint_index][0]
                         calibration_defs[muscle_group.name]["DIP"]["value"] = [float(dip_pos_flexed), float(dip_pos_extended)]
-                        calibration_defs[muscle_group.name]["DIP"]["ratio"] = float(dip_pos_diff/dip_rom_range)
+                        # calibration_defs[muscle_group.name]["DIP"]["ratio"] = float(dip_pos_diff/dip_rom_range)
+                        calibration_defs[muscle_group.name]["DIP"]["ratio"] = float(np.ceil((dip_pos_diff/dip_rom_range)*10) / 10)
 
 
             # Write the structure to a YAML file
