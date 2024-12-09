@@ -5,7 +5,7 @@ muscle_groups:
     joint_roms: [[-75, 75], [-45, 45], [-10, 90], [0, 90]]
     tendon_ids: [1, 2, 3, 4, 5, 6, 7, 8]    
     motor_map: [2, 2, 1, 1, 13, 13, 14, 14]     
-    spool_rad: [-7.5, 7.5, -7.5, 7.5, 7.5, -7.5, -7.5, 7.5] 
+    spool_rad: [-7.5, 7.5, -7.5, 7.5, 7.5, -7.5, 7.5, -7.5] 
 
   index: 
     joint_ids: [4, 15, 3]           # [ABD, MCP, PIP]  ids for each controllable joint from proximal to distal 
