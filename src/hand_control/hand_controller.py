@@ -72,6 +72,9 @@ class HandController(CalibrationClass):
         
         # If we have auto_calibrate no manual calibration is needed
 
+        # Map Mano indexes to the corresponding motor_ids index
+        self.mano_to_motor_ids_mapping = self.get_mano_to_motor_ids_mapping()
+        
         if auto_calibrate:
             calibration = False
             self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
@@ -79,6 +82,7 @@ class HandController(CalibrationClass):
             self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
             self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
         
+
 
 
     def terminate(self):
@@ -403,22 +407,13 @@ class HandController(CalibrationClass):
 
         joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
         
-        # DIP for thumb is mapped in reverse order and the value is negative 
-        # joint_angles_normalized[4] = joint_angles[4]
-        # joint_angles_normalized[4] *=-1
-
         motor_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
         
-        # Map Mano indexes to the corresponding motor_ids index
-        mano_to_motor_ids_mapping =self.get_mano_to_motor_ids_mapping()
-
         motor_pos_mapped = np.zeros(len(self.motor_ids))
-        for i,idx in enumerate(mano_to_motor_ids_mapping):
+        for i,idx in enumerate(self.mano_to_motor_ids_mapping):
             motor_pos_mapped[idx] = motor_anlges_from_ratio[i]
 
         # Abduction of Index and Middle finger are mapped in reverse order
-        # TODO: Move in beggining of the function
-
         motor_pos_mapped[4] *=-1 # Index ABD
         motor_pos_mapped[7] *=-1 # Middle ABD
         motor_pos_mapped[-1] *=-1 # Wrist
@@ -431,8 +426,8 @@ class HandController(CalibrationClass):
             self.move_to_desired_positions(motor_pos_des)
         else:
             self.write_desired_motor_pos(motor_pos_des)
-
-        time.sleep(0.01) # wait for the command to be sent
+            
+        time.sleep(0.005) # wait for the command to be sent
 
 
     def get_mano_to_motor_ids_mapping(self):
