@@ -117,9 +117,7 @@ class CalibrationClass():
             motors_directions[middle_motor_idxs[0]] = -1
             motors_directions[index_motor_idxs[0]] = -1
 
-            # Create a new calibration file
-            date_created = datetime.now().strftime("%m-%d--%Hh")
-            file_path = os.path.join("src/hand_control/calibration_yaml","calibration_"+ date_created+".yaml")        
+            file_path = "src/hand_control/calibration_yaml/calibration_ratios.yaml" 
             
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
