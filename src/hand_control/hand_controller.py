@@ -68,17 +68,18 @@ class HandController(CalibrationClass):
         
         self.mano_joints_rom_list = self.get_mano_joints_rom_list()
         
-        self.mano_motor_directions = self.get_mano_motor_directions()
+        # self.mano_motor_directions = self.get_mano_motor_directions()
+        
         # If we have auto_calibrate no manual calibration is needed
+
         if auto_calibrate:
             calibration = False
+            self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
+        else:
+            self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+            self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
         
 
-        self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
-
-        #TODO: Auto calibrate is always False for now because we want to start in specific position to test our calibration functions.
-        self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
-        
 
     def terminate(self):
         '''
@@ -181,23 +182,23 @@ class HandController(CalibrationClass):
         with self.motor_lock:
             self._dxc.write_desired_current(self.motor_ids, - motor_currents_mA * directions)
 
-    def get_mano_motor_directions(self):
-        """
-        Get the ROM (Range of Motion) for each muscle group.
-        :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
-        """
-        directions_list = [0 for _ in range(17)]
-        for muscle_group in self.muscle_groups:
-            joint_indices = self.mano_joint_mapping[muscle_group.name]
+    # def get_mano_motor_directions(self):
+    #     """
+    #     Get the ROM (Range of Motion) for each muscle group.
+    #     :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
+    #     """
+    #     directions_list = [0 for _ in range(17)]
+    #     for muscle_group in self.muscle_groups:
+    #         joint_indices = self.mano_joint_mapping[muscle_group.name]
 
-            spool_rad_list = muscle_group.spool_rad
+    #         spool_rad_list = muscle_group.spool_rad
 
-            # idx is for geting the values from the muscle_roms which start from 0
-            # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
-            for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
-                directions_list[joint_idx] = np.sign(spool_rad_list[idx*2])
+    #         # idx is for geting the values from the muscle_roms which start from 0
+    #         # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
+    #         for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
+    #             directions_list[joint_idx] = np.sign(spool_rad_list[idx*2])
 
-        return directions_list
+    #     return directions_list
 
     def connect_to_dynamixels(self):
         with self.motor_lock:
@@ -385,17 +386,18 @@ class HandController(CalibrationClass):
 
         """
 
-        # Pinky is mapped in reverse order
+        # Pinky ABD mapped in reverse order
         joint_angles[14] *= -1
-        joint_angles[3] += joint_angles[3] + (0.3*joint_angles[1] if joint_angles[1]>0 else 0)
- 
-        # joint_angles[1:] *= 1.2
 
         # Thumb ABD and PIP mapped in reverse order
         joint_angles[1] *= -1
-        joint_angles[2] *= -1 # Not 100% sure about this one
+        joint_angles[2] *= -1 
 
-        # TODO: Check thumb DIP function
+        # Cheating way to make thumb MCP actuate more.
+        joint_angles[3] += joint_angles[3] + (0.2*joint_angles[1] if joint_angles[1]>0 else 0)
+ 
+        # Increase all joitns angles buy a little.
+        # joint_angles[1:] *= 1.2
 
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
 
@@ -416,9 +418,11 @@ class HandController(CalibrationClass):
 
         # Abduction of Index and Middle finger are mapped in reverse order
         # TODO: Move in beggining of the function
-        motor_pos_mapped[4] *=-1 
-        motor_pos_mapped[7] *=-1 
-        motor_pos_mapped[-1] *=-1
+
+        motor_pos_mapped[4] *=-1 # Index ABD
+        motor_pos_mapped[7] *=-1 # Middle ABD
+        motor_pos_mapped[-1] *=-1 # Wrist
+        
         motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
 
         if calibrate:
@@ -492,6 +496,9 @@ class HandController(CalibrationClass):
         calibration_ratios_file_name = "src/hand_control/calibration_yaml/calibration_ratios.yaml"
         
         # Open the YAML file
+        if not os.path.isfile(calibration_ratios_file_name):
+            raise FileNotFoundError(f"Calibration ratios file not found: {calibration_ratios_file_name}. \n Have you run the calibration script?")
+
         with open(calibration_ratios_file_name, "r") as yaml_file:
             calibration_defs = yaml.safe_load(yaml_file)
         
