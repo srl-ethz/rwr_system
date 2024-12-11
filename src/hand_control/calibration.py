@@ -52,7 +52,7 @@ class CalibrationClass():
 
         return current_positions
 
-    def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.1, threshold=0.0002):
+    def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.08, threshold=0.0002):
         """
         Incrementally move motors to their limits based on the directions in motor_start.
         Stop when the change in position is below a threshold get_motor_posor all motors.
@@ -117,8 +117,10 @@ class CalibrationClass():
             motors_directions[middle_motor_idxs[0]] = -1
             motors_directions[index_motor_idxs[0]] = -1
 
-            file_path = "src/hand_control/calibration_yaml/calibration_ratios.yaml" 
-            
+            current_path = os.path.abspath(__file__)
+            current_path = os.path.dirname(current_path)
+            file_path = os.path.join(current_path,"calibration_yaml", "calibration_ratios.yaml")
+
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
             # Calibrate the wrist pitch joint and keep it's initial position value.

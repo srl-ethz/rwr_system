@@ -36,8 +36,8 @@ class HandController(CalibrationClass):
         
         ### All configurations are here ### 
 
-        maxCurrent = 180
-        calibration_current = 180
+        maxCurrent = 200
+        calibration_current = 200
         
         baudrate = 3000000
 
