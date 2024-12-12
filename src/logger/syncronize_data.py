@@ -7,10 +7,40 @@ from scipy.spatial.transform import Rotation as R
 from scipy.interpolate import interp1d
 import numpy as np
 import h5py
+#from logger_node import TOPICS_TYPES  # Import the predefined topic types
+import cv2
 from logger_node import TOPICS_TYPES  # Import the predefined topic types
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
+
+TOPICS_TYPES = {
+    # FRANKA ROBOT
+    "/franka/end_effector_pose": PoseStamped,
+    "/franka/end_effector_pose_cmd": PoseStamped,
+    
+    # HAND POLICY OUTPUT
+    "/hand/policy_output": Float32MultiArray,
+    
+    # CAMERA IMAGES
+    "/oakd_front_view/color": Image,
+    "/oakd_side_view/color": Image,
+    "/oakd_wrist_view/color": Image,
+    
+    "/task_description": String,  # New topic for task description
+    
+    # CAMERA PARAMETERS
+    "/oakd_front_view/intrinsics": Float32MultiArray,
+    "/oakd_side_view/intrinsics": Float32MultiArray,
+    "/oakd_wrist_view/intrinsics": Float32MultiArray,
+    "/oakd_front_view/extrinsics": Float32MultiArray,
+    "/oakd_side_view/extrinsics": Float32MultiArray,
+    "/oakd_wrist_view/extrinsics": Float32MultiArray,
+    "/oakd_front_view/projection": Float32MultiArray,
+    "/oakd_side_view/projection": Float32MultiArray,
+    "/oakd_wrist_view/projection": Float32MultiArray,
+}
+
 
 TOPIC_TO_STRING = {
     Float32MultiArray: "Float32MultiArray",
@@ -25,7 +55,7 @@ def get_topic_names(h5_path):
         print(f"Topics in the HDF5 file: {topic_names}")
     return topic_names
 
-def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compress, topic_types):
+def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compress, resize_to, topic_types):
     qpos_franka = None
     qpos_hand = None
     actions_franka = None
@@ -89,6 +119,10 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     closest_idx = np.abs(topic_timestamps - t).argmin()
                     closest_timestamp = topic_timestamps[closest_idx]
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
+
+                if resize_to is not None:
+                    sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
+
                 sampled_images = np.array(sampled_images)  # TxHxWxC
                 chunk_size = (1,) + tuple(sampled_images.shape[1:])
                 if compress:
@@ -147,7 +181,7 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
 
     print(f"Processed data saved to: {output_h5_path}")
 
-def process_folder(input_folder, sampling_frequency, compress, topic_types):
+def process_folder(input_folder, sampling_frequency, compress, resize_to, topic_types):
     """
     Process all HDF5 files in the given folder and save the processed files
     with a running index in a new folder named <input_folder>_processed.
@@ -176,7 +210,7 @@ def process_folder(input_folder, sampling_frequency, compress, topic_types):
         try:
             output_file = os.path.join(output_folder, f"{idx:04d}.h5")
             print(f"Processing file: {input_file}")
-            sample_and_sync_h5(input_file, output_file, sampling_frequency, compress, topic_types)
+            sample_and_sync_h5(input_file, output_file, sampling_frequency, compress, resize_to, topic_types)
             print(f"Processed file saved as: {output_file}")
         except Exception as e:
             print(e)
@@ -186,12 +220,20 @@ def process_folder(input_folder, sampling_frequency, compress, topic_types):
 def main():
     parser = argparse.ArgumentParser(description="Process and synchronize HDF5 files.")
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
+    # parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
+    parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
     parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
     parser.add_argument("--compress",  action="store_true", help="Compress the output HDF5 files. [it might boost the performance on aws but might decrease the performance on local machine]")
+    parser.add_argument(
+        '--resize_to',
+        type=lambda s: tuple(map(int, s.strip("()").split(","))),
+        help="Target size of the image as a tuple of integers, e.g., '(width, height)'.",
+        default=None
+    )
     args = parser.parse_args()
 
     # Process all files in the folder
-    process_folder(args.input_folder, args.sampling_freq, args.compress, TOPICS_TYPES)
+    process_folder(args.input_folder, args.sampling_freq, args.compress, args.resize_to, TOPICS_TYPES)
 
 if __name__ == "__main__":
     main()

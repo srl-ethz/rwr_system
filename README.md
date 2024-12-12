@@ -55,7 +55,7 @@ To get started with the RWR System, follow these steps:
         ```bash
         pip install -e .[all]
         ```
-        this will install the faive_system package in your enviroment, and all the required dependencies specified in the `project.toml` file 
+        this will install the faive_system package in your enviroment, and all the required dependencies specified in the `pyproject.toml` file 
 
 
 ## Main TODOs for RWR students

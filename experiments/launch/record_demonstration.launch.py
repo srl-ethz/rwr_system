@@ -9,6 +9,16 @@ cameras = {"front_view": True, "side_view": True, "wrist_view": True}
 
 
 def generate_launch_description():
+    urdf = os.path.join(
+    get_package_share_directory('viz'),
+    "models",
+    "orca2_hand",
+    "urdf",
+    "orca2.urdf")
+
+    with open(urdf, 'r') as infp:
+        robot_desc = infp.read()
+
     return LaunchDescription(
         [
             # CAMERA INGRESS NODE
@@ -100,5 +110,21 @@ def generate_launch_description():
             #     ],
             #     output="screen",
             # ),
+
+            # Node(
+            #     package='robot_state_publisher',
+            #     executable='robot_state_publisher',
+            #     name='robot_state_publisher',
+            #     output='screen',
+            #     parameters=[{'robot_description': robot_desc,}],
+            #     arguments=[urdf]),
+            
+            # Node(
+            #     package='rviz2',
+            #     executable='rviz2',
+            #     name='rviz2',
+            #     output='screen', 
+            #     arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
+            #     ),
         ]
     )

@@ -15,13 +15,13 @@ class HandControllerNode(Node):
         self.declare_parameter("hand_controller/port", "/dev/ttyUSB0")
         self.declare_parameter("hand_controller/baudrate", 3000000)
 
-
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
+        # auto_calibrate = self.get_parameter("hand_controller/auto_calibrate").value
 
         # self._hc = HandController(port=port, baudrate=baudrate)
 
-        self._hc = HandController(port=port)
+        self._hc = HandController(port=port, calibration=False, auto_calibrate= False)
         # self.get_logger().info("Hand Controller Before INIT =========================")
 
         self._hc.init_joints(calibrate=False)
@@ -35,10 +35,10 @@ class HandControllerNode(Node):
             len(msg.data)
         )
         joint_angles = np.array(msg.data)
-        # print(f"Node thumb angles: {joint_angles[0:4]}")
         joint_angles_deg = joint_angles * 180 / np.pi
         # self._hc.command_joint_angles(joint_angles_deg)
 
+        # print(f"Node thumb angles: {joint_angles[1:5]}")
         self._hc.write_desired_joint_angles(joint_angles_deg)
 
 

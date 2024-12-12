@@ -45,37 +45,37 @@ def generate_launch_description():
             ),
             
  # VISUALIZATION NODE
-            Node(
-                package="viz",
-                executable="visualize_joints.py",
-                name="visualize_joints",
-                parameters=[
-                    {
-                        "scheme_path": os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            "orca2_hand",
-                            "scheme_orca2.yaml",
-                        )
-                    }
-                ],
-                output="screen",
-            ),
+            # Node(
+            #     package="viz",
+            #     executable="visualize_joints.py",
+            #     name="visualize_joints",
+            #     parameters=[
+            #         {
+            #             "scheme_path": os.path.join(
+            #                 get_package_share_directory("viz"),
+            #                 "models",
+            #                 "orca2_hand",
+            #                 "scheme_orca2.yaml",
+            #             )
+            #         }
+            #     ],
+            #     output="screen",
+            # ),
 
-            Node(
-                package='robot_state_publisher',
-                executable='robot_state_publisher',
-                name='robot_state_publisher',
-                output='screen',
-                parameters=[{'robot_description': robot_desc,}],
-                arguments=[urdf]),
+            # Node(
+            #     package='robot_state_publisher',
+            #     executable='robot_state_publisher',
+            #     name='robot_state_publisher',
+            #     output='screen',
+            #     parameters=[{'robot_description': robot_desc,}],
+            #     arguments=[urdf]),
             
-            Node(
-                package='rviz2',
-                executable='rviz2',
-                name='rviz2',
-                output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
-                ),
+            # Node(
+            #     package='rviz2',
+            #     executable='rviz2',
+            #     name='rviz2',
+            #     output='screen', 
+            #     arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
+            #     ),
         ]
     )

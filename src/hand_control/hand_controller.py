@@ -1,12 +1,12 @@
 from re import L
-from faive_system.src.hand_control.dynamixel_client import *
 import numpy as np
 import time
 import yaml
 import os
-import faive_system.src.hand_control.finger_kinematics as fk
 from threading import RLock
-
+import faive_system.src.hand_control.finger_kinematics as fk
+from faive_system.src.hand_control.dynamixel_client import *
+from calibration import CalibrationClass
 
 class MuscleGroup:
     """
@@ -19,53 +19,71 @@ class MuscleGroup:
             setattr(self, attr_name, muscle_group_json[attr_name])
         print(f"Created muscle group {name} with joint ids {self.joint_ids}, tendon ids {self.tendon_ids}, motor ids {self.motor_ids} and spool_rad {self.spool_rad}")
 
-class HandController:
+class HandController(CalibrationClass):
     """
-    class specialized for the VGripper
+    class specialized for Hand Control of the Orca Hand.
     wraps DynamixelClient to make it easier to access hand-related functions, letting the user think with "tendons" and "joints" instead of "motors"
     
     ## about tendon direction
     Signs for the tendon length is modified before sending to the robot so for the user, it is always [positive] = [actual tendon length increases]
     The direction of each tendon is set by the sign of the `spool_rad` variable in each muscle group
     """
-    def __init__(self, port: str = '/dev/ttyUSB0', config_yml: str = "hand_defs.yaml", calibration: bool = False, maxCurrent: int = 150):
+
+    def __init__(self, port: str = '/dev/ttyUSB0', config_yml: str = "hand_defs.yaml", calibration: bool = False, auto_calibrate: bool = False, maxCurrent: int = 150):
         """
         config_yml: path to the config file, relative to this source file
         """
+        
+        ### All configurations are here ### 
 
-        print("================Setting Current to 60 (low) for Safety================")
         maxCurrent = 200
-
-
+        calibration_current = 200
+        
         baudrate = 3000000
+
+        # Mapping of joint names to their index ranges from the joint_angles array
+        self.mano_joint_mapping = {
+            "wrist": slice(0, 1),   # 0 --> wrist pitch
+            "thumb": slice(1, 5),   # 1,2,3,4 --> thumb [ABD,MCP,PIP,DIP] 
+            "index": slice(5, 8),   # 5,6,7 --> [ABD,MCP,PIP]
+            "middle": slice(8, 11), # 8,9,10 
+            "ring": slice(11, 14),  # 11,12,13 
+            "pinky": slice(14, 17), # 14,15,16    
+        }
 
         self.motor_lock = RLock() # lock to read / write motor information
 
         self._load_musclegroup_yaml(os.path.join(os.path.dirname(os.path.abspath(__file__)), config_yml))
-        self.joint_ids = np.zeros(17)
+        
         self.command_lock = RLock() # lock to receive and read angle commands
         self._cmd_joint_angles = np.zeros(self.joint_nr)
 
         # initialize and connect dynamixels
-        
+        # self._dxc = DummyDynamixelClient(self.motor_ids, port, baudrate)
         self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
+
         self.connect_to_dynamixels()
 
+        self.motor_ids_dict = self.get_motor_id_dict() 
+        
+        self.mano_joints_rom_list = self.get_mano_joints_rom_list()
+        
+        # self.mano_motor_directions = self.get_mano_motor_directions()
+        
+        # If we have auto_calibrate no manual calibration is needed
 
-        # Mapping of joint names to their index ranges from the joint_angles array
-        self.joint_mapping = {
-            "wrist": slice(0, 1), 
-            "thumb": slice(1, 5), # 0, 1, 2, 3 
-            "index": slice(5, 8), # 4, 5, 6 [ABD,MCP,PIP]
-            "middle": slice(8, 11), # 7, 8, 9 [ABD,MCP,PIP]
-            "ring": slice(11, 14), # 10, 11, 12 [ABD,MCP,PIP]
-            "pinky": slice(14, 17) # 13, 14, 15 [ABD,MCP,PIP]   
-        }
+        # Map Mano indexes to the corresponding motor_ids index
+        self.mano_to_motor_ids_mapping = self.get_mano_to_motor_ids_mapping()
+        
+        if auto_calibrate:
+            calibration = False
+            self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
+        else:
+            self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+            self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
+        
 
-        self.joints_rom_list = self.get_joints_rom_list()
 
-        # initialize the joint
-        self.init_joints(calibrate=calibration, maxCurrent=maxCurrent)
 
     def terminate(self):
         '''
@@ -152,7 +170,6 @@ class HandController:
         with self.motor_lock:
             self._dxc.write_desired_pos(self.motor_ids, motor_positions_rad)
 
-
     def write_desired_motor_current(self, motor_currents_mA):
         """
         send current command to the motors
@@ -168,7 +185,25 @@ class HandController:
                 m_idx += 1
         with self.motor_lock:
             self._dxc.write_desired_current(self.motor_ids, - motor_currents_mA * directions)
-    
+
+    # def get_mano_motor_directions(self):
+    #     """
+    #     Get the ROM (Range of Motion) for each muscle group.
+    #     :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
+    #     """
+    #     directions_list = [0 for _ in range(17)]
+    #     for muscle_group in self.muscle_groups:
+    #         joint_indices = self.mano_joint_mapping[muscle_group.name]
+
+    #         spool_rad_list = muscle_group.spool_rad
+
+    #         # idx is for geting the values from the muscle_roms which start from 0
+    #         # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
+    #         for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
+    #             directions_list[joint_idx] = np.sign(spool_rad_list[idx*2])
+
+    #     return directions_list
+
     def connect_to_dynamixels(self):
         with self.motor_lock:
             self._dxc.connect()
@@ -183,6 +218,15 @@ class HandController:
         """
         with self.motor_lock:
             self._dxc.set_operating_mode(self.motor_ids, mode)
+
+    def set_operating_mode_for_motors(self, motor_ids, mode):
+        """
+        Set the operating mode for specific motors.
+        :param motor_ids: List of motor IDs to set the mode for.
+        :param mode: The operating mode to set.
+        """
+        with self.motor_lock:
+            self._dxc.set_operating_mode(motor_ids, mode)
 
     def get_motor_pos(self):
         with self.motor_lock:
@@ -215,7 +259,6 @@ class HandController:
     def pose2motors(self, joint_angles):
         """ Input: joint angles in rad
         Output: motor positions 
-        TODO: Extend the calculation of the tendon lengths for every finger. Tip: A clever design can allow for the same formulas for each finger to reduce complexity.
         """
         # return 
         tendon_lengths = np.zeros(len(self.tendon_ids))
@@ -223,9 +266,10 @@ class HandController:
         for muscle_group in self.muscle_groups:
             t_s, t_e = tendon_id_ranges_dict[muscle_group.name]
                 
-            # Maybe if statement for wrist
-            joint_angles_of_muscle_group = self.get_joint_angles_for_joint(joint_angles, muscle_group.name)
-            
+            joint_indices = self.mano_joint_mapping[muscle_group.name]
+            # Extract and return the angles for the specified joint
+            joint_angles_of_muscle_group = joint_angles[joint_indices]
+
             if muscle_group.name == "wrist":
                 tendon_lengths[t_s:t_e+1] = fk.pose2wrist(*joint_angles_of_muscle_group)
             else:
@@ -235,27 +279,38 @@ class HandController:
     def get_tendon_id_ranges(self):
         """
         Create a dictionary with the starting tendon id and last tendon id of each muscle group.
-        :return: Dictionary with muscle group names as keys and tuples (start_tendon_id, end_tendon_id) as values.
+        :return: Dictionary with muscle group names as keys and tuples (start_tendon_idx, end_tendon_idx) as values.
         """
         tendon_id_ranges = {}
         for muscle_group in self.muscle_groups:
-            start_tendon_id = muscle_group.tendon_ids[0]-1
-            end_tendon_id = muscle_group.tendon_ids[-1]-1
-            tendon_id_ranges[muscle_group.name] = (start_tendon_id, end_tendon_id)
+            start_tendon_idx = muscle_group.tendon_ids[0]-1
+            end_tendon_idx = muscle_group.tendon_ids[-1]-1
+            tendon_id_ranges[muscle_group.name] = (start_tendon_idx, end_tendon_idx)
         return tendon_id_ranges
+    
+    
+    def get_motor_id_dict(self):
+        """
+        Create a dictionary with the motor ids for each muscle group.
+        :return: Dictionary with muscle group names as keys and lists of motor ids as values.
+        """
+        motor_id_dict = {}
+        for muscle_group in self.muscle_groups:
+            motor_id_dict[muscle_group.name] = muscle_group.motor_ids
+        return motor_id_dict
 
-    def init_joints(self, calibrate: bool = False, maxCurrent: int = 150):
+    def init_joints(self, calibrate: bool = False, auto_calibrate: bool = False, calib_current: int = 70, maxCurrent: int = 150):
         """
         Set the offsets based on the current (initial) motor positions
         :param calibrate: if True, perform calibration and set the offsets else move to the initial position
-        TODO: Think of a clever way to perform the calibration. How can you make sure that all the motor are in the corect position?
         """
-
+        self.motor_pos_norm = np.zeros(len(self.joint_ids))
+        
+        # Find calibration file
         cal_yaml_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cal.yaml")
         cal_exists = os.path.isfile(cal_yaml_fname)
 
-        if not calibrate and cal_exists:
-
+        if not auto_calibrate and not calibrate and cal_exists:
             # Load the calibration file
             with open(cal_yaml_fname, 'r') as cal_file:
                 cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
@@ -264,60 +319,132 @@ class HandController:
              # Set to current based position control mode
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
-            self.write_desired_motor_pos(self.motor_id2init_pos)
-            time.sleep(0.01)   
-            # self.wait_for_motion()
+            # This is in order to grecefully reached the desired position when starting the hand
+            joint_angles = np.zeros(len(self.motor_ids)) 
+            self.write_desired_joint_angles(joint_angles, calibrate=True)
+            # self.write_desired_motor_pos(self.motor_id2init_pos)
+            time.sleep(0.1)   
 
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
+            if auto_calibrate:
+                self.auto_calibrate_fingers_with_pos(calib_current, maxCurrent) # Demo script for calibrating based on hardstops of design
+                time.sleep(0.3)
 
-            # Disable torque to allow the motors to move freely
-            self.disable_torque()
-            input("Move fingers to init position and press Enter to continue...")
-            
-            # TODO: Add your own calibration procedure here, that move the motors to a defined initial position:
-            self.motor_id2init_pos = self.get_motor_pos()
-            
-            print(f"Motor positions after calibration (0-10): {self.motor_id2init_pos}")
-            # Set to current based position control mode
-            self.set_operating_mode(5)
-            self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
-            time.sleep(0.2)
+                # Load the calibration file that have just been written by the previous function
+                with open(cal_yaml_fname, 'r') as cal_file:
+                    cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
 
-            # Save the offsets to a YAML file
-            with open(cal_yaml_fname, 'r') as cal_file:
-                cal_orig = yaml.load(cal_file, Loader=yaml.FullLoader)
+                self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
+                # This is called now that the self calibration has been done.
+                # It can be called after the init_joints function
+                self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+                
+                # Write zero angles for all joints 
+                # TODO: Maybe put a different default position
+                joint_angles = np.zeros(len(self.motor_ids)) 
+                self.write_desired_joint_angles(joint_angles, calibrate=True)
+            else:
+                # Manual calibration code
+                # Disable torque to allow the motors to move freely
+                self.disable_torque()
+                input("Move fingers to init position and press Enter to continue...")
+                
+                # Set to current based position control mode
+                self.set_operating_mode(5)
+                self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
+                time.sleep(0.2)
+                self.update_motorinitpos()
 
-            cal_orig['motor_init_pos'] = self.motor_id2init_pos.tolist()
 
-            with open(cal_yaml_fname, 'w') as cal_file:
-                yaml.dump(cal_orig, cal_file, default_flow_style=False)
+        #TODO: Maybe this need to change based on ratio kinematics model. Run and see what this norm value is. IF zero then just delete it.
+        # self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
 
-        self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
 
-    def write_desired_joint_angles(self, joint_angles: np.array):
+    def update_motorinitpos(self, motor_init_pos=None):
+        """
+        Updates the initial motor positions based on the current position
+        """
+        cal_yaml_fname = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "cal.yaml"
+        )
+
+        # Get current motor positions or the ones passed to the function
+        if motor_init_pos is None:
+            self.motor_init_pos = self.get_motor_pos()
+        else:
+            self.motor_init_pos = motor_init_pos
+        print(
+            f"Setting current motor position as motor_init_pos: {self.motor_init_pos}"
+        )
+
+        # Save the offsets to a YAML file
+        cal_data = {}
+        cal_data["motor_init_pos"] = self.motor_init_pos.tolist()
+        with open(cal_yaml_fname, "w") as cal_file:
+            yaml.dump(cal_data, cal_file, default_flow_style=False)
+
+    def write_desired_joint_angles(self, joint_angles: np.array, calibrate: bool = False):
         """
         Command joint angles in deg
         :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
 
         """
 
-        # print(f"Thumb Joint Before: {joint_angles[0:4]}")
+        # Pinky ABD mapped in reverse order
+        joint_angles[14] *= -1
 
+        # Thumb ABD and PIP mapped in reverse order
+        joint_angles[1] *= -1
+        joint_angles[2] *= -1 
 
-       # joint_angles = np.append(joint_angles,0) # Add wrist angle
+        # Cheating way to make thumb MCP actuate more.
+        joint_angles[3] += joint_angles[3] + (0.2*joint_angles[1] if joint_angles[1]>0 else 0)
+ 
+        # Increase all joitns angles buy a little.
+        # joint_angles[1:] *= 1.2
 
-        # joint_angles[1] = joint_angles[1]-35
-        
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
 
-        joint_angles_clipped = joint_angles_clipped
+        joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
         
+        motor_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
         
-        # print(f"Thumb Joint After: {joint_angles_clipped[0:4]}")
-        motor_pos_des = self.pose2motors(np.deg2rad(joint_angles_clipped)) - self.motor_pos_norm + self.motor_id2init_pos
-        self.write_desired_motor_pos(motor_pos_des)
-        time.sleep(0.01) # wait for the command to be sent
+        motor_pos_mapped = np.zeros(len(self.motor_ids))
+        for i,idx in enumerate(self.mano_to_motor_ids_mapping):
+            motor_pos_mapped[idx] = motor_anlges_from_ratio[i]
 
+        # Abduction of Index and Middle finger are mapped in reverse order
+        motor_pos_mapped[4] *=-1 # Index ABD
+        motor_pos_mapped[7] *=-1 # Middle ABD
+        motor_pos_mapped[-1] *=-1 # Wrist
+        
+        motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
+
+        if calibrate:
+            # Move like this because the movement is big and joints will move too fast.
+            # Creates overload error or breaks a tendon.
+            self.move_to_desired_positions(motor_pos_des)
+        else:
+            self.write_desired_motor_pos(motor_pos_des)
+            
+        time.sleep(0.005) # wait for the command to be sent
+
+
+    def get_mano_to_motor_ids_mapping(self):
+        mano_indexes_list = []
+        motors_ids_idxs_list = []
+        for joint in self.mano_joint_mapping.keys():
+            joint_motor_ids = self.motor_ids_dict[joint]
+            joint_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in joint_motor_ids]      
+            motors_ids_idxs_list.extend(joint_motor_idxs)
+
+            joints_slice = self.mano_joint_mapping[joint]
+            mano_indexes_list.extend(list(range(joints_slice.start, joints_slice.stop)))
+
+        sorted_indices = sorted(range(len(mano_indexes_list)), key=lambda i: mano_indexes_list[i])
+        mano_indexes_list = [mano_indexes_list[i] for i in sorted_indices]
+        mapping = [motors_ids_idxs_list[i] for i in sorted_indices]
+        return mapping
 
     def clip_joint_angles(self, joint_angles):
         """
@@ -326,7 +453,7 @@ class HandController:
         :return: Clipped joint angles.
         """
         # Get rom as array of 2 columns, one with min values and one with max values
-        bounds = np.array(self.joints_rom_list)
+        bounds = np.array(self.mano_joints_rom_list)
 
         # Separate bounds into min and max angle
         min_angles = bounds[:, 0]
@@ -335,38 +462,14 @@ class HandController:
         clipped_angles = np.clip(joint_angles, min_angles[:len(joint_angles)], max_angle[:len(joint_angles)])
         return clipped_angles
 
-
-    def get_joint_angles_for_joint(self, joints_angles, joint_name):
-        """
-        Extract joint angles corresponding to the given joint name.
-
-        Parameters:
-            joints_angles (list or array): A list or array of size (21, 3) representing joint angles.
-            joint_name (str): The name of the joint (e.g., "thumb", "index", "middle", "ring", "pinky").
-
-        Returns:
-            list: The joint angles corresponding to the specified joint name.
-        """
-
-        # Ensure the joint name is valid
-        if joint_name not in self.joint_mapping:
-            raise ValueError(f"Invalid joint name '{joint_name}'. Valid names are: {list(self.joint_mapping.keys())}.")
-
-        # Get the index range for the specified joint
-        joint_indices = self.joint_mapping[joint_name]
-
-        # Extract and return the angles for the specified joint
-        return joints_angles[joint_indices]
-
-
-    def get_joints_rom_list(self):
+    def get_mano_joints_rom_list(self):
         """
         Get the ROM (Range of Motion) for each muscle group.
         :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
         """
-        joints_rom_list = [(0,0) for _ in range(21)]
+        joints_rom_list = [(0,0) for _ in range(17)]
         for muscle_group in self.muscle_groups:
-            joint_indices = self.joint_mapping[muscle_group.name]
+            joint_indices = self.mano_joint_mapping[muscle_group.name]
 
             muscle_roms = muscle_group.joint_roms
 
@@ -377,18 +480,46 @@ class HandController:
         
         return joints_rom_list
 
+    def get_joints2spool_ratio(self):
+        """
+        Get the ROM (Range of Motion) for each muscle group.
+        :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
+        """
+        joints_ratio_list = [0 for _ in range(17)]
+        
+        # calibration_ratios_file_name = self.find_latest_calibration_file("src/hand_control/calibration_yaml")
+        calibration_ratios_file_name = "src/hand_control/calibration_yaml/calibration_ratios.yaml"
+        
+        # Open the YAML file
+        if not os.path.isfile(calibration_ratios_file_name):
+            raise FileNotFoundError(f"Calibration ratios file not found: {calibration_ratios_file_name}. \n Have you run the calibration script?")
 
-    # TODO Implement the following function    
-    # def get_motors_rom(self):
-    #     # Based on the ROMs defined in the muscle groups for the joints and the spool rom
-    #     # Calculate the ROMs of each motor and save it in self.motors_rom. 
-    #     # Comparing with initial values/Calibration check for the motors if they are requested to go outside their allower rom values.
-    #     return
+        with open(calibration_ratios_file_name, "r") as yaml_file:
+            calibration_defs = yaml.safe_load(yaml_file)
+        
+        for muscle_group in self.muscle_groups:
+            finger_name = muscle_group.name
+            
+            joint_indices = self.mano_joint_mapping[finger_name]
+            
+            joint_names = list(calibration_defs[finger_name].keys())
+
+            # idx is for geting the values from each ABD,MCP,PIP joint which start from 0
+            # joint_idx is for setting the values in the joints_ratio_list which depends on the joint 
+
+            for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
+                joint_type = joint_names[idx]
+                if finger_name == "thumb":
+                    joint_names_thumb = ["MCP","ABD","PIP","DIP"]
+                    joint_type = joint_names_thumb[idx]
+                elif finger_name == "wrist":
+                    joint_type = "PITCH"
+                    
+                joints_ratio_list[joint_idx] = calibration_defs[finger_name][joint_type]["ratio"]
+
+        return joints_ratio_list
+
 
 if __name__ == "__main__" :
-    gc = HandController("/dev/ttyUSB0")
-    gc.connect_to_dynamixels()
-
-    gc.init_joints(calibrate=False)
-
-    time.sleep(3.0)
+    gc = HandController("/dev/ttyUSB0", calibration= False, auto_calibrate= True)
+    time.sleep(2.0)

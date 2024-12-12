@@ -82,6 +82,63 @@ def unsigned_to_signed(value: int, size: int) -> int:
     return value
 
 
+from enum import IntFlag
+
+class OperatingMode(IntFlag):
+    CURRENT_CONTROL = 0
+    VELOCITY_CONTROL = 1
+    POSITION_CONTROL = 3
+    MULTI_TURN_POSITION_CONTROL = 4
+    CURRENT_BASED_POSITION_CONTROL = 5
+    PWM_CONTROL = 16
+
+class DummyDynamixelClient:
+    """Dummy client for testing."""
+
+    def __init__(self, motor_ids: Sequence[int], port="Torgtuga", baudrate=1000000, lazy_connect=False):
+        self.motor_ids = motor_ids
+        self.motor_positions = np.zeros(len(motor_ids))
+        self.torque_enabled = np.zeros(len(motor_ids), dtype=bool)
+        self.lazy_connect = lazy_connect
+
+    def write_desired_pos(self, motor_ids, motor_positions_rad):
+        if len(motor_ids) != len(motor_positions_rad):
+            raise ValueError(
+                "motor_ids and motor_positions_rad must be the same length"
+            )
+        self.motor_positions[:] = motor_positions_rad
+
+    def write_desired_current(self, motor_ids, motor_currents_mA):
+        pass
+
+    def connect(self):
+        print(f"Connected to DUMMY Dynamixel motors: {self.motor_ids}")
+
+    def disconnect(self):
+        print(f"Disconnected from DUMMY Dynamixel motors: {self.motor_ids}")
+
+    def set_operating_mode(self, motor_ids, mode: OperatingMode):
+        print(
+            f"Set operating mode for DUMMY dynamixels with IDs {self.motor_ids}: {mode}"
+        )
+
+    def read_pos_vel_cur(self):
+        return (
+            self.motor_positions.copy(),
+            np.zeros(len(self.motor_ids)),
+            np.zeros(len(self.motor_ids)),
+        )
+
+    def read_status_is_done_moving(self):
+        return True
+
+    def set_torque_enabled(self):
+        self.torque_enabled[:] = True
+
+    def read_pos(self):
+        return self.motor_positions.copy()
+
+
 class DynamixelClient:
     """Client for communicating with Dynamixel motors.
 
