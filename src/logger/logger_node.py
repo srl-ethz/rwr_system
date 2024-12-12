@@ -30,7 +30,7 @@ TOPICS_TYPES = {
     # CAMERA PARAMETERS
     "/oakd_front_view/intrinsics": Float32MultiArray,
     "/oakd_side_view/intrinsics": Float32MultiArray,
-    # "/oakd_wrist_view/intrinsics": Float32MultiArray,
+    # "/oakd_wrist_view/intrinintrinsicssics": Float32MultiArray,
     "/oakd_front_view/extrinsics": Float32MultiArray,
     "/oakd_side_view/extrinsics": Float32MultiArray,
     # "/oakd_wrist_view/extrinsics": Float32MultiArray,
@@ -195,9 +195,6 @@ def main(args=None):
                         '/oakd_side_view/extrinsics',
                         '/oakd_side_view/projection',
                         '/oakd_wrist_view/color', 
-                        '/oakd_wrist_view/intrinsics',
-                        '/oakd_wrist_view/extrinsics',
-                        '/oakd_wrist_view/projection',
                         '/hand/policy_output', 
                         '/franka/end_effector_pose', 
                         '/franka/end_effector_pose_cmd',
