@@ -398,7 +398,8 @@ class HandController(CalibrationClass):
         joint_angles[2] *= -1 
 
         # Cheating way to make thumb MCP actuate more.
-        joint_angles[3] += joint_angles[3] + (0.2*joint_angles[1] if joint_angles[1]>0 else 0)
+        joint_angles[3] 
+        # += joint_angles[3] + (0.2*joint_angles[1] if joint_angles[1]>0 else 0)
  
         # Increase all joitns angles buy a little.
         # joint_angles[1:] *= 1.2

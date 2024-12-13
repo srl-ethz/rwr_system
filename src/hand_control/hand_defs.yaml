@@ -2,7 +2,7 @@ muscle_groups:
   thumb: # These are randomly allocated do not change
     joint_ids: [2, 1 ,13, 14] # [MCP, ABD, PIP, DIP]  
     motor_ids: [2, 1, 13, 14]           
-    joint_roms: [[-75, 75], [-45, 45], [-10, 90], [0, 90]]
+    joint_roms: [[-45, 45], [-40, 50], [-10, 90], [0, 90]]
     tendon_ids: [1, 2, 3, 4, 5, 6, 7, 8]    
     motor_map: [2, 2, 1, 1, 13, 13, 14, 14]     
     spool_rad: [-7.5, 7.5, -7.5, 7.5, 7.5, -7.5, 7.5, -7.5] 
