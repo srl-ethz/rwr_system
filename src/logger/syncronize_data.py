@@ -26,19 +26,19 @@ TOPICS_TYPES = {
     "/oakd_front_view/color": Image,
     "/oakd_side_view/color": Image,
     "/oakd_wrist_view/color": Image,
+    "/oakd_front_view/color_mask": Image,
+    "/oakd_side_view/color_mask": Image,
+    "/oakd_wrist_view/color_mask": Image,
     
     "/task_description": String,  # New topic for task description
     
     # CAMERA PARAMETERS
     "/oakd_front_view/intrinsics": Float32MultiArray,
     "/oakd_side_view/intrinsics": Float32MultiArray,
-    "/oakd_wrist_view/intrinsics": Float32MultiArray,
     "/oakd_front_view/extrinsics": Float32MultiArray,
     "/oakd_side_view/extrinsics": Float32MultiArray,
-    "/oakd_wrist_view/extrinsics": Float32MultiArray,
     "/oakd_front_view/projection": Float32MultiArray,
     "/oakd_side_view/projection": Float32MultiArray,
-    "/oakd_wrist_view/projection": Float32MultiArray,
 }
 
 
@@ -200,17 +200,19 @@ def process_folder(input_folder, output_folder, sampling_frequency, compress, re
 
     # Create the output folder
     if output_folder is None:
-        output_folder = os.path.join(os.path.dirname(input_folder), 
-                                     os.path.basename(input_folder) + "_processed" + f"_{int(sampling_frequency)}hz")
+        parent_dir = os.path.dirname(input_folder)
+        output_folder_name = os.path.basename(input_folder) + "_proc" + f"_{int(sampling_frequency)}hz"
         if compress:
-            output_folder += "_lzf"
+            output_folder_name += "_lzf"
+        output_folder = os.path.join(parent_dir, output_folder_name)
     os.makedirs(output_folder, exist_ok=True)
     print(f"Output folder created: {output_folder}")
 
     # Process each file
     for idx, input_file in enumerate(h5_files):
         try:
-            output_file = os.path.join(output_folder, f"{idx:04d}.h5")
+            assert output_folder is not input_folder, "Input and output folders must be different."
+            output_file = os.path.join(output_folder, os.path.basename(input_file))
             print(f"Processing file: {input_file}")
             sample_and_sync_h5(input_file, output_file, sampling_frequency, compress, resize_to, topic_types)
             print(f"Processed file saved as: {output_file}")
