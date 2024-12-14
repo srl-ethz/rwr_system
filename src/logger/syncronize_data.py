@@ -200,11 +200,16 @@ def process_folder(input_folder, output_folder, sampling_frequency, compress, re
 
     # Create the output folder
     if output_folder is None:
+        print("Input folder:", input_folder)   
+        input_folder = os.path.normpath(input_folder) 
         parent_dir = os.path.dirname(input_folder)
-        output_folder_name = os.path.basename(input_folder) + "_proc" + f"_{int(sampling_frequency)}hz"
+        base_name = os.path.basename(input_folder)
+        output_folder_name = f"{base_name}_synced"
+        
         if compress:
             output_folder_name += "_lzf"
         output_folder = os.path.join(parent_dir, output_folder_name)
+        print("Output folder:", output_folder)
     os.makedirs(output_folder, exist_ok=True)
     print(f"Output folder created: {output_folder}")
 

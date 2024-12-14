@@ -69,7 +69,7 @@ def process_h5_file_gray_with_color(input_file, color, output_file=None):
                 
                 # gray_image = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
                 gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-                gray_image_bgr = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
+                gray_image_bgr = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
 
                 condition_mask = (mask_channel == 255)
                 
@@ -80,7 +80,6 @@ def process_h5_file_gray_with_color(input_file, color, output_file=None):
                 
                 cv2.imwrite('colored_grayscale_images/gray_blue.png', modified_image)
                 cv2.imwrite('colored_grayscale_images/original.png', rgb)
-                print(f"Processed image {i+1}/{num_images} in view: {view}")
 
     # If output_file is a temporary file and processing was successful, replace the original file
 
@@ -107,7 +106,16 @@ if __name__ == "__main__":
     for file in os.listdir(input_folder):
         if file.endswith('.h5'):
             input_file = os.path.join(input_folder, file)
+            
+            input_folder_clean = os.path.normpath(input_folder) 
+            parent_dir = os.path.dirname(input_folder_clean)
+            base_name = os.path.basename(input_folder_clean)
+            output_folder_name = f"{base_name}_grayed"
+                    
+            output_folder = os.path.join(parent_dir, output_folder_name)
+            print("Output folder:", output_folder)
+            os.makedirs(output_folder, exist_ok=True)
+            
             output_file = os.path.join(output_folder, file)
             process_h5_file_gray_with_color(input_file, color, output_file)
             print("Processed", file)
-            
