@@ -110,4 +110,4 @@ if __name__ == "__main__":
             output_file = os.path.join(output_folder, file)
             process_h5_file_gray_with_color(input_file, color, output_file)
             print("Processed", file)
-            time.sleep(1)
+            
