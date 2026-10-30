@@ -20,7 +20,7 @@ Every 1/policy_hz seconds:
 4. Publish the joint position command on /right/hand/policy_output, which hand_control_node executes (unless dry_run)
 
 Subtask 2 (exteroception): every step the node also reads the cube pose from TF (hand_root -> cube, published by
-cube_spin.launch.py and cube_detection_node) and converts it to object_pos / object_quat as in the simulation. They are
+cube_spin_v2.launch.py and cube_detection_node) and converts it to object_pos / object_quat as in the simulation. They are
 logged, but not part of the observation (commented out in process_once).
 
 The joint limits, observation order and scales below must match the training task (orca_v2_repose_env_cfg.py).

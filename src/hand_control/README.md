@@ -2,31 +2,7 @@
 Joint-level controllers for the hand
 see Notion page [Hand Control Hello World](https://www.notion.so/Hand-control-hello-world-223bcc457b5880a4ad73e1b2e3dad025) for more detailed usage and tutorial
 
-## to test connection to individual Dynamixels
-
-```bash
-# connect to motors 0, 1, 2 on port /dev/ttyUSB0
-python motor_control_gui.py -m 0,1,2 -p /dev/ttyUSB0
-# there are other options, see help
-python motor_control_gui.py -h
-```
-
-## ORCA Hand Joint GUI
-```bash
-cd orca
-python joint_gui.py
-```
-Calibration can be run from the GUI. After initializing, each joint can be controlled manually with the sliders.
-
-## ORCA Hand base ROS controller
-
-```bash
-ros2 launch hand_control orcahand_v1b_controller_launch.yaml hand_chirality:=right calibrate:=true launch_rviz:=true compliant_test_mode:=true 
-```
-in `compliant_test_mode`, the joints become limp and the proprioception shows up in Rviz.
-
-
-## ORCA_v2 Hand 
+## ORCA v2 Hand
 For standalone v2 chirp acquisition and offline validation (without ROS), see
 the [ORCA characterization guide](../../experiments/orca/README.md).
 

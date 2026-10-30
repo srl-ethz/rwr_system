@@ -41,14 +41,3 @@ actions:
     topic: /right/hand/policy_output
     init: null                 # null -> zeros(hand_qpos_dim)
 
-# human-in-the-loop (see launch/hil_rl.launch.py)
-hil:
-  # the teleop stack is launched with its command topics remapped to `<action topic><suffix>`;
-  # this node forwards them to the real topics only while the operator has taken over.
-  # Must match cmd_topic_suffix of hil_rl.launch.py.
-  topic_suffix: _teleop
-  # std_msgs/Bool: an external takeover switch (pedal, gamepad, gui) next to the 'n' key
-  mode_topic: /hil_mode
-  # arms whose teleop is re-anchored on takeover via <ns>/<chirality>/{pause,resume}
-  teleop_service_ns: /franka_teleop
-  teleop_chiralities: [left, right]

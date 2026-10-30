@@ -3,25 +3,12 @@ from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
 
-# select the cameras to be used
+# Start the cameras and the ORCA v2 hand controller, e.g. for running an imitation learning
+# policy with run_policy_inference.launch.py. Select the cameras in generate_launch_description().
 
 
-def spawn_hand_controller(hand_chirality, hand_name):
-    """Spawn the hand controller node for one side (left/right).
-
-    arg: hand_name: "orcahand_v1b" # "orca_v1" "mimic", None
-    """
-    if hand_name is None:
-        return []
-
-    if "mimic" in hand_name:
-        hand_family = "mimic"
-    elif "orca" in hand_name:
-        hand_family = "orca"
-    else:
-        raise ValueError(f"Unknown hand_name: {hand_name}")
-
-    # HAND CONTROLLER NODE
+def spawn_hand_controller(hand_chirality):
+    """Spawn the ORCA v2 hand controller node for one side (left/right)."""
     hand_controller_node = Node(
         package="hand_control",
         executable="hand_control_node.py",
@@ -30,9 +17,9 @@ def spawn_hand_controller(hand_chirality, hand_name):
         namespace=hand_chirality,
         parameters=[
             {
-                "hand_controller/hand_name": hand_family,
+                "hand_controller/hand_name": "orca_v2",
                 "hand_controller/hand_chirality": hand_chirality,
-                "hand_controller/hand_cfg_name": hand_name,
+                "hand_controller/hand_cfg_name": "orcahand_v2",
                 "hand_controller/calibrate": False,
             }
         ],
@@ -41,11 +28,11 @@ def spawn_hand_controller(hand_chirality, hand_name):
 
 
 def generate_launch_description():
-    OAKD_CAMERA_CFG_NAME = "oakd_pour_task" # or None
-    ZED_CONFIG_FILE = None
-    LEFT_SIDE = True
+    OAKD_CAMERA_CFG_NAME = "oakd_scissors_task" # file in cfgs/cams, or None
+    ZED_CAMERA_CFG_NAME = None # "zed_color_arena" # or None
+    # the ORCA v2 hand is right-handed only (src/hand_control/orca/configs/orcahand_v2/right)
+    LEFT_SIDE = False
     RIGHT_SIDE = True
-    hand_name = "orcahand_v1b" # "orca_v1" "mimic", None
 
     camera_nodes = []
 
@@ -61,19 +48,20 @@ def generate_launch_description():
             }],
         ))
 
-    if ZED_CONFIG_FILE is not None:
+    if ZED_CAMERA_CFG_NAME is not None:
         camera_nodes.append(Node(
             package="ingress",
             executable="zed_node.py",
             name="zed_node",
             output="screen",
             parameters=[{
-                "config_file":ZED_CONFIG_FILE,
-            }]
+                "config_file": os.path.join(get_package_share_directory("experiments"),
+                                            "cfgs", "cams", f"{ZED_CAMERA_CFG_NAME}.yaml")
+            }],
         ))
 
     return LaunchDescription(
         camera_nodes
-        + (spawn_hand_controller("right", hand_name) if RIGHT_SIDE else [])
-        + (spawn_hand_controller("left", hand_name) if LEFT_SIDE else [])
+        + (spawn_hand_controller("right") if RIGHT_SIDE else [])
+        + (spawn_hand_controller("left") if LEFT_SIDE else [])
     )

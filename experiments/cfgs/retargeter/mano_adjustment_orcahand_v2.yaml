@@ -1,3 +1,6 @@
+# MANO -> URDF alignment adjustments for orcahand_v2 (right hand).
+# Started from the orcahand_v1b values. Tune them for your hand with retargeter_config_helper.launch.py,
+# or fit them to collected data with src/retargeter/retargeter_calibration.py.
 all:
   translation : [0.0, 0.0, -0.01]
   rotation : [0.2, 0.0, -0.1]

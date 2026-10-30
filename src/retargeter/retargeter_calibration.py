@@ -7,7 +7,7 @@ Inputs:
     - One or more JSON files produced by retargeter_collect_calibration_data.py.
       Each JSON contains samples with:
           { "mano_keypoints": [[x,y,z], ...], "joint_angles": [...] }
-    - A hand name (e.g. "orcahand_v1b").
+    - A hand name (e.g. "orcahand_v2").
       URDF, scheme, mano_adjustment, and retargeter_cfg paths are resolved like
       in the teleop / record_demonstration launch files.
 
@@ -52,19 +52,19 @@ def load_dataset(json_paths):
             if mano.size == 0 or joints.size == 0:
                 continue
             mano_list.append(mano)
-            joints_list.append(joints)
+            # the collector stores the motor joint positions in radians, the retargeter works in degrees
+            joints_list.append(np.rad2deg(joints))
     if not mano_list:
         raise ValueError("No valid samples found in provided JSON paths.")
     return mano_list, joints_list
 
 
-def build_retargeter(urdf_path, scheme_path, mano_adjustments, retargeter_cfg):
+def build_retargeter(urdf_string, scheme_path, mano_adjustments, retargeter_cfg):
     """Construct a Retargeter with given config."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     return Retargeter(
-        device="cuda",
-        mjcf_filepath=None,
-        urdf_filepath=str(urdf_path),
+        device=device,
+        urdf_string=urdf_string,
         hand_scheme=str(scheme_path),
         mano_adjustments=mano_adjustments,
         retargeter_cfg=retargeter_cfg,
@@ -116,7 +116,7 @@ def apply_theta_to_adjustments(base_adjustments, theta, layout):
     return adj
 
 
-def make_objective(retargeter, mano_list, joints_list, urdf_path, scheme_path, base_adjustments, retargeter_cfg, layout):
+def make_objective(retargeter, mano_list, joints_list, urdf_string, scheme_path, base_adjustments, retargeter_cfg, layout):
     """
     Return an objective function f(theta) -> scalar MSE over the dataset.
     """
@@ -148,7 +148,7 @@ def make_objective(retargeter, mano_list, joints_list, urdf_path, scheme_path, b
 def evaluate_errors(
     mano_list,
     joints_list,
-    urdf_path: Path,
+    urdf_string: str,
     scheme_path: Path,
     mano_adjustments: dict,
     retargeter_cfg: dict,
@@ -157,7 +157,7 @@ def evaluate_errors(
     Evaluate per-sample MSE errors for a given mano_adjustments dict.
     Returns an array of shape (n_samples,).
     """
-    retargeter = build_retargeter(urdf_path, scheme_path, mano_adjustments, retargeter_cfg)
+    retargeter = build_retargeter(urdf_string, scheme_path, mano_adjustments, retargeter_cfg)
     errs = []
     for mano_pts, q_gt in zip(mano_list, joints_list):
         debug_dict = {}
@@ -309,9 +309,9 @@ def parse_args():
     )
     parser.add_argument(
         "--hand-name",
-        default="orcahand_v1b",
+        default="orcahand_v2",
         help=(
-            "Hand name, e.g. 'orcahand_v1b', 'orca_v1', or 'mimic'. "
+            "Hand name, e.g. 'orcahand_v2'. "
             "URDF, scheme, and cfg paths are resolved like in the launch files."
         ),
     )
@@ -366,17 +366,12 @@ def main():
     viz_dir = project_root / "src" / "viz"
     experiments_dir = project_root / "experiments"
 
-    if "mimic" in hand_name:
-        urdf_path = (
-            viz_dir / "models" / "mimic" / "converted.urdf"
-        )
-        scheme_path = (
-            viz_dir / "models" / hand_name / "scheme.yaml"
-        )
-    elif "orca" in hand_name:
-        urdf_path = (
-            viz_dir / "models" / hand_name / "urdf" / f"{hand_name}.urdf"
-        )
+    if hand_name == "orcahand_v2":
+        import xacro
+        urdf_string = xacro.process_file(
+            str(viz_dir / "models" / hand_name / f"{hand_name}.urdf.xacro"),
+            mappings={"hand_chirality": "right"},
+        ).toxml()
         scheme_path = (
             viz_dir / "models" / hand_name / f"scheme_{hand_name}.yaml"
         )
@@ -398,12 +393,12 @@ def main():
     # Build parameter layout: always 'all', plus any selected fingers.
     layout = build_layout(args.optimize_fingers)
 
-    retargeter = build_retargeter(urdf_path, scheme_path, base_adjustments, retargeter_cfg)
+    retargeter = build_retargeter(urdf_string, scheme_path, base_adjustments, retargeter_cfg)
     objective = make_objective(
         retargeter,
         mano_list,
         joints_list,
-        urdf_path,
+        urdf_string,
         scheme_path,
         base_adjustments,
         retargeter_cfg,
@@ -451,7 +446,7 @@ def main():
     base_errs = evaluate_errors(
         mano_list,
         joints_list,
-        urdf_path,
+        urdf_string,
         scheme_path,
         base_adjustments,
         retargeter_cfg,
@@ -459,7 +454,7 @@ def main():
     best_errs = evaluate_errors(
         mano_list,
         joints_list,
-        urdf_path,
+        urdf_string,
         scheme_path,
         best_adjustments,
         retargeter_cfg,

@@ -1,150 +1,117 @@
-# Faive System
+# RWR System
 
-## Getting Started
+Code for the [Real-World Robotics](https://rwr.ethz.ch/) class (RWR 2026) with the ORCA v2 hand:
 
-To install faive System, follow these steps:
+- **Reinforcement learning:** run a policy trained in simulation on the real hand (cube spin), with camera-based cube detection.
+- **Imitation learning:** teleoperate the hand (Rokoko glove) and the Franka arm, record demonstrations, and run the trained policy.
 
-1. If you don't have a `src` directory in your ROS 2 workspace, create it:
+The code of the RWR 2024 class is kept under the git tag [`rwr2024`](https://github.com/srl-ethz/rwr_system/tree/rwr2024).
+
+## Repository layout
+
+| Folder | ROS package | Content |
+|---|---|---|
+| `src/hand_control` | `hand_control` | ORCA v2 hand controller (through [orca_core](https://pypi.org/project/orca_core/)), Franka gripper, tensioning |
+| `src/ingress` | `ingress` | Sensor input: OAK-D and ZED cameras, Rokoko glove, webcam hand tracking (MediaPipe) |
+| `src/retargeter` | `retargeter` | Maps the human hand keypoints to the hand's joint angles, with tools to tune and calibrate it |
+| `src/logger` | `logger` | Records ROS topics during demonstrations and converts them to HDF5 |
+| `src/viz` | `viz` | Robot models (ORCA v2, Franka, cube), RViz configs, joint visualization |
+| `src/common` | | Shared Python utilities |
+| `experiments` | `experiments` | Launch files, configs and scripts for the tasks |
+| `tests` | `faive_test` | Retargeter replay test, ORCA v2 chirp tests |
+| `third_party/franka_msgs` | `franka_msgs` | Franka message definitions |
+
+The Python package is called `faive_system` (e.g. `from faive_system.src.common.utils import ...`).
+
+## Installation
+
+1. Create the `src` folder of your ROS 2 workspace and clone the repository into it:
     ```bash
     mkdir -p ~/ros_ws/src
-    ```
-2. Clone the repository inside the `src` directory of your ROS 2 workspace:
-    ```bash
     cd ~/ros_ws/src
-    git clone https://github.com/srl_ethz/faive_system
+    git clone https://github.com/srl-ethz/rwr_system.git
     ```
-3. Navigate to the project directory:
+2. Set up a ROS 2 Jazzy environment, e.g. with pixi following [Getting Started with RoboStack](https://robostack.github.io/GettingStarted.html). With pixi, prefix the commands below with `pixi run` and run them from `~/ros_ws`.
+3. Install the ROS dependencies:
     ```bash
-    cd faive_system
+    pixi add pip ros-jazzy-rosidl-typesupport-c ros-jazzy-joint-state-publisher-gui ros-jazzy-xacro
+    pixi run which pip   # should print ~/ros_ws/.pixi/envs/default/bin/pip or similar
     ```
-    1. Set up your ROS 2 Jazzy environment.
-        If you don't have a ROS 2 environment, follow this guide: [Getting Started with RoboStack](https://robostack.github.io/GettingStarted.html).
-        If you are using the pixi environment, you need to prepend all commands you want to run in the environment with `pixi run`, and run it from the `~/ros_ws` directory that you set up. Further commands in this README may abbreviate this prefixed command for brevity: re-add `pixi run` as needed.
-
-    2. Install the necessary dependencies:
-        For a pixi robostack environment, install pip first if it doesn't exist yet:
-        ```bash
-        pixi add pip
-        # check that the correct pip is used:
-        pixi run which pip
-        ```
-        The output of the `which` command should be `/home/your_usename/ros_ws/.pixi/envs/default/bin/pip` or similar. Note: Having the mamba / conda setup code in `~/.bashrc` or `~/.zshrc` might interfere with `pixi`'s `pip`, in which case comment out those setup scripts.
-
-        Now install the dependent Python packages with
-        ```
-        pixi run pip install -e './src/faive_system[all]'
-        ```
-        this will install the faive_system package in your enviroment, and all the required dependencies specified in the `project.toml` file 
-    
-    3. Install other necessary dependencies
-        ```bash
-        pixi add ros-jazzy-rosidl-typesupport-c ros-jazzy-joint-state-publisher-gui ros-jazzy-xacro
-        ```
-
-4. Build ROS 2 packages
-    1. Navigate to your ROS 2 workspace:
-        ```bash
-        cd ~/ros_ws
-        ```
-    2. Build the packages:
-        ```bash
-        colcon build --symlink-install
-        ```
-        3. To build individual packages, use:
-            ```bash
-            colcon build --symlink-install --packages-up-to <package_name>
-            ```
-    4. Source the setup script:
-        ```bash
-        source install/setup.bash
-        ```
-        Note: for pixi environments, add this to `~/ros_ws/pixi.toml` instead:
-        ```toml
-        [target.unix.activation]
-        scripts = ["install/setup.bash"]
-        ```
-
-If you encounter any issues during the installation or build process, try removing the `install`, `log`, and `build` directories, and then attempt the process again:
-```bash
-rm -r install/ build/ log/
-```
-
-
-## Code Explanation
-
-### Experiments
-
-All experiments or main launch files are structured to ensure user interaction is straightforward. 
-
-- To run scripts that require user interaction, use:
+    If `which pip` prints another pip, comment out the conda/mamba setup in `~/.bashrc` or `~/.zshrc`.
+4. Install the Python dependencies:
     ```bash
-    ros2 run <package_name> <file_name>
+    pixi run pip install -e './src/rwr_system[all]'
+    # the ORCA v2 driver. --no-deps: orca_core asks for a newer numpy than this package pins, but works with it
+    pixi run pip install --no-deps orca_core==0.5.2
     ```
-    For example:
+5. Build the workspace and source it:
     ```bash
-    ros2 run experiments run_teleop_rokoko.py
+    cd ~/ros_ws
+    pixi run colcon build --symlink-install
+    source install/setup.bash
     ```
-
-- To run all required nodes, use the corresponding launch files:
+    With pixi, add the source step to `~/ros_ws/pixi.toml` instead:
+    ```toml
+    [target.unix.activation]
+    scripts = ["install/setup.bash"]
+    ```
+    If the build fails after changes, remove `build/`, `install/` and `log/` and build again.
+6. For the RL task, download the cube detector's model files once:
     ```bash
-    ros2 launch <package_name> <launch_file>
+    ./src/rwr_system/experiments/rl_inference/pose_estimation/download_models.sh
     ```
-    For example:
+
+Run nodes with `ros2 run <package> <file>` and launch files with `ros2 launch <package> <launch file>`.
+
+## The hand
+
+Tension the tendons, calibrate the hand and move the joints: see [src/hand_control/README.md](src/hand_control/README.md).
+
+To check the hand without teleop or a policy, `experiments/fixed_command.py` publishes fixed joint poses (edit the poses in the script), and `ros2 run experiments command_gui.py -n 17 -t policy_output` moves each joint with a slider.
+
+## Reinforcement learning: cube spin
+
+Run a policy trained in faive_lab on the hand, detect the cube, and calibrate the camera: see [experiments/README.md](experiments/README.md).
+
+## Imitation learning
+
+The hand follows the Rokoko glove through the retargeter, and the Franka arm follows the glove's wrist. The Franka arm controller is not part of this repository: it subscribes to `/right/arm/end_effector_pose_cmd` and publishes `/right/arm/end_effector_pose`.
+
+1. **Cameras.** Set the ID printed on each OAK-D camera in a file in `experiments/cfgs/cams/` and select it with `OAKD_CAMERA_CFG_NAME` in `record_demonstration.launch.py` and `controllers_and_cameras.launch.py` (default: `oakd_scissors_task.yaml`). For a ZED camera, set `ZED_CAMERA_CFG_NAME`. The camera extrinsics can be measured with `experiments/calibrate_camera_pose.py`.
+2. **Retargeter.** Tune the mapping from your hand to the robot hand, see [src/retargeter/README.md](src/retargeter/README.md). The ORCA v2 settings are in `experiments/cfgs/retargeter/`.
+3. **Test the teleop** (no recording):
     ```bash
-    ros2 launch experiments run_teleop_rokoko.launch.py
+    ros2 launch experiments teleop_rokoko.launch.py
     ```
-So, during a teleop experiment, you need to run the launch file in one terminal and the script in another terminal.
+    A `keyboard_runner` terminal opens: press Enter to start, pause and resume the teleop. Foot pedals that type keys work the same way.
+4. **Record demonstrations.** Set `DATASET_NAME` in `record_demonstration.launch.py`, then:
+    ```bash
+    ros2 launch experiments record_demonstration.launch.py
+    ```
+    In the `keyboard_runner` terminal, Enter starts the teleop, starts the recording and stops it. Each demonstration is saved as an `.h5` file in `tmp/<DATASET_NAME>/` (relative to where you launched). The recorded topics are listed in `experiments/cfgs/logger/datacollection_default.yaml`.
+5. **Process the data.** Resample all topics of the recordings in a folder to a common rate:
+    ```bash
+    ros2 run logger syncronize_data.py tmp/<DATASET_NAME> --sampling_freq 10
+    ```
+    Check the demonstrations with `experiments/scripts/plot_trajectories.py` and `experiments/scripts/visualize_videos.py`.
+6. **Train** a policy, e.g. with [srl_il](https://github.com/srl-ethz/srl_il).
+7. **Run the policy.** Start the cameras and the hand, then the policy:
+    ```bash
+    ros2 launch experiments controllers_and_cameras.launch.py
+    ros2 launch experiments run_policy_inference.launch.py policy_ckpt_path:=/path/to/policy.ckpt
+    ```
+    The inference config (`experiments/cfgs/inference_config_*.yaml`, set with `inference_cfg_file:=`) maps the camera and joint topics to the policy's inputs and outputs; it must match your training data.
 
-### Grasp GUI
+## Other tools
 
-The `grasp_gui.py` script is useful for testing your `hand_control`. Ensure you adapt it to your specific hand model.
-
-### Logger
-
-To start recording, use:
-```bash
-ros2 run logger logger_node.py # TODO: DEPRECATED
-```
-Select the list of topics to record in the code. Additionally, you can use the `record_demonstrations.launch.py` file to launch all the required nodes while recording.
-### Other Packages
-
-The project is organized into two main folders: one containing all the Python scripts and the other containing ROS-dependent components such as nodes, launch files, and packages.
-
-#### Hand Control
-
-Significant modifications are required for the hand control package. Refer to the workshop materials for guidance on controlling the hand.
-We left the code in the package as reference or hint to implement your own kinematics and hand_controller. 
-
-#### Ingress
-
-##### OAK-D
-
-This component handles the stream from the cameras.
-
-- **OakdNode**: Publishes images to `/oakd/front_view/color`, etc.
-
-##### Rokoko
-
-This component handles the stream from the gloves.
-
-- **RokokoNode**: Publishes data to `/ingress/mano` (21x3 keypoints, `FloatMultiArray`) and `/ingress/wrist` (`PoseStamped`).
-
-##### Apple Vision Pro (AVP)
-
-This component handles the stream from the Apple Vision Pro headset.
-
-- **AVPNode**: Publishes data to `/ingress/<chirality>/mano`, `/ingress/<chirality>/wrist` and other minor topics.
-
-#### Retargeter
-
- Your code should be placed in the `retargeter.py` file. Follow the provided hints to adapt it, or develop your own retargeting method.
-
-- **RetargeterNode**: Subscribes to `/ingress/mano` and publishes to `/hand/policy_output` (you can rename this based on your hand model).
-
-#### Viz
-visualization helper functions, have a look at visualize_joints.py to see how to visualize both rolling contact and pin joints in rviz
-
+| Tool | Use |
+|---|---|
+| `experiments/gesture_runner.py` | Enables the retargeter only while one wrist is held more than 10 cm higher than the other (needs both gloves), so the hand stops following when you lower it |
+| `experiments/run_keyboard_teleop_franka.py` | Moves the Franka end effector with the keyboard |
+| `experiments/calibrate_franka_load.py` | Calibrates the load mounted on the Franka |
+| `src/viz/visualize_static_frames.py` | Publishes fixed frames (e.g. cameras) from a YAML file such as `experiments/cfgs/tf/static_frames_bimanual.yaml` |
+| `experiments/orca/` | ORCA v2 chirp data acquisition for system identification, see [experiments/orca/README.md](experiments/orca/README.md) |
 
 ## Contributing
-If you would like to contribute to the RWR System, please fork the repository and submit a pull request. We welcome all contributions and improvements.
 
+To contribute, fork the repository and open a pull request.

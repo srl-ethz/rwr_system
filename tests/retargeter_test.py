@@ -4,9 +4,9 @@
 This script is used to test the retargeter module.
 Instead of receiving mano keypoints from ingress nodes, it reads from a JSON file and calls the retargeter module.
 It publishes the joint angles of the retargeted hand to the topic "/hand/policy_output".
+The JSON file is either a recording of experiments/rokoko_recorder.py ([left, right, timestamp] per pose,
+the right hand is used) or the older single-hand format ([handpose, timestamp] per pose).
 """
-
-# @TODO: update this test to work with a bimanual test artifact
 
 import rclpy
 from rclpy.node import Node
@@ -31,6 +31,9 @@ class RetargeterNode(Node):
         # start retargeter
         self.declare_parameter("retarget/mjcf_filepath", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/urdf_filepath", rclpy.Parameter.Type.STRING)
+        # URDF content (e.g. rendered from a xacro); if non-empty, it is used instead of urdf_filepath
+        self.declare_parameter("robot_description", "")
+        self.declare_parameter("handposes_file", "handposes_20241127222652.json")
         self.declare_parameter("retarget/hand_scheme", rclpy.Parameter.Type.STRING)
         self.declare_parameter("retarget/mano_adjustments", "")
         self.declare_parameter("retarget/retargeter_cfg", "")
@@ -41,9 +44,12 @@ class RetargeterNode(Node):
         except:
             mjcf_filepath = None
         
+        urdf_string = self.get_parameter("robot_description").value or None
         try:
             urdf_filepath = self.get_parameter("retarget/urdf_filepath").value
         except:
+            urdf_filepath = None
+        if urdf_string is not None:
             urdf_filepath = None
         hand_scheme = self.get_parameter("retarget/hand_scheme").value
         # mano_adjustments's default value is None
@@ -62,12 +68,12 @@ class RetargeterNode(Node):
         share_dir = get_package_share_directory(package_name)
 
         # Define the relative path within the share directory
-        relative_path = os.path.join(share_dir, 'artifacts', 'handposes_20241127222652.json')
+        relative_path = os.path.join(share_dir, 'artifacts', self.get_parameter("handposes_file").value)
         self.load_mano_handposes(relative_path)
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         self.retargeter = Retargeter(
-            device=device,  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, 
+            device=device,  mjcf_filepath= mjcf_filepath, urdf_filepath=urdf_filepath, urdf_string=urdf_string,
             hand_scheme=hand_scheme, mano_adjustments=mano_adjustments, retargeter_cfg=retargeter_cfg
         )
 
@@ -87,8 +93,24 @@ class RetargeterNode(Node):
         with open(filepath, "r") as f:
             handposes_w_time_stamps = json.load(f)
 
-        self.mano_handposes = [handpose for handpose, timestamp in handposes_w_time_stamps]
+        if len(handposes_w_time_stamps[0]) == 3:
+            # rokoko_recorder.py format: [left, right, timestamp], use the right hand
+            self.mano_handposes = [right for left, right, timestamp in handposes_w_time_stamps]
+        else:
+            self.mano_handposes = [handpose for handpose, timestamp in handposes_w_time_stamps]
         self.mano_handposes = [np.array(handpose, dtype=np.float32) for handpose in self.mano_handposes]
+        if self.mano_handposes[0].shape[0] == 21:
+            # the retargeter needs 22 keypoints: forearm, then the 21 MANO points (wrist first).
+            # Older recordings have no forearm point, so place one 15 cm behind the wrist,
+            # away from the middle finger's base.
+            self.get_logger().warn("The hand poses have no forearm keypoint, using an approximate one")
+            self.mano_handposes = [self.add_forearm_keypoint(p) for p in self.mano_handposes]
+
+    @staticmethod
+    def add_forearm_keypoint(handpose):
+        direction = handpose[0] - handpose[9]
+        direction /= np.linalg.norm(direction)
+        return np.vstack([handpose[0] + 0.15 * direction, handpose]).astype(np.float32)
 
     def timer_publish_cb(self):
         pose_switch_time = 1.0  # seconds

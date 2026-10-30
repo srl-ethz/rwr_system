@@ -5,14 +5,16 @@ from launch_ros.parameter_descriptions import ParameterValue
 import os
 from ament_index_python.packages import get_package_share_directory
 
-# select the cameras to be used
+# Record imitation learning demonstrations: cameras, ORCA v2 hand + retargeter, Rokoko glove,
+# Franka arm teleop, logger, and the keyboard_runner terminal to start/stop the recordings.
+# Select the cameras and the dataset name in generate_launch_description().
 
 
-def _orcahand_v1b_robot_description(hand_chirality):
-    """Render the orcahand_v1b URDF in-memory from the mirror-aware xacro."""
+def _orcahand_v2_robot_description(hand_chirality):
+    """Render the orcahand_v2 URDF in-memory from the xacro."""
     xacro_path = os.path.join(
         get_package_share_directory("viz"),
-        "models", "orcahand_v1b", "orcahand_v1b.urdf.xacro",
+        "models", "orcahand_v2", "orcahand_v2.urdf.xacro",
     )
     return ParameterValue(
         Command(['xacro ', xacro_path, ' hand_chirality:=', hand_chirality]),
@@ -20,41 +22,11 @@ def _orcahand_v1b_robot_description(hand_chirality):
     )
 
 
-def spawn_hand_nodes(hand_chirality, hand_name):
-    """
-    arg: hand_name: "orcahand_v1b" # "orca_v1" "mimic", None
-    """
-    if hand_name is None:
-        return []
-
-    robot_description = None
-
-    if "mimic" in hand_name:
-        urdf_filepath = os.path.join(get_package_share_directory('viz'), "models/mimic/converted.urdf")
-        hand_scheme_filepath = os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            hand_name,
-                            "scheme.yaml"
-            )
-        hand_family = "mimic"
-
-    elif "orca" in hand_name:
-        if hand_name == "orcahand_v1b":
-            urdf_filepath = None
-            robot_description = _orcahand_v1b_robot_description(hand_chirality)
-            hand_scheme_filepath = os.path.join(
-                get_package_share_directory("viz"),
-                f"models/{hand_name}/scheme_{hand_name}.yaml",
-            )
-        else:
-            urdf_filepath = os.path.join(get_package_share_directory('viz'), f"models/{hand_name}/urdf/{hand_name}.urdf")
-            hand_scheme_filepath = os.path.join(get_package_share_directory("viz"), f"models/{hand_name}/scheme_{hand_name}.yaml")
-        hand_family = "orca"
-
-
-    mano_adjust_suffix = "_left" if hand_name == "orcahand_v1b" and hand_chirality == "left" else ""
-    mano_adjustments_filepath = os.path.join(get_package_share_directory("experiments"), "cfgs", "retargeter", f"mano_adjustment_{hand_name}{mano_adjust_suffix}.yaml")
+def spawn_hand_nodes(hand_chirality):
+    """Spawn the ORCA v2 hand controller and the retargeter for one side."""
+    hand_name = "orcahand_v2"
+    hand_scheme_filepath = os.path.join(get_package_share_directory("viz"), "models", hand_name, f"scheme_{hand_name}.yaml")
+    mano_adjustments_filepath = os.path.join(get_package_share_directory("experiments"), "cfgs", "retargeter", f"mano_adjustment_{hand_name}.yaml")
     retargeter_cfg_filepath = os.path.join(get_package_share_directory("experiments"), "cfgs", "retargeter", f"retargeter_cfgs_{hand_name}.yaml")
 
     # HAND CONTROLLER NODE
@@ -66,7 +38,7 @@ def spawn_hand_nodes(hand_chirality, hand_name):
         namespace=hand_chirality,
         parameters=[
             {
-                "hand_controller/hand_name": hand_family,
+                "hand_controller/hand_name": "orca_v2",
                 "hand_controller/hand_chirality": hand_chirality,
                 "hand_controller/hand_cfg_name": hand_name,
                 "hand_controller/calibrate": False,
@@ -74,36 +46,30 @@ def spawn_hand_nodes(hand_chirality, hand_name):
         ],
     )
 
-    retargeter_params = {
-        "retarget/hand_scheme": hand_scheme_filepath,
-        "retarget/hand_chirality": hand_chirality,
-        "retarget/mano_adjustments": mano_adjustments_filepath,
-        "retarget/retargeter_cfg": retargeter_cfg_filepath,
-    }
-    if robot_description is not None:
-        retargeter_params["robot_description"] = robot_description
-    else:
-        retargeter_params["retarget/urdf_filepath"] = urdf_filepath
-
     retargeter_node = Node(
         package="retargeter",
         executable="retargeter_node.py",
         name="retargeter_node",
         output="screen",
         namespace=hand_chirality,
-        parameters=[retargeter_params],
+        parameters=[{
+            "retarget/hand_scheme": hand_scheme_filepath,
+            "retarget/hand_chirality": hand_chirality,
+            "retarget/mano_adjustments": mano_adjustments_filepath,
+            "retarget/retargeter_cfg": retargeter_cfg_filepath,
+            "robot_description": _orcahand_v2_robot_description(hand_chirality),
+        }],
     )
     return [hand_controller_node, retargeter_node]
 
 
 def generate_launch_description():
-    OAKD_CAMERA_CFG_NAME = "oakd_pour_task" # or None
+    OAKD_CAMERA_CFG_NAME = "oakd_scissors_task" # file in cfgs/cams, or None
     ZED_CAMERA_CFG_NAME = None # "zed_color_arena" # or None
-    FISHEYE_CAMERA = False
-    LEFT_SIDE = True
+    # the ORCA v2 hand is right-handed only (src/hand_control/orca/configs/orcahand_v2/right)
+    LEFT_SIDE = False
     RIGHT_SIDE = True
-    hand_name = "orcahand_v1b" # "orca_v1" "mimic", None
-    DATASET_NAME = "pour"
+    DATASET_NAME = "demo"
     DATA_RECORDING_CONFIG_PATH = os.path.join(
         get_package_share_directory("experiments"), "cfgs", "logger", "datacollection_default.yaml"
     )
@@ -113,11 +79,11 @@ def generate_launch_description():
     if OAKD_CAMERA_CFG_NAME is not None:
         camera_nodes.append(Node(
             package="ingress",
-            executable="oakd_node.py", 
+            executable="oakd_node.py",
             name="oakd_node",
             output="log",
             parameters=[{
-                "config_file": os.path.join(get_package_share_directory("experiments"), 
+                "config_file": os.path.join(get_package_share_directory("experiments"),
                                             "cfgs", "cams", f"{OAKD_CAMERA_CFG_NAME}.yaml")
             }],
         ))
@@ -129,29 +95,17 @@ def generate_launch_description():
             name="zed_node",
             output="screen",
             parameters=[{
-                "config_file": os.path.join(get_package_share_directory("experiments"), 
+                "config_file": os.path.join(get_package_share_directory("experiments"),
                                             "cfgs", "cams", f"{ZED_CAMERA_CFG_NAME}.yaml")
             }],
 
         ))
-    if FISHEYE_CAMERA:
-        # for mimic's fish eye camera
-        camera_nodes.append(Node(
-            package="ingress",
-            executable="fisheye_node.py",
-            name="fisheye_node", 
-            output="screen",
-            parameters=[
-                {"enable_top_wrist_camera": False},
-                {"enable_bottom_wrist_camera": True},
-            ],
-        ))         
 
     rokoko_node = Node(
         package="ingress",
         executable="rokoko_node.py",
         name="rokoko_node",
-        output="screen", 
+        output="screen",
         parameters=[
             {"rokoko_tracker/ip": "0.0.0.0"},
             {"rokoko_tracker/port": 14043},
@@ -163,7 +117,7 @@ def generate_launch_description():
         package="logger",
         executable="logger_node.py",
         name="logger_node",
-        output="screen", 
+        output="screen",
         parameters=[
             {
             "topics_and_types_path": DATA_RECORDING_CONFIG_PATH,
@@ -172,7 +126,7 @@ def generate_launch_description():
             }
         ],
     )
-    # move the arm 
+    # move the arm
     arm_teleop_node = Node(
         package="experiments",
         executable="run_teleop_rokoko.py",
@@ -200,13 +154,13 @@ def generate_launch_description():
         )
 
     return LaunchDescription(
-        camera_nodes 
-        + (spawn_hand_nodes("right", hand_name) if RIGHT_SIDE else [])
-        + (spawn_hand_nodes("left", hand_name) if LEFT_SIDE else [])
+        camera_nodes
+        + (spawn_hand_nodes("right") if RIGHT_SIDE else [])
+        + (spawn_hand_nodes("left") if LEFT_SIDE else [])
         + [
             rokoko_node,
             logger_node,
             arm_teleop_node,
             keyboard_ctrl
-        ] 
+        ]
     )

@@ -57,6 +57,8 @@ all = [
     "opencv-python",
     "cv_bridge", 
     "mediapipe",
+    "scikit-learn",  # retargeter calibration
+    "matplotlib",
 ]
 
 [tool.setuptools]
