@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faive_system"
+version = "0.1.0"
+description = "A robotic hand control system"
+authors = [
+    {name = "Barnabas Gavin Cangan", email = "gavin.cangan@srl.ethz.ch"},
+    {name = "Chenyu Yang", email = "chenyu.yang@srl.ethz.ch"},
+    {name = "Davide Liconti", email = "davide.liconti@srl.ethz.ch"},
+]
+requires-python = ">=3.6"
+dependencies = [
+    "numpy==1.26.4",
+    "scipy>=1.14.0",
+    "tqdm",
+    "pandas",
+    "strenum"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.10",
+]
+
+[project.optional-dependencies]
+gui = [
+    "tkinter",
+]
+retargeter = [
+    "torch",
+    "pytorch_kinematics",
+]
+ros = [
+    "rclpy",
+]
+inference = [
+    "torch",
+    "h5py",
+    "torchvision",
+]
+all = [
+    "torch",
+    "pytorch_kinematics",
+    "rclpy",
+    "h5py",
+    "torchvision", 
+    "depthai<3",  # the OAK-D node uses the depthai v2 API
+    "dt-apriltags",  # AprilTag camera calibration
+    "pytorch-lightning",  # the cube detector (experiments/rl_inference/pose_estimation)
+    "kornia",
+    "einops",
+    "fire",
+    "open3d",
+    "opencv-python",
+    "cv_bridge", 
+    "mediapipe",
+]
+
+[tool.setuptools]
+package-dir = {faive_system = "."}  # Tells setuptools that the package is in the current directory
+packages = [
+    "faive_system",
+    "faive_system.src.hand_control",
+    "faive_system.src.logger",
+    "faive_system.src.ingress",
+    "faive_system.src.viz",
+    "faive_system.src.common",
+    "faive_system.src.retargeter",
+]

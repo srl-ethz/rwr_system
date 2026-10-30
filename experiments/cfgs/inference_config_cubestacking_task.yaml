@@ -1,0 +1,22 @@
+rgb_process_dict: {}
+rgb_resize_size: [224,224]
+
+hand_qpos_dim: 17
+
+# camera ros topic -> model observation key (moved here from the launch file)
+camera_topics: ["/oakd_front_view/color", "/oakd_wrist_bottom_view/color"]
+camera_names:  ["oakd_front_view_images", "oakd_wrist_bottom_view_images"]
+
+# model observation input key -> ros topic
+observations:
+  qpos_arm: /right/arm/end_effector_pose
+  qpos_hand: /right/hand/joint_position_from_motor
+
+# model action key -> ros topic (+ default init state published on reset)
+actions:
+  actions_arm:
+    topic: /right/arm/end_effector_pose_cmd
+    init: [0.45, -0.0, 0.2]   # wrist position; orientation uses the fixed default
+  actions_hand:
+    topic: /right/hand/policy_output
+    init: null                # null -> zeros(hand_qpos_dim)

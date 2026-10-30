@@ -1,0 +1,87 @@
+!!python/object:argparse.Namespace
+anchor_sizes: !!python/tuple
+- !!python/tuple
+  - 32
+- !!python/tuple
+  - 64
+- !!python/tuple
+  - 128
+- !!python/tuple
+  - 256
+- !!python/tuple
+  - 512
+backbone_str: resnet50-fpn
+background_augmentation: true
+batch_size: 2
+box_reg_alpha: 1
+classifier_alpha: 1
+epoch_size: 156
+global_batch_size: 64
+input_resize: !!python/tuple
+- 640
+- 480
+label_to_category_id:
+  background: 0
+  obj_000001: 1
+  obj_000002: 2
+  obj_000003: 3
+  obj_000004: 4
+  obj_000005: 5
+  obj_000006: 6
+  obj_000007: 7
+  obj_000008: 8
+  obj_000009: 9
+  obj_000010: 10
+  obj_000011: 11
+  obj_000012: 12
+  obj_000013: 13
+  obj_000014: 14
+  obj_000015: 15
+  obj_000016: 16
+  obj_000017: 17
+  obj_000018: 18
+  obj_000019: 19
+  obj_000020: 20
+  obj_000021: 21
+lr: 0.04
+lr_epoch_decay: 200
+mask_alpha: 1
+momentum: 0.9
+n_dataloader_workers: 8
+n_epochs: 600
+n_epochs_warmup: 50
+n_gpus: 32
+n_test_frames: null
+objectness_alpha: 1
+optimizer: sgd
+pretrain_coco: true
+resume_run_id: null
+rgb_augmentation: true
+rpn_box_reg_alpha: 1
+run_id: detector-bop-ycbv-synt+real--292971
+run_id_pretrain: detector-ycbv-pbr-augm--970850
+save_dir: !!python/object/apply:pathlib.PosixPath
+- /
+- gpfsscratch
+- rech
+- vuw
+- uwi72sr
+- experiments
+- relative
+- detector-bop-ycbv-synt+real--292971
+test_ds_names:
+- ycbv.bop19
+test_epoch_interval: 30
+train_ds_names: &id001
+- !!python/tuple
+  - ycbv.pbr
+  - 20
+- !!python/tuple
+  - ycbv.train.synt
+  - 1
+- !!python/tuple
+  - ycbv.train.real
+  - 3
+val_ds_names: *id001
+val_epoch_interval: 10
+weight_decay: 0.0001

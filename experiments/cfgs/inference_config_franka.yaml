@@ -1,0 +1,44 @@
+rgb_process_dict:
+  oakd_front_view_images:
+    - type: crop
+      top: 0
+      left: 200
+      bottom: null
+      right: null
+  oakd_side_view_images:
+    - type: crop
+      top: 0
+      left: 250
+      bottom: null
+      right: 770
+  oakd_wrist_view_images:
+    - type: crop
+      (condition)hand_name: franka
+      top: 0
+      left: 0
+      bottom: null
+      right: null
+    - type: rotate90
+      (condition)hand_name: franka
+      k: 1
+rgb_resize_size: [224,224]
+
+hand_qpos_dim: 17
+
+# camera ros topic -> model observation key (moved here from the launch file)
+camera_topics: ["/oakd_front_view/color", "/oakd_side_view/color", "/oakd_wrist_view/color"]
+camera_names:  ["oakd_front_view_images", "oakd_side_view_images", "oakd_wrist_view_images"]
+
+# model observation input key -> ros topic
+observations:
+  qpos_arm: /right/arm/end_effector_pose
+  qpos_hand: /right/hand/joint_position_from_motor
+
+# model action key -> ros topic (+ default init state published on reset)
+actions:
+  actions_arm:
+    topic: /right/arm/end_effector_pose_cmd
+    init: [0.45, -0.0, 0.2]   # wrist position; orientation uses the fixed default
+  actions_hand:
+    topic: /right/hand/policy_output
+    init: null                # null -> zeros(hand_qpos_dim)

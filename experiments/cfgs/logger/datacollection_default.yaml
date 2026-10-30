@@ -1,0 +1,69 @@
+topics_and_types:
+  "/right/arm/end_effector_pose": geometry_msgs.msg.PoseStamped
+  "/right/arm/end_effector_pose_cmd": geometry_msgs.msg.PoseStamped
+  "/left/arm/end_effector_pose": geometry_msgs.msg.PoseStamped
+  "/left/arm/end_effector_pose_cmd": geometry_msgs.msg.PoseStamped
+
+  # HAND POLICY OUTPUT
+  "/right/hand/policy_output": std_msgs.msg.Float32MultiArray
+  "/right/hand/proprioception": std_msgs.msg.Float32MultiArray
+  "/right/hand/joint_position_from_motor": std_msgs.msg.Float32MultiArray
+  "/left/hand/policy_output": std_msgs.msg.Float32MultiArray
+  "/left/hand/proprioception": std_msgs.msg.Float32MultiArray
+  "/left/hand/joint_position_from_motor": std_msgs.msg.Float32MultiArray
+
+  # CAMERA IMAGES
+  # OAKD
+  "/oakd_front_view/color": sensor_msgs.msg.Image
+  "/oakd_front_view/depth": sensor_msgs.msg.Image
+  "/oakd_side_view/color": sensor_msgs.msg.Image
+  "/oakd_side_view/depth": sensor_msgs.msg.Image
+  "/oakd_wrist_view/color": sensor_msgs.msg.Image
+  "/oakd_wrist_bottom_view/color": sensor_msgs.msg.Image
+  "/oakd_wrist_top_view/color": sensor_msgs.msg.Image
+  "/oakd_left_wrist_view/color": sensor_msgs.msg.Image
+  "/oakd_right_wrist_view/color": sensor_msgs.msg.Image
+
+  #ZED
+  "/zed_back_view/color": sensor_msgs.msg.Image
+  
+
+
+  # aria
+  "/aria_rgb_cam/color": sensor_msgs.msg.Image
+  "/task_description": std_msgs.msg.String  # New topic for task description
+
+  # CAMERA PARAMETERS
+  "/oakd_front_view/intrinsics": std_msgs.msg.Float32MultiArray
+  "/oakd_side_view/intrinsics": std_msgs.msg.Float32MultiArray
+  "/oakd_left_wrist_view/intrinsics": std_msgs.msg.Float32MultiArray
+  "/oakd_right_wrist_view/intrinsics": std_msgs.msg.Float32MultiArray
+  "/oakd_wrist_bottom_view/intrinsics": std_msgs.msg.Float32MultiArray
+  "/oakd_wrist_top_view/intrinsics": std_msgs.msg.Float32MultiArray
+
+
+keys_and_topics:
+  "observations/images/{0}/color": # {0} will be replaced by the camera name. I.e., the first match in the regular expression
+    dtype: sensor_msgs.msg.Image
+    topic: "(.*)/color" # regular expression, the camera name will be captured as {0}. 
+  "observations/images/{0}/intrinsics":
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: "(.*)/intrinsics" # regular expression
+  "observations/images/{0}/extrinsics":
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: "(.*)/extrinsics" # regular expression
+  "observations/{0}/qpos_arm":
+    dtype: geometry_msgs.msg.PoseStamped
+    topic: "/(.*)/arm/end_effector_pose"
+  "{0}/actions_arm":
+    dtype: geometry_msgs.msg.PoseStamped
+    topic: "/(.*)/arm/end_effector_pose_cmd"
+  "observations/{0}/qpos_hand":
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: "/(.*)/hand/joint_position_from_motor" 
+  "{0}/actions_hand":
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: "/(.*)/hand/policy_output"
+  "task_description":
+    dtype: std_msgs.msg.String
+    topic: "/task_description"

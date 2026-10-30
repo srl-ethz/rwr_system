@@ -1,0 +1,54 @@
+rgb_process_dict: {}
+  # oakd_left_wrist_view_images:
+  #   - type: crop
+  #     top: 0
+  #     left: null
+  #     bottom: null
+  #     right: null
+  # oakd_right_wrist_view_images:
+  #   - type: crop
+  #     top: 0
+  #     left: null
+  #     bottom: null
+  #     right: null
+rgb_resize_size: [224,224]
+
+hand_qpos_dim: 17
+
+# camera ros topic -> model observation key (moved here from the launch file)
+camera_topics: ["/oakd_front_view/color", "/oakd_left_wrist_view/color", "/oakd_right_wrist_view/color"]
+camera_names:  ["oakd_front_view_images", "oakd_left_wrist_view_images", "oakd_right_wrist_view_images"]
+
+# model observation input key -> ros topic (bimanual)
+observations:
+  left_qpos_arm: /left/arm/end_effector_pose
+  left_qpos_hand: /left/hand/joint_position_from_motor
+  right_qpos_arm: /right/arm/end_effector_pose
+  right_qpos_hand: /right/hand/joint_position_from_motor
+
+# model action key -> ros topic (+ default init state published on reset)
+actions:
+  left_actions_arm:
+    topic: /left/arm/end_effector_pose_cmd
+    init: [0.45, 0.36, 0.2]    # left wrist position; orientation uses the fixed default
+  left_actions_hand:
+    topic: /left/hand/policy_output
+    init: null                 # null -> zeros(hand_qpos_dim)
+  right_actions_arm:
+    topic: /right/arm/end_effector_pose_cmd
+    init: [0.45, -0.36, 0.2]   # right wrist position; orientation uses the fixed default
+  right_actions_hand:
+    topic: /right/hand/policy_output
+    init: null                 # null -> zeros(hand_qpos_dim)
+
+# human-in-the-loop (see launch/hil_rl.launch.py)
+hil:
+  # the teleop stack is launched with its command topics remapped to `<action topic><suffix>`;
+  # this node forwards them to the real topics only while the operator has taken over.
+  # Must match cmd_topic_suffix of hil_rl.launch.py.
+  topic_suffix: _teleop
+  # std_msgs/Bool: an external takeover switch (pedal, gamepad, gui) next to the 'n' key
+  mode_topic: /hil_mode
+  # arms whose teleop is re-anchored on takeover via <ns>/<chirality>/{pause,resume}
+  teleop_service_ns: /franka_teleop
+  teleop_chiralities: [left, right]

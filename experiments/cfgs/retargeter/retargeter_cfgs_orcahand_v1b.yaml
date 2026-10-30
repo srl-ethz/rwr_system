@@ -1,0 +1,39 @@
+# Retargeter loss configuration for orcahand_v1b.
+# Joint names match the URDF rendered from orcahand_mirrable.urdf.xacro
+# (same names for left and right; only the URDF geometry mirrors).
+lr: 2.5
+loss_func_cfg:
+  keyvector_fingers2palm: 2.0
+  keyvector_forearm_and_wrist: 2.0
+  keyvector_fingers2fingers: 1.0
+  zero_regularizor:
+    weight: 0.01
+    kwargs:
+      index_abd:   [0, 1.0]
+      middle_abd:  [0, 1.0]
+      ring_abd:    [0, 1.0]
+      pinky_abd:   [0, 1.0]
+      thumb_abd:   [0.7, 0.25]
+      thumb_pip:   [0.7, 0.25]
+      wrist:       [0, 2.0]
+  # virtual_coupling:
+  #   weight: 1.0
+  #   kwargs:
+  #     "thumb1":
+  #       - 5.0 # thumb base vs pp2mp
+  #       - [[1.0,  thumb_abd], [-0.2,  thumb_pip]]
+  #     "thumb2":
+  #       - 1.0 # thumb pp2mp vs mp2dp
+  #       - [[1.0,  thumb_pip], [-1.0,  thumb_dip]]
+  #     "index":
+  #       - 1.0 # index
+  #       - [[1.0,  index_mcp], [-1.0,  index_pip]]
+  #     "middle":
+  #       - 1.0 # middle
+  #       - [[1.0,  middle_mcp], [-1.0,  middle_pip]]
+  #     "ring":
+  #       - 1.0 # ring
+  #       - [[1.0,  ring_mcp], [-1.0,  ring_pip]]
+  #     "pinky":
+  #       - 1.0 # pinky
+  #       - [[1.0,  pinky_mcp], [-1.0,  pinky_pip]]

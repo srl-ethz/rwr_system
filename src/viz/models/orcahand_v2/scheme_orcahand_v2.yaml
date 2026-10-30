@@ -1,0 +1,85 @@
+# Right-hand retargeter scheme for orcahand_v2.
+# Joint names match the URDF rendered from orcahand_v2.urdf.xacro and the
+# joint_ids of orca_core. Joint limits below mirror the hardware ROM (in degrees)
+# from src/hand_control/orca/configs/orcahand_v2/right/config.yaml.
+
+gc_tendons:
+  'wrist': {}
+  'thumb_cmc': {}
+  'thumb_abd': {}
+  'thumb_mcp': {}
+  'thumb_dip': {}
+  'index_abd': {}
+  'index_mcp': {}
+  'index_pip': {}
+  'middle_abd': {}
+  'middle_mcp': {}
+  'middle_pip': {}
+  'ring_abd': {}
+  'ring_mcp': {}
+  'ring_pip': {}
+  'pinky_abd': {}
+  'pinky_mcp': {}
+  'pinky_pip': {}
+
+
+finger_to_tip:
+  thumb: thumb_fingertip
+  index: index_fingertip
+  middle: middle_fingertip
+  ring: ring_fingertip
+  pinky: pinky_fingertip
+
+finger_to_base:
+  thumb: thumb_tp
+  index: index_ap
+  middle: middle_ap
+  ring: ring_ap
+  pinky: pinky_ap
+
+forearm_and_wrist:
+  forearm: tower
+  wrist: palm
+
+wrist_name: tower
+anchor_name: palm # all transformations are relative to the anchor frame
+
+gc_limits_lower : [
+  -65.0,  # wrist
+  -45.0,  # thumb_cmc
+  -18.0,  # thumb_abd
+  -25.0,  # thumb_mcp
+  -15.0,  # thumb_dip
+  -25.0,  # index_abd
+  -25.0,  # index_mcp
+  -15.0,  # index_pip
+  -27.0,  # middle_abd
+  -25.0,  # middle_mcp
+  -15.0,  # middle_pip
+  -27.0,  # ring_abd
+  -25.0,  # ring_mcp
+  -15.0,  # ring_pip
+  -30.0,  # pinky_abd
+  -25.0,  # pinky_mcp
+  -15.0,  # pinky_pip
+]
+
+gc_limits_upper : [
+  35.0,   # wrist
+  33.0,   # thumb_cmc
+  55.0,   # thumb_abd
+  100.0,  # thumb_mcp
+  107.0,  # thumb_dip
+  30.0,   # index_abd
+  100.0,  # index_mcp
+  107.0,  # index_pip
+  27.0,   # middle_abd
+  100.0,  # middle_mcp
+  107.0,  # middle_pip
+  27.0,   # ring_abd
+  100.0,  # ring_mcp
+  107.0,  # ring_pip
+  30.0,   # pinky_abd
+  100.0,  # pinky_mcp
+  107.0,  # pinky_pip
+]

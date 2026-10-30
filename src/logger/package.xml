@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>logger</name>
+  <version>0.1.0</version>
+  <description>Ros2 wrapper for faive retargeter</description>
+  <maintainer email="dlicontig@srl.ethz.ch">Davide Liconti</maintainer>
+  <license>BSD</license>
+
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclpy</build_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <!-- package dependency for custom messages -->
+
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>numpy</exec_depend>
+  <exec_depend>scipy</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

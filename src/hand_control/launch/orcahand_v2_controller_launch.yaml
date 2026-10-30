@@ -1,0 +1,163 @@
+%YAML 1.2
+---
+# launch the basic nodes required to control the orca v2 hand (driven through orca_core):
+# - hand controller node
+# - joint visualization node (to convert info to JointState msgs)
+# - robot state
+# - optionally, rviz
+# - optionally, set compliant test mode
+
+# example usage:
+# $ ros2 launch hand_control orcahand_v2_controller_launch.yaml hand_chirality:=right calibrate:=true launch_rviz:=true compliant_test_mode:=true
+# this launch file does not launch any nodes related to:
+# - cameras
+# - controllers
+
+launch:
+  - arg:
+      name: "launch_rviz"
+      default: "true"
+      description: "Whether to launch RVIZ"
+
+  - arg:
+      name: "hand_chirality"
+      default: "right"
+      description: "Chirality of the hand to be controlled"
+
+  - arg:
+      name: "calibrate"
+      default: "false"
+      description: "Whether to calibrate the hand on startup"
+
+  - arg:
+      name: "compliant_test_mode"
+      default: "false"
+      description: "Whether to enable compliant test mode (joints become limp and can be moved by hand)"
+
+  - arg:
+      name: "suppress_visualize_joints"
+      default: "false"
+      description: "suppresses /policy_output -> /joint_states conversion"
+
+  - arg:
+      name: "launch_hand_controller"
+      default: "true"
+      description: "Whether to launch the hand controller node (all other nodes will still launch, so this is useful for debugging without the robot etc.)"
+
+  # -------- Constants / derived values --------
+  - let:
+      name: "urdf_xacro_file"
+      value: "$(find-pkg-share viz)/models/orcahand_v2/orcahand_v2.urdf.xacro"
+  - let:
+      name: "hand_scheme_file"
+      value: "$(find-pkg-share viz)/models/orcahand_v2/scheme_orcahand_v2.yaml"
+  - let:
+      name: "rviz_config"
+      value: "$(find-pkg-share viz)/config/rviz/orcahand_v2_$(var hand_chirality)_minimal.rviz"
+
+  # Render the URDF in-memory from the xacro (right hand only for now).
+  # No on-disk URDF artifact.
+  - let:
+      name: "robot_description"
+      value: "$(command 'xacro $(var urdf_xacro_file) hand_chirality:=$(var hand_chirality)')"
+
+  - let:
+      name: "motor_sensed_ns"
+      value: "$(var hand_chirality)/motor_sensed"
+
+  # -------- Hand controller --------
+  - node:
+      pkg: "hand_control"
+      exec: "hand_control_node.py"
+      name: "hand_controller_node"
+      namespace: "$(var hand_chirality)"
+      output: "screen"
+      if: "$(var launch_hand_controller)"
+      param:
+        - name: "hand_controller/hand_name"
+          value: "orca_v2"
+        - name: "hand_controller/hand_chirality"
+          value: "$(var hand_chirality)"
+        - name: "hand_controller/hand_cfg_name"
+          value: "orcahand_v2"
+        - name: "hand_controller/calibrate"
+          value: "$(var calibrate)"
+        - name: "hand_controller/compliant_test_mode"
+          value: "$(var compliant_test_mode)"
+
+
+  # -------- Visualize target pose (commanded) --------
+  # convert /right/hand/policy_output (Float32MultiArray) to /right/joint_states (JointState)
+  # to show the desired robot pose
+
+  - node:
+      pkg: "viz"
+      exec: "visualize_joints.py"
+      name: "visualize_joints"
+      namespace: "$(var hand_chirality)"
+      output: "screen"
+      unless: "$(var suppress_visualize_joints)"
+      param:
+        - name: "scheme_path"
+          value: "$(var hand_scheme_file)"
+        - name: "viz/hand_chirality"
+          value: "$(var hand_chirality)"
+        - name: "viz/joint_name_contains_chirality"
+          value: false
+
+  - node:
+      pkg: "robot_state_publisher"
+      exec: "robot_state_publisher"
+      name: "robot_state_publisher"
+      namespace: "$(var hand_chirality)"
+      output: "screen"
+      param:
+        - name: "robot_description"
+          value: "$(var robot_description)"
+
+
+  # -------- Visualize sensed pose from motor --------
+  # remap the visualize_joints.py so it can retarget the joint states sensed from the motor instead of the commanded
+  - node:
+      pkg: "viz"
+      exec: "visualize_joints.py"
+      name: "visualize_joints_motor_sensed"
+      namespace: "$(var hand_chirality)"
+      output: "screen"
+      param:
+        - name: "scheme_path"
+          value: "$(var hand_scheme_file)"
+        - name: "viz/hand_chirality"
+          value: "$(var hand_chirality)"
+      remap:
+        - from: "hand/policy_output"
+          to: "hand/joint_position_from_motor"
+        - from: "joint_states"
+          to: "motor_sensed/joint_states"
+
+  - node:
+      pkg: "robot_state_publisher"
+      exec: "robot_state_publisher"
+      name: "robot_state_publisher_motor_sensed"
+      namespace: "$(var motor_sensed_ns)"
+      output: "screen"
+      param:
+        - name: "robot_description"
+          value: "$(var robot_description)"
+        - name: "frame_prefix"
+          value: "$(var motor_sensed_ns)/"
+
+  # publish a static transform to define where the sensed robot should show up in rviz
+  - node:
+      pkg: "tf2_ros"
+      exec: "static_transform_publisher"
+      args: "0 0 0 0 0 0 hand_root $(var hand_chirality)/motor_sensed/hand_root"
+
+  # -------- Optional RViz --------
+  - node:
+      pkg: "rviz2"
+      exec: "rviz2"
+      name: "rviz2"
+      output: "screen"
+      args: "-d $(var rviz_config)"
+      if: "$(var launch_rviz)"

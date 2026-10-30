@@ -1,0 +1,8 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v5.4.4108939008)
+
+newmtl DexMaterial
+Kd 1 1 1
+illum 1
+map_Kd ./dex_cube_mod.png
+
