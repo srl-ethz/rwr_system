@@ -23,6 +23,12 @@ RENAME_SPEC = importlib.util.spec_from_file_location(
 )
 rename_chirp = importlib.util.module_from_spec(RENAME_SPEC)
 RENAME_SPEC.loader.exec_module(rename_chirp)
+sys.path.insert(0, str(ROOT / "experiments/orca"))
+ALL_SPEC = importlib.util.spec_from_file_location(
+    "orca_chirp_all", ROOT / "experiments/orca/chirp_all.py"
+)
+chirp_all = importlib.util.module_from_spec(ALL_SPEC)
+ALL_SPEC.loader.exec_module(chirp_all)
 
 
 class Clock:
@@ -307,3 +313,201 @@ def test_migration_preflights_all_collisions_before_renaming(tmp_path):
     assert (tmp_path / "thumb_cmc.csv").read_text() == "existing data"
     assert not (tmp_path / "wrist.csv").exists()
     assert all((tmp_path / name).exists() for name in names)
+
+
+GOOD_TRAVEL = dict(index_pip=98.0, middle_pip=99.0, ring_pip=100.0, pinky_pip=92.0)
+
+
+@pytest.fixture
+def all_run(tmp_path, monkeypatch):
+    """A hand folder as installed by colcon, the fake hand, and scripted answers to the prompts."""
+    install = tmp_path / "install"
+    install.mkdir()
+    (install / "config.yaml").symlink_to(chirp.DEFAULT_CONFIG)
+    calibration = dict(calibrated=True, motor_travel_measured=GOOD_TRAVEL)
+    (install / "calibration.yaml").write_text(yaml.safe_dump(calibration))
+    clock = Clock()
+    hand = Hand(clock)
+    answers = []
+    opened = []
+    monkeypatch.setattr(chirp_all.chirp, "version", lambda name: "test")
+    monkeypatch.setattr(chirp_all, "open_image", opened.append)
+
+    def fake_input(prompt):
+        if not answers:
+            raise EOFError
+        answer = answers.pop(0)
+        if isinstance(answer, BaseException):
+            raise answer
+        return answer
+
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    def main(*options, execute=True):
+        argv = ["--config", str(install / "config.yaml"), "--output-dir", str(tmp_path / "data"),
+                "--duration", ".2", "--settle-time", "0", *options] + (["--execute"] if execute else [])
+        return chirp_all.main(argv, factory=lambda **kwargs: hand, clock=clock, sleep=clock.sleep)
+
+    return SimpleNamespace(main=main, hand=hand, answers=answers, opened=opened, install=install,
+                           data=tmp_path / "data")
+
+
+def only_run(all_run):
+    run_dir, = all_run.data.iterdir()
+    return run_dir, json.loads((run_dir / "metadata.json").read_text())
+
+
+def test_all_joints_default_records_every_joint_with_fit_finger_first():
+    joints = chirp_all.default_joints("middle")
+    config = yaml.safe_load(chirp.DEFAULT_CONFIG.read_text())
+    assert sorted(joints) == sorted(config["joint_ids"])
+    assert joints[:8] == ["wrist", "thumb_cmc", "thumb_abd", "thumb_mcp", "thumb_dip",
+                          "middle_abd", "middle_mcp", "middle_pip"]
+    assert chirp_all.default_joints("ring")[5:8] == ["ring_abd", "ring_mcp", "ring_pip"]
+
+
+def test_all_preview_moves_nothing(all_run, capsys):
+    assert all_run.main(execute=False) == 0
+    assert "Preview only" in capsys.readouterr().out
+    assert not all_run.data.exists()
+    assert not all_run.hand.events
+
+
+@pytest.mark.parametrize("answer, tag", [("y", "good"), ("Yes", "good"), ("n", "bad"), ("", "untagged")])
+def test_all_answer_tags_the_folder_and_keeps_inputs(all_run, answer, tag):
+    all_run.answers += [answer, "re-tensioned index"]
+    assert all_run.main() == 0
+    run_dir, metadata = only_run(all_run)
+    assert run_dir.name == f"{metadata['run_id']}_{tag}"
+    assert metadata["status"] == "complete"
+    assert (metadata["tag"], metadata["notes"]) == (tag, "re-tensioned index")
+    assert metadata["fit_finger"] == "middle"
+    assert metadata["fit_joints"][-3:] == ["middle_abd", "middle_mcp", "middle_pip"]
+    assert len(list(run_dir.glob("chirp_*.csv"))) == 17
+    # Real copies of what the run used, not links that could change later.
+    assert not (run_dir / "config.yaml").is_symlink()
+    assert (run_dir / "config.yaml").read_text() == chirp.DEFAULT_CONFIG.read_text()
+    assert yaml.safe_load((run_dir / "calibration.yaml").read_text())["calibrated"] is True
+    assert (run_dir / "overview.png").stat().st_size > 0
+    assert all_run.opened and all_run.hand.events[-2:] == ["disable", "disconnect"]
+
+
+@pytest.mark.parametrize("answer", [EOFError(), KeyboardInterrupt()])
+def test_all_aborted_prompt_still_saves_as_untagged(all_run, answer):
+    all_run.answers.append(answer)
+    assert all_run.main("--notes", "from the command line") == 0
+    run_dir, metadata = only_run(all_run)
+    assert run_dir.name.endswith("_untagged")
+    assert metadata["notes"] == "from the command line"
+
+
+def test_all_interrupted_run_is_tagged_without_asking(all_run):
+    all_run.hand.interrupt_on_read = 2
+    assert all_run.main() == 130
+    run_dir, metadata = only_run(all_run)
+    assert run_dir.name.endswith("_interrupted")
+    assert metadata["tag"] == "interrupted"
+    assert all_run.hand.events[-2:] == ["disable", "disconnect"]
+
+
+def test_all_failed_run_is_tagged_without_asking(all_run):
+    all_run.hand.fail_init = True
+    assert all_run.main() == 1
+    run_dir, metadata = only_run(all_run)
+    assert run_dir.name.endswith("_failed")
+    assert (run_dir / "calibration.yaml").exists()
+
+
+def test_all_uncalibrated_hand_leaves_no_folder(all_run):
+    all_run.hand.calibrated = False
+    assert all_run.main() == 1
+    assert not all_run.data.exists() or not list(all_run.data.iterdir())
+    assert not all_run.hand.commands
+
+
+def test_all_custom_joints_and_finger(all_run):
+    all_run.answers += ["y", ""]
+    assert all_run.main("--joints", "index_mcp", "ring_pip", "--finger", "ring", "--amplitude-deg", "3") == 0
+    run_dir, metadata = only_run(all_run)
+    assert metadata["joints"] == ["index_mcp", "ring_pip"]
+    assert metadata["fit_joints"] == ["ring_pip"]
+    assert metadata["amplitude_deg"] == 3
+
+
+def test_all_missing_calibration_is_rejected_before_hardware(all_run):
+    (all_run.install / "calibration.yaml").unlink()
+    with pytest.raises(SystemExit) as exc:
+        all_run.main()
+    assert exc.value.code == 2
+    assert not all_run.hand.events
+
+
+@pytest.fixture
+def short_index_pip(all_run):
+    calibration = dict(calibrated=True, motor_travel_measured=dict(GOOD_TRAVEL, index_pip=63.0))
+    (all_run.install / "calibration.yaml").write_text(yaml.safe_dump(calibration))
+
+
+@pytest.mark.parametrize("answer", ["", "n", EOFError()])
+def test_all_short_travel_stops_before_moving_unless_confirmed(all_run, short_index_pip, answer, capsys):
+    all_run.answers.append(answer)
+    assert all_run.main() == 1
+    assert "index_pip has 63.0 deg" in capsys.readouterr().out
+    assert not all_run.hand.events
+    assert not all_run.data.exists()
+
+
+def test_all_short_travel_can_be_confirmed_and_is_flagged(all_run, short_index_pip, capsys):
+    all_run.answers += ["y", "y", ""]
+    assert all_run.main() == 0
+    assert "short travel" in capsys.readouterr().out
+    assert only_run(all_run)[0].name.endswith("_good")
+
+
+def test_short_travel_ignores_normal_spread_and_missing_data():
+    assert chirp_all.short_travel({}) == {}
+    assert chirp_all.short_travel(dict(motor_travel_measured=GOOD_TRAVEL)) == {}
+    travel = dict(index_mcp=109.16, middle_mcp=123.93, ring_mcp=127.62, pinky_mcp=103.89,
+                  index_pip=63.02, middle_pip=99.49, ring_pip=99.67, pinky_pip=91.93)
+    assert set(chirp_all.short_travel(dict(motor_travel_measured=travel))) == {"index_pip"}
+
+
+def test_all_low_motion_is_flagged(tmp_path):
+    rows = np.column_stack([np.arange(4) * .05, [0, 10, 0, -10], [0, 2, 0, -2]])
+    np.savetxt(tmp_path / "a.csv", rows, delimiter=",", header="t,c,m", comments="")
+    (tmp_path / "b.csv").write_text("")
+    metadata = dict(ctrl_freq_hz=20.0, sample_count_per_joint=4, joints=["wrist", "thumb_cmc"],
+                    csv_files=["a.csv", "b.csv"])
+    summary = chirp_all.summarize(tmp_path, metadata, {})
+    assert summary["wrist"]["flags"] == ["low motion"]
+    assert summary["wrist"]["moved"] == pytest.approx(.2)
+    assert summary["thumb_cmc"]["flags"] == ["no data"]
+
+
+def test_all_with_installed_orca_core_mock_hand(tmp_path, monkeypatch):
+    """The real v2 API, from a config folder like the installed one, without serial I/O."""
+    core = pytest.importorskip("orca_core")
+    (tmp_path / "config.yaml").symlink_to(chirp.DEFAULT_CONFIG)
+    (tmp_path / "calibration.yaml").write_text("calibrated: false\n")
+    before = (tmp_path / "calibration.yaml").read_text()
+    monkeypatch.setattr(chirp_all, "open_image", lambda path: None)
+    monkeypatch.setattr("builtins.input", lambda prompt: "y")
+    clock = Clock()
+    hands = []
+
+    def factory(**kwargs):
+        hands.append(core.load_hand(**kwargs, mock=True))
+        return hands[-1]
+
+    assert chirp_all.main(["--config", str(tmp_path / "config.yaml"), "--output-dir", str(tmp_path / "data"),
+                           "--duration", ".2", "--settle-time", "0", "--notes", "mock", "--execute"],
+                          factory=factory, clock=clock, sleep=clock.sleep) == 0
+    run_dir, = (tmp_path / "data").iterdir()
+    metadata = json.loads((run_dir / "metadata.json").read_text())
+    assert run_dir.name.endswith("_good")
+    assert len(metadata["csv_files"]) == 17
+    assert len(metadata["motor_temperature_start_c"]) == 17
+    assert len(metadata["motor_temperature_end_c"]) == 17
+    assert not hands[0].is_connected()
+    # Mock calibration must never be written over a real hand's calibration.
+    assert (tmp_path / "calibration.yaml").read_text() == before

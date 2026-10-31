@@ -123,30 +123,26 @@ Make sure that the servo wiring is correct before you connect the power: the ser
      Then stop the GUI.
 4. **Record chirps for system identification.** The recorder uses `orca_core` directly, without ROS. Remove all loads from the hand and leave it room to move. See [experiments/orca/README.md](experiments/orca/README.md) for the details.
    ```bash
-     # copy the config and the calibration to their own folder; repeat after each calibration or config change
-     mkdir -p ~/ros_ws/chirp_config
-     cp -L ~/ros_ws/install/hand_control/share/hand_control/orca/configs/orcahand_v2/right/{config,calibration}.yaml ~/ros_ws/chirp_config/
+     # show the plan without moving
+     python experiments/orca/chirp_all.py
 
-     # show the plan without moving, then test one joint with a small amplitude
-     python experiments/orca/chirp.py --config ~/ros_ws/chirp_config/config.yaml --joints index_mcp --dry-run
-     python experiments/orca/chirp.py --config ~/ros_ws/chirp_config/config.yaml --joints index_mcp --amplitude-deg 3 --execute
+     # test one joint with a small amplitude
+     python experiments/orca/chirp_all.py --joints index_mcp --amplitude-deg 3 --execute
 
-     # record the 8 joint types
-     python experiments/orca/chirp.py --config ~/ros_ws/chirp_config/config.yaml \
-       --joints wrist thumb_cmc thumb_abd thumb_mcp thumb_dip index_abd index_mcp index_pip \
-       --ctrl-freq 20 --duration 20 --f0 0.1 --f1 5 --amplitude-deg 10 --execute
+     # record all 17 joints, about 6 minutes
+     python experiments/orca/chirp_all.py --execute
    ```
 
-     Each run creates a folder in `logs/chirp_v2/`. Use it only if `metadata.json` says `complete` and each CSV has 400 rows. Plot a recording with `python experiments/orca/plot.py <recording.csv> --save`.
+     After the run, the script shows a table and `overview.png`, and asks whether the run was good. Answer `n` only if the run itself was disturbed (bumped, loaded, loose cable): a genuine outlier is still a good run, and it is what you want to measure. The answer goes into the folder name, so `ls -d logs/chirp_v2/*_good` lists the good runs. Press Enter to decide later and rename the folder yourself, and do not tag test runs as good. Each folder has the `config.yaml` and `calibration.yaml` of that run, and its name has the start time in UTC. `logs/chirp_v2/` is ignored by git, so copy the runs somewhere safe. See [experiments/orca/README.md](experiments/orca/README.md).
 5. **Fit the joint parameters** on the training computer, in the Python environment with Isaac Lab, from `scripts/motor_param_characterization` in `rwr_faive_lab`. Install the fit's packages once with `python -m pip install scikit-optimize pandas`. The simulator's joint names have the prefix `right_`:
    ```bash
-     for j in wrist thumb_cmc thumb_abd thumb_mcp thumb_dip index_abd index_mcp index_pip; do
+     for j in wrist thumb_cmc thumb_abd thumb_mcp thumb_dip middle_abd middle_mcp middle_pip; do
        python optimization.py --joint_name right_$j --ground_truth <run_dir>/chirp_${j}_*.csv
      done
    ```
 
      The output shows the best parameters, and `logs/optimizations/<joint>_<timestamp>/frf_comparison.png` compares them with the real hand. If a best value is at the limit of its range, make the range larger in `optimization.py` and fit again. If you change the chirp on the real hand, also change it in `chirp_characterization.py`.
-6. **Use the parameters.** Write them into `source/faive_lab/faive_lab/assets/orca_v2.py` in `rwr_faive_lab` (the index values also apply to the middle, ring and pinky fingers), then train the policy again.
+6. **Use the parameters.** Write them into `source/faive_lab/faive_lab/assets/orca_v2.py` in `rwr_faive_lab` (the values of the finger you fit also apply to the other three fingers), then train the policy again.
 
 If something fails, see Troubleshooting in [experiments/README.md](experiments/README.md).
 

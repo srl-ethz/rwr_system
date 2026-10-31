@@ -45,13 +45,46 @@ On macOS, you can use the `rwr_jazzy` environment instead (see the
 4. Stop the ROS controller, GUI, tensioning tool, and any other program using
    the same serial port. Leave the hand unloaded with room to move.
 
+## Record all joints
+
+`chirp_all.py` records all 17 joints in one run (about 6 minutes), so you can
+fit one finger and use the other three to find outliers and measure the spread:
+
+```bash
+python experiments/orca/chirp_all.py            # plan only
+python experiments/orca/chirp_all.py --execute  # move the hand
+```
+
+It uses the installed `~/ros_ws/install/.../right/config.yaml` and the
+`calibration.yaml` beside it; pass `--config` for another workspace. You do not
+need the copy from step 2 above. The sweep options are the same as for `chirp.py`, and
+`--joints` limits the run to some joints.
+
+`--finger` (default `middle`) only saves the finger meant for the fit in
+`metadata.json`, under `fit_finger` and `fit_joints`, so you can still fit another finger later.
+Before it moves, the script warns you if a joint's motor travel in `calibration.yaml` is more than
+25% below the median of the same joint on all fingers, and asks whether to continue.
+
+After the run it prints a table, opens `overview.png`, and asks whether the run
+was good and for optional notes (or pass `--notes`). The answer is added to the folder name:
+
+| Suffix | Meaning |
+|---|---|
+| `_good` | You answered `y` |
+| `_bad` | You answered `n`: the run itself was disturbed. A genuine outlier is still a good run |
+| `_untagged` | You pressed Enter or Ctrl+C at the prompt; rename the folder when you decide |
+| `_interrupted` | You stopped the run with Ctrl+C; the partial data is kept |
+| `_failed` | The run stopped with an error; the partial data is kept |
+
+The table flags `low motion` (moved less than 75% of the commanded peak-to-peak range), `short travel`,
+`too few samples`, `timing` and `no data`. `overview.png` shows each joint type in one column.
+
 ## Collect data
 
-For whole-hand SysID, collect eight representative joints: the wrist,
-four thumb joints, and three index-finger joints. faive_lab fits these eight
-and reuses each index-finger joint's parameters for the corresponding
-middle, ring, and pinky joints (nine more joints). This reduces recording
-and fitting time; it assumes similar dynamics, not identical measured behavior.
+To record only some joints, use `chirp.py`. The minimum for whole-hand SysID is eight representative
+joints: the wrist, four thumb joints, and three joints of one finger. faive_lab fits these eight
+and reuses that finger's parameters for the other three fingers (nine more joints). This reduces
+recording and fitting time; it assumes similar dynamics, not identical measured behavior.
 
 ```bash
 python experiments/orca/chirp.py \
@@ -74,6 +107,10 @@ logs/chirp_v2/<timestamp>/
 ├── metadata.json
 └── chirp_<joint>_*.csv   # one CSV per selected joint
 ```
+
+`chirp_all.py` adds the suffix above to the folder, and also saves `config.yaml`, `calibration.yaml` and
+`overview.png` in it. The timestamp in the folder name is in UTC. `metadata.json` includes the motor
+temperatures at the start and end of the run.
 
 CSV columns (seconds and degrees; 400 rows per joint with the settings above):
 

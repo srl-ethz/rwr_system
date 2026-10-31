@@ -142,7 +142,16 @@ def collect_joint(hand, args, plan, joint, path, *, clock=time.monotonic, sleep=
         sleep(max(0.0, start + len(t) / args.ctrl_freq - clock()))
 
 
-def run_hardware(args, plan, *, factory=None, clock=time.monotonic, sleep=time.sleep):
+def read_temperatures(hand):
+    """Motor temperatures in degrees C by motor ID; None if the read fails, which must not stop a run."""
+    try:
+        return {str(motor): float(temp) for motor, temp in hand.get_motor_temp(as_dict=True).items()}
+    except Exception:
+        return None
+
+
+def run_hardware(args, plan, *, factory=None, clock=time.monotonic, sleep=time.sleep, on_run_dir=None):
+    """on_run_dir, if given, is called with the run directory as soon as it exists."""
     if factory is None:
         # Preview/help work without orca_core, ROS or any serial access.
         from orca_core import load_hand
@@ -166,8 +175,11 @@ def run_hardware(args, plan, *, factory=None, clock=time.monotonic, sleep=time.s
         stamp = started_at.strftime("%Y%m%d_%H%M%S_%f")
         run_dir = args.output_dir / stamp
         run_dir.mkdir(parents=True, exist_ok=False)
+        if on_run_dir is not None:
+            on_run_dir(run_dir)
         metadata.update(status="running", orca_core_version=version("orca_core"),
-                        run_id=stamp, started_at_utc=started_at.isoformat())
+                        run_id=stamp, started_at_utc=started_at.isoformat(),
+                        motor_temperature_start_c=read_temperatures(hand))
         (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
         hand.init_joints(force_calibrate=False, move_to_neutral=True)
         for joint in args.joints:
@@ -188,6 +200,7 @@ def run_hardware(args, plan, *, factory=None, clock=time.monotonic, sleep=time.s
         cleanup_errors = []
         operations = []
         if hand.is_connected():
+            metadata["motor_temperature_end_c"] = read_temperatures(hand)
             operations.append(("disable torque", hand.disable_torque))
         operations.append(("disconnect", hand.disconnect))
         for label, operation in operations:
