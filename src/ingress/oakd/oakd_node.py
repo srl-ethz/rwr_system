@@ -16,10 +16,13 @@ import depthai as dai
 from copy import deepcopy
 import time
 from faive_system.src.common.utils import numpy_to_float32_multiarray
+from faive_system.src.common.ros_utils import restore_library_path_on_macos
 from ingress.msg import CameraIntrinsics
 from datetime import datetime
 import os
 import yaml
+
+restore_library_path_on_macos()
 
 class OakDPublisher(Node):
     def __init__(self, camera_dict=None):

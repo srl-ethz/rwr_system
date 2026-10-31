@@ -20,6 +20,9 @@ NumPy requirement and `faive_system`'s NumPy 1.26.4 pin. For an existing
 Faive/ROS environment, see the installation notes in
 [`src/hand_control/README.md`](../../src/hand_control/README.md).
 
+On macOS, you can use the `rwr_jazzy` environment instead (see the
+[main README](../../README.md)). It already contains `orca_core` and `scipy`.
+
 ## Prepare the hand
 
 1. Tension and calibrate the correct physical hand using the existing v2
@@ -28,6 +31,14 @@ Faive/ROS environment, see the installation notes in
 2. Prepare your hand's own `config.yaml` and place its `calibration.yaml`
    in the same directory. Pass your config path with `--config` in the
    commands below, replacing `/path/to/your/config.yaml` with your file.
+   After a `colcon build --symlink-install`, the installed `config.yaml` is a
+   symlink to the source folder, and `chirp.py` then looks for `calibration.yaml`
+   in the source folder. Copy both files to a folder of their own and use that:
+   ```bash
+   mkdir -p ~/ros_ws/chirp_config
+   cp -L ~/ros_ws/install/hand_control/share/hand_control/orca/configs/orcahand_v2/right/{config,calibration}.yaml ~/ros_ws/chirp_config/
+   ```
+   Copy them again after each new calibration or change of `config.yaml`.
 3. Connect power and USB. Keep `port: auto` in your config for automatic
    detection. If it fails or selects the wrong device, set `port` manually
    to the actual serial device (see Troubleshooting).
@@ -90,6 +101,8 @@ settings; see `plot.py --help` for trim and alignment options.
 ## Use the recording in faive_lab SysID
 
 [faive_lab SysID guide](https://github.com/srl-ethz/faive_lab/blob/rwr2026/scripts/sysid/README.md)
+
+For the fit commands, see "The hand" in the [main README](../../README.md).
 
 ## Troubleshooting
 

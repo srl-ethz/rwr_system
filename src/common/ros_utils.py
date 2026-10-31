@@ -1,5 +1,26 @@
+import os
+import sys
+
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 import numpy as np
+
+def restore_library_path_on_macos():
+    """
+    macOS removes DYLD_LIBRARY_PATH from processes started through /usr/bin/env, so from every node with a
+    `#!/usr/bin/env python3` shebang. ROS then cannot find the message libraries of this workspace (e.g. ingress.msg)
+    and creating a publisher or subscription fails with "type_support is null". Does nothing on other systems.
+
+    The dynamic loader reads the variable only when a process starts, so this restarts the node once with the variable
+    set. Call it at the top of a node that uses a message type of this workspace, before any slow imports.
+    """
+    if sys.platform != "darwin" or os.environ.get("DYLD_LIBRARY_PATH"):
+        return
+    env_prefix = os.path.realpath(sys.prefix)  # the environment's own libraries are found without the variable
+    prefixes = os.environ.get("AMENT_PREFIX_PATH", "").split(os.pathsep)
+    lib_dirs = [os.path.join(prefix, "lib") for prefix in prefixes if prefix and os.path.realpath(prefix) != env_prefix]
+    if lib_dirs:
+        os.environ["DYLD_LIBRARY_PATH"] = os.pathsep.join(lib_dirs)
+        os.execv(sys.executable, [sys.executable] + sys.orig_argv[1:])
 
 def numpy_to_float32_multiarray(np_array):
     """

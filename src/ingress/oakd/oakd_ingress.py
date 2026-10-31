@@ -16,9 +16,6 @@ from typing import Optional, Tuple, Dict
 import numpy as np
 import depthai as dai
 import cv2
-import open3d as o3d
-
-from oakd_utils import PointCloudVisualizer
 
 
 # ---------- Stereo / camera config ----------

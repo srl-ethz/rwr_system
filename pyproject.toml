@@ -13,7 +13,8 @@ authors = [
 ]
 requires-python = ">=3.6"
 dependencies = [
-    "numpy==1.26.4",
+    "numpy==1.26.4; sys_platform != 'darwin'",
+    "numpy>=2; sys_platform == 'darwin'",  # RoboStack's macOS packages are built against NumPy 2
     "scipy>=1.14.0",
     "tqdm",
     "pandas",
@@ -48,7 +49,8 @@ all = [
     "h5py",
     "torchvision", 
     "depthai<3",  # the OAK-D node uses the depthai v2 API
-    "dt-apriltags",  # AprilTag camera calibration
+    "dt-apriltags; sys_platform != 'darwin'",  # AprilTag camera calibration
+    "pupil-apriltags; sys_platform == 'darwin'",  # dt-apriltags has no Apple Silicon wheel
     "pytorch-lightning",  # the cube detector (experiments/rl_inference/pose_estimation)
     "kornia",
     "einops",

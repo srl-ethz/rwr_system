@@ -35,6 +35,10 @@ import threading
 from typing import Optional, Tuple
 from copy import deepcopy
 
+from faive_system.src.common.ros_utils import restore_library_path_on_macos
+
+restore_library_path_on_macos()
+
 import numpy as np
 import cv2
 
@@ -46,13 +50,17 @@ from sensor_msgs.msg import Image
 from ingress.msg import CameraIntrinsics
 from cv_bridge import CvBridge
 
-# AprilTag detection
+# AprilTag detection: dt_apriltags has no Apple Silicon wheel, pupil_apriltags is its drop-in replacement there
 try:
     from dt_apriltags import Detector
     APRILTAG_AVAILABLE = True
 except ImportError:
-    print("⚠ Warning: dt_apriltags not installed. Install with: pip install dt-apriltags")
-    APRILTAG_AVAILABLE = False
+    try:
+        from pupil_apriltags import Detector
+        APRILTAG_AVAILABLE = True
+    except ImportError:
+        print("⚠ Warning: no AprilTag library installed. Install with: pip install dt-apriltags (macOS: pupil-apriltags)")
+        APRILTAG_AVAILABLE = False
 
 # Import rotation utilities
 from rotation_utils import (
@@ -100,8 +108,8 @@ class AprilTagCalibration(Node):
         
         # Check AprilTag library
         if not APRILTAG_AVAILABLE:
-            self.get_logger().error("❌ dt_apriltags not available!")
-            raise ImportError("Please install: pip install dt-apriltags")
+            self.get_logger().error("❌ No AprilTag library available!")
+            raise ImportError("Please install: pip install dt-apriltags (macOS: pupil-apriltags)")
         
         # Create camera listener
         self.listener = CameraListener(self, self.camera_topic, self.camera_name)

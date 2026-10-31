@@ -1,0 +1,41 @@
+# ROS 2 Jazzy environment for Apple Silicon Macs. See "Installation on macOS" in README.md.
+#   micromamba create -f environment-macos.yml
+# PyTorch, OpenCV and SciPy must come from conda: mixing them with pip's builds crashes with a duplicate OpenMP runtime.
+name: rwr_jazzy
+channels:
+  - robostack-jazzy
+  - conda-forge
+dependencies:
+  - python=3.12
+  - ros-jazzy-desktop
+  - ros-jazzy-xacro
+  - ros-jazzy-joint-state-publisher-gui
+  - ros-jazzy-rmw-cyclonedds-cpp
+  - ros-jazzy-cv-bridge
+  - colcon-common-extensions
+  - compilers
+  - cmake
+  - ninja
+  - make
+  - pkg-config
+  - pip
+  - pytorch
+  - torchvision
+  - scipy
+  - pandas
+  - pyserial
+  - einops
+  - kornia
+  - pytorch-lightning
+  - fire
+  - strenum
+  - tqdm
+  - h5py
+  - matplotlib
+  - pip:
+      - depthai<3  # the OAK-D node uses the depthai v2 API
+      - pupil-apriltags
+      - orca_core==0.5.2
+variables:
+  # macOS limits UDP datagrams to 9216 bytes by default, and FastDDS then delivers no camera images
+  RMW_IMPLEMENTATION: rmw_cyclonedds_cpp

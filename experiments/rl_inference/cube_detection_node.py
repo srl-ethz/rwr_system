@@ -17,8 +17,17 @@ The cube pose in world frame is computed by other nodes using the chain:
     world → tag (from launch file) → camera (via calibration) → cube (from this node)
 """
 
+import os
+
+from faive_system.src.common.ros_utils import restore_library_path_on_macos
+
+restore_library_path_on_macos()
+
 import numpy as np
 import cv2
+
+# Apple Silicon: Mask R-CNN's nms has no MPS implementation, run it on the CPU. Must be set before importing torch.
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 import torch
 
 import rclpy
@@ -105,8 +114,13 @@ class CubeDetectionNode(Node):
 
         # ========== Load MaskRCNN Detection Model ==========
         self.get_logger().info(f"Loading detection model from: {model_path}")
-        self.model = maskrcnn_detection.load_from_checkpoint(model_path)
-        self.model = self.model.cuda() if torch.cuda.is_available() else self.model
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        else:
+            self.device = torch.device("cpu")
+        self.model = maskrcnn_detection.load_from_checkpoint(model_path).to(self.device)
         self.model.eval()
 
         # ========== Camera Listener ==========
@@ -154,7 +168,7 @@ class CubeDetectionNode(Node):
         self.last_filtered_quat = None
 
         self.get_logger().info("Cube detection node initialized successfully")
-        self.get_logger().info(f"CUDA available: {torch.cuda.is_available()}")
+        self.get_logger().info(f"Detection device: {self.device}")
         self.get_logger().info(f"Process rate: {self.process_hz} Hz")
 
     def _init_kalman(self, pos_xyz):
@@ -246,9 +260,7 @@ class CubeDetectionNode(Node):
 
         # === Step 2: Run MaskRCNN Detection ===
         rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-        rgb_tensor = torch.from_numpy(rgb).permute(2, 0, 1).float() / 255.0
-        if torch.cuda.is_available():
-            rgb_tensor = rgb_tensor.cuda()
+        rgb_tensor = (torch.from_numpy(rgb).permute(2, 0, 1).float() / 255.0).to(self.device)
 
         with torch.no_grad():
             output = self.model.get_detections([rgb_tensor])[0]

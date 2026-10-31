@@ -3,6 +3,8 @@ port: auto
 max_current: default
 type: right
 control_mode: current_based_position
+# Also the order in which the motors answer a sync read. Motor 12 is last because its reply
+# fails its checksum in about 3% of reads when motor 13 answers right after it.
 motor_ids:
 - 1
 - 2
@@ -15,12 +17,12 @@ motor_ids:
 - 9
 - 10
 - 11
-- 12
 - 13
 - 14
 - 15
 - 16
 - 17
+- 12
 joint_ids:
 - wrist
 - thumb_cmc
