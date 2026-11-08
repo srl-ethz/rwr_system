@@ -117,6 +117,16 @@ This hand stop closes the controller connection; restart the launch to use it
 again. Hand-only samples lack the arm observations/actions required for the full
 task demonstrations.
 
+For diagnostic logging, `experiments/cfgs/logger/datacollection_hand_only.yaml`
+records motor-derived hand joint states, hand commands, right glove keypoints
+and right glove wrist poses. It deliberately contains no arm or image streams.
+Run `logger_node.py` with this file as `topics_and_types_path`, a
+`storage_base_path` outside the source checkout, and a unique `data_name`.
+Use the logger's `/demo_logger/start_recording`, `/demo_logger/stop_recording`
+and `/demo_logger/save_recording` Trigger services. Pause the retargeter before
+stopping a hand-only recording. Pass the same config with `--cfg_file` when
+synchronizing these files.
+
 ### Full arm-and-hand demonstrations
 
 ```bash
