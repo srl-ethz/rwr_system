@@ -34,12 +34,12 @@ topics_and_types:
   "/task_description": std_msgs.msg.String  # New topic for task description
 
   # CAMERA PARAMETERS
-  "/oakd_front_view/intrinsics": std_msgs.msg.Float32MultiArray
-  "/oakd_side_view/intrinsics": std_msgs.msg.Float32MultiArray
-  "/oakd_left_wrist_view/intrinsics": std_msgs.msg.Float32MultiArray
-  "/oakd_right_wrist_view/intrinsics": std_msgs.msg.Float32MultiArray
-  "/oakd_wrist_bottom_view/intrinsics": std_msgs.msg.Float32MultiArray
-  "/oakd_wrist_top_view/intrinsics": std_msgs.msg.Float32MultiArray
+  "/oakd_front_view/intrinsics": ingress.msg.CameraIntrinsics
+  "/oakd_side_view/intrinsics": ingress.msg.CameraIntrinsics
+  "/oakd_left_wrist_view/intrinsics": ingress.msg.CameraIntrinsics
+  "/oakd_right_wrist_view/intrinsics": ingress.msg.CameraIntrinsics
+  "/oakd_wrist_bottom_view/intrinsics": ingress.msg.CameraIntrinsics
+  "/oakd_wrist_top_view/intrinsics": ingress.msg.CameraIntrinsics
 
 
 keys_and_topics:
@@ -47,7 +47,7 @@ keys_and_topics:
     dtype: sensor_msgs.msg.Image
     topic: "(.*)/color" # regular expression, the camera name will be captured as {0}. 
   "observations/images/{0}/intrinsics":
-    dtype: std_msgs.msg.Float32MultiArray
+    dtype: ingress.msg.CameraIntrinsics
     topic: "(.*)/intrinsics" # regular expression
   "observations/images/{0}/extrinsics":
     dtype: std_msgs.msg.Float32MultiArray

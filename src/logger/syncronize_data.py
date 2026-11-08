@@ -3,7 +3,8 @@
 import os
 import glob
 import argparse
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation as R, Slerp
+from ament_index_python.packages import get_package_share_directory
 from scipy.interpolate import interp1d
 import numpy as np
 import h5py
@@ -72,27 +73,39 @@ def sample_and_sync_h5(keys_and_topics, topics_and_types, input_h5_path, output_
         topic_types (dict): Dictionary mapping topics to their types.
     """
     key_matcher = Topic2KeyMatcher(keys_and_topics)
+    if sampling_frequency <= 0:
+        raise ValueError("sampling_frequency must be positive")
     with h5py.File(input_h5_path, 'r') as input_h5, h5py.File(output_h5_path, 'w') as output_h5:
         # Determine sampling timestamps
         start_time = None
         end_time = None
-        for topic in topics_and_types.keys():
+        for topic, dtype in topics_and_types.items():
             if topic in input_h5:
-                if topic == "/task_description":
+                if dtype == "std_msgs.msg.String" or any(k in topic for k in ("intrinsics", "extrinsics", "projection")):
                     continue
-                timestamps = np.array(list(map(int, input_h5[topic].keys())))
-                if start_time is None or timestamps[0] < start_time:
+                if not key_matcher.match(topic, dtype):
+                    continue
+                timestamps = np.sort(np.array(list(map(int, input_h5[topic].keys()))))
+                if len(timestamps) < 2:
+                    raise ValueError(f"Need at least two samples for {topic}")
+                if start_time is None or timestamps[0] > start_time:
                     start_time = timestamps[0]
-                if end_time is None or timestamps[-1] > end_time:
+                if end_time is None or timestamps[-1] < end_time:
                     end_time = timestamps[-1]
+        if start_time is None or end_time <= start_time:
+            raise ValueError("Recorded streams have no shared time interval")
         desired_timestamps = np.arange(
             start_time, end_time, 1e9 / sampling_frequency
         ).astype(int)
+        output_h5.create_dataset("timestamps", data=desired_timestamps)
+        output_h5.attrs["sampling_frequency"] = sampling_frequency
 
         # Process each topic
         for topic, topic_type_name in topics_and_types.items():
             if topic not in input_h5:
                 print(f"Topic {topic} not found in the HDF5 file. Skipping...")
+                continue
+            if not key_matcher.match(topic, topic_type_name):
                 continue
             print(f"Processing topic: {topic}")
             topic_group = input_h5[topic]
@@ -106,6 +119,14 @@ def sample_and_sync_h5(keys_and_topics, topics_and_types, input_h5_path, output_
 
             topic_timestamps = np.array(list(map(int, topic_group.keys())))
             topic_timestamps.sort()
+
+            if any(k in topic for k in ("intrinsics", "extrinsics", "projection")):
+                # Calibration is static; it must not shorten the motion/image overlap.
+                for key in key_matcher.match(topic, topic_type_name):
+                    dataset = output_h5.create_dataset(key, data=topic_group[str(topic_timestamps[-1])][:])
+                    for name, value in topic_group.attrs.items():
+                        dataset.attrs[name] = value
+                continue
 
             if topic_type_name == "sensor_msgs.msg.Image":
                 # Sample images
@@ -136,17 +157,15 @@ def sample_and_sync_h5(keys_and_topics, topics_and_types, input_h5_path, output_
                 quaternions = pose_data[:, 3:]
                 
                 interp_position = interp1d(
-                    topic_timestamps, positions, axis=0, kind="linear", fill_value="extrapolate"
+                    topic_timestamps, positions, axis=0, kind="linear", bounds_error=True
                 )
-                interp_quaternions = interp1d(
-                    topic_timestamps, quaternions, axis=0, kind="linear", fill_value="extrapolate"
-                )
+                relative_times = (topic_timestamps - topic_timestamps[0]) / 1e9
+                interp_quaternions = Slerp(relative_times, R.from_quat(quaternions))
 
                 sampled_positions = interp_position(desired_timestamps)
-                sampled_quaternions = interp_quaternions(desired_timestamps)
-                sampled_quaternions /= np.linalg.norm(
-                    sampled_quaternions, axis=1, keepdims=True
-                )  # Normalize quaternions
+                sampled_quaternions = interp_quaternions(
+                    (desired_timestamps - topic_timestamps[0]) / 1e9
+                ).as_quat()
                 
                 keys = key_matcher.match(topic, topic_type_name)
                 for k in keys:
@@ -157,7 +176,7 @@ def sample_and_sync_h5(keys_and_topics, topics_and_types, input_h5_path, output_
                 # Interpolate Float32MultiArray data
                 array_data = np.array([topic_group[str(ts)][:] for ts in topic_timestamps])
                 interp_array = interp1d(
-                    topic_timestamps, array_data, axis=0, kind="linear", fill_value="extrapolate"
+                    topic_timestamps, array_data, axis=0, kind="linear", bounds_error=True
                 )
                 sampled_array = interp_array(desired_timestamps)
                 
@@ -207,12 +226,16 @@ def process_folder(keys_and_topics, topics_and_types, input_folder, sampling_fre
                 executor.submit(sample_and_sync_h5, keys_and_topics, topics_and_types, input_file, output_file, sampling_frequency, compress, resize_to)
             )
         
+        failures = []
         for future in concurrent.futures.as_completed(futures):
             try:
                 future.result()
                 print("File processed successfully.")
             except Exception as e:
                 print(f"Error processing file: {e}")
+                failures.append(e)
+        if failures:
+            raise RuntimeError(f"Failed to process {len(failures)} recording(s)") from failures[0]
 
     print(f"All files processed. Processed files are saved in {output_folder}.")
 
@@ -231,7 +254,7 @@ def main():
     args = parser.parse_args()
 
     if args.cfg_file == "":
-        cfg_file = os.path.join(os.path.dirname(__file__),"../../experiments/cfgs/logger" ,"datacollection_default.yaml")
+        cfg_file = os.path.join(get_package_share_directory("experiments"), "cfgs", "logger", "datacollection_default.yaml")
     else:
         cfg_file = args.cfg_file
     cfgyaml = yaml.safe_load(open(cfg_file, 'r'))

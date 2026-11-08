@@ -64,6 +64,7 @@ def spawn_hand_nodes(hand_chirality, enable_hand_controller=True):
             "retarget/hand_chirality": hand_chirality,
             "retarget/mano_adjustments": mano_adjustments_filepath,
             "retarget/retargeter_cfg": retargeter_cfg_filepath,
+            "enable_at_start": False,
             "robot_description": _orcahand_v2_robot_description(hand_chirality),
         }],
     )
@@ -88,7 +89,9 @@ def launch_setup(context, *args, **kwargs):
                 parameters=[
                     {"rokoko_tracker/ip": "0.0.0.0"},
                     {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": True}
+                    {"rokoko_tracker/use_coil": True},
+                    {"rokoko_tracker/enable_left": LEFT_SIDE},
+                    {"rokoko_tracker/enable_right": RIGHT_SIDE},
                 ],
             )
 
@@ -99,6 +102,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             {"enable_left": LEFT_SIDE},
             {"enable_right": RIGHT_SIDE},
+            {"interactive": False},
         ],
         output="screen",
     )

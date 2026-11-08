@@ -11,6 +11,7 @@ from rclpy.serialization import serialize_message
 from pathlib import Path
 from datetime import datetime
 from std_srvs.srv import Trigger
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 import threading
 import importlib
 import yaml
@@ -168,19 +169,26 @@ class DemoLogger(Node):
 
         # Add topics to be recorded
         self.subscribers = []
-        for topic_name, (topic_type_name, topic_type) in self.topics_and_types.items():
+        for topic_id, (topic_name, (topic_type_name, topic_type)) in enumerate(self.topics_and_types.items(), 1):
             
             # Create topic metadata for rosbag
-            self.writer.create_topic(rosbag2_py.TopicMetadata(
+            metadata = dict(
                 name=topic_name,
-                type=topic_type.__name__,
+                type=topic_type_name.replace(".msg.", "/msg/"),
                 serialization_format="cdr"
-            ))
+            )
+            try:
+                topic_metadata = rosbag2_py.TopicMetadata(id=topic_id, **metadata)
+            except TypeError:  # Humble's constructor has no id argument.
+                topic_metadata = rosbag2_py.TopicMetadata(**metadata)
+            self.writer.create_topic(topic_metadata)
 
             # Subscribe and add callback to write messages
-            from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
             qos_profile = QoSProfile(depth=10)
-            qos_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
+            if topic_type is Image:
+                qos_profile.reliability = ReliabilityPolicy.BEST_EFFORT
+            elif any(key in topic_name for key in ("intrinsics", "extrinsics", "projection")):
+                qos_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
             
             self.subscribers.append(
                 self.create_subscription(
@@ -189,7 +197,7 @@ class DemoLogger(Node):
                     lambda msg, topic_name=topic_name: self.writer.write(
                         topic_name, serialize_message(msg), self.get_clock().now().nanoseconds
                     ),
-                    qos_profile if "intrinsics" in topic_name or "extrinsics" in topic_name or "projection"in topic_name  else 10,
+                    qos_profile,
                 )
             )
 

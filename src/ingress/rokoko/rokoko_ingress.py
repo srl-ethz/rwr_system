@@ -66,6 +66,7 @@ class RokokoTracker:
             socket.AF_INET, socket.SOCK_DGRAM  # Internet
         )  # "socket.SOCK_DGRAM" for UDP and "socket.SOCK_STREAM" for TCP
         sock.bind((ip, port))
+        sock.settimeout(0.25)
         self.sock = sock
 
         self.left_keypoint_positions, self.right_keypoint_positions = None, None
@@ -145,9 +146,10 @@ class RokokoTracker:
 
     def read_rokoko_data(self):
         while self.keep_running:
-            received_data, addr = self.sock.recvfrom(
-                1024 * 20
-            )  # buffer size is 1024 bytes
+            try:
+                received_data, addr = self.sock.recvfrom(1024 * 20)
+            except socket.timeout:
+                continue
             # print("Received message: %s" % received_data)
             try:
                 data_dict = json.loads(

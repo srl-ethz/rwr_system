@@ -75,18 +75,21 @@ Run a policy trained in faive_lab on the hand, detect the cube, and calibrate th
 
 ## Imitation learning
 
+For an isolated Linux setup, SSH-friendly launch arguments and raw/processed
+data validation, see [the RWR 2026 collection guide](docs/rwr26_teleop.md).
+
 The hand follows the Rokoko glove through the retargeter, and the Franka arm follows the glove's wrist. The Franka arm controller is not part of this repository: it subscribes to `/right/arm/end_effector_pose_cmd` and publishes `/right/arm/end_effector_pose`.
 
-1. **Cameras.** Set the ID printed on each OAK-D camera in a file in `experiments/cfgs/cams/` and select it with `OAKD_CAMERA_CFG_NAME` in `record_demonstration.launch.py` and `controllers_and_cameras.launch.py` (default: `oakd_scissors_task.yaml`). For a ZED camera, set `ZED_CAMERA_CFG_NAME`. The camera extrinsics can be measured with `experiments/calibrate_camera_pose.py`.
+1. **Cameras.** Set each OAK-D camera's ID and role in a YAML file. For recording, pass its full path as `oakd_config:=/path/to/cameras.yaml` (default: `oakd_scissors_task.yaml`); pass `zed_config:=/path/to/zed.yaml` for a ZED camera. In `controllers_and_cameras.launch.py`, select the files using `OAKD_CAMERA_CFG_NAME` and `ZED_CAMERA_CFG_NAME`. The camera extrinsics can be measured with `experiments/calibrate_camera_pose.py`.
 2. **Retargeter.** Tune the mapping from your hand to the robot hand, see [src/retargeter/README.md](src/retargeter/README.md). The ORCA v2 settings are in `experiments/cfgs/retargeter/`.
 3. **Test the teleop** (no recording):
     ```bash
     ros2 launch experiments teleop_rokoko.launch.py
     ```
     A `keyboard_runner` terminal opens: press Enter to start, pause and resume the teleop. Foot pedals that type keys work the same way.
-4. **Record demonstrations.** Set `DATASET_NAME` in `record_demonstration.launch.py`, then:
+4. **Record demonstrations.** Choose the dataset name at launch:
     ```bash
-    ros2 launch experiments record_demonstration.launch.py
+    ros2 launch experiments record_demonstration.launch.py dataset_name:=demo
     ```
     In the `keyboard_runner` terminal, Enter starts the teleop, starts the recording and stops it. Each demonstration is saved as an `.h5` file in `tmp/<DATASET_NAME>/` (relative to where you launched). The recorded topics are listed in `experiments/cfgs/logger/datacollection_default.yaml`.
 5. **Process the data.** Resample all topics of the recordings in a folder to a common rate:
