@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import json
+import tempfile
 
 import h5py
 import numpy as np
@@ -71,6 +72,39 @@ def test_rokoko_without_udp_stream_stops_cleanly():
         output = stop_process(process)
     assert running, output
     assert "waiting for hand tracker" not in output
+    assert process.returncode == 0, output
+
+
+def test_hand_only_launch_does_not_start_arm_or_hardware_controller():
+    log = tempfile.TemporaryFile(mode='w+')
+    process = subprocess.Popen(
+        ['ros2', 'launch', 'experiments', 'teleop_rokoko.launch.py',
+         'teleop_arm:=false', 'enable_hand_controller:=false'],
+        stdout=log, stderr=subprocess.STDOUT, text=True,
+    )
+    rclpy.init()
+    observer = Node('hand_only_launch_observer')
+    try:
+        deadline = time.monotonic() + 15
+        services = []
+        while time.monotonic() < deadline:
+            rclpy.spin_once(observer, timeout_sec=0.1)
+            services = [name for name, _ in observer.get_service_names_and_types()]
+            if '/right/retargeter/set_enabled' in services:
+                break
+            assert process.poll() is None, 'Hand-only launch exited during startup'
+        assert '/right/retargeter/set_enabled' in services
+        assert not any(name.startswith('/franka_teleop/') for name in services)
+        assert '/right/hand/estop' not in services
+        assert 'keyboard_runner_node' not in observer.get_node_names()
+    finally:
+        observer.destroy_node()
+        rclpy.try_shutdown()
+        stop_process(process)
+        log.seek(0)
+        output = log.read()
+        log.close()
+    assert 'Traceback' not in output, output
     assert process.returncode == 0, output
 
 

@@ -140,9 +140,16 @@ class HandControllerNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = HandControllerNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if node.hand_name == "orca_v2":
+            node._orca_timer.cancel()
+            node._hc.disconnect()
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 if __name__ == "__main__":
     main()

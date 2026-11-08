@@ -91,6 +91,34 @@ deliberately kept running separately, use `enable_hand_controller:=false`.
 
 ## Record a short demonstration first
 
+### Hand-only operation while the Franka controller is unavailable
+
+To start the glove, retargeter and hand without the arm node or keyboard runner:
+
+```bash
+ros2 launch experiments teleop_rokoko.launch.py teleop_arm:=false
+```
+
+The retargeter stays disabled initially. After checking the hand's initialization,
+enable following in another terminal:
+
+```bash
+ros2 service call /right/retargeter/set_enabled std_srvs/srv/SetBool '{data: true}'
+```
+
+Pause following with the same command and `{data: false}`. The hand holds its
+latest target while paused. To release hand torque before stopping the launch:
+
+```bash
+ros2 service call /right/hand/estop std_srvs/srv/SetBool '{data: true}'
+```
+
+This hand stop closes the controller connection; restart the launch to use it
+again. Hand-only samples lack the arm observations/actions required for the full
+task demonstrations.
+
+### Full arm-and-hand demonstrations
+
 ```bash
 ros2 launch experiments record_demonstration.launch.py \
   oakd_config:="$RWR_WS/local/cameras.yaml" \
