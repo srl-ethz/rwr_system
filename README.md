@@ -61,6 +61,26 @@ The Python package is called `faive_system` (e.g. `from faive_system.src.common.
     ./src/rwr_system/experiments/rl_inference/pose_estimation/download_models.sh
     ```
 
+### Installation for Task 2
+Task 2 uses ROS 2 Humble. You can set it up in your Task 1 workspace, which replaces its Jazzy environment: remove `pixi.toml`, `pixi.lock`, `.pixi/`, `build/`, `install/` and `log/` there, then start at step 2. Or keep Jazzy and use a separate workspace (e.g. `~/rwr_humble_ws`), starting at step 1:
+
+1. Clone the repository into `~/rwr_humble_ws/src` as in step 1 above.
+2. Set up the Humble environment. Python is pinned to 3.12: pixi would otherwise install Python 3.14, which some of our dependencies do not support yet.
+    ```bash
+    cd ~/rwr_humble_ws
+    pixi init -c https://prefix.dev/robostack-humble -c https://prefix.dev/conda-forge
+    pixi add "python=3.12" ros-humble-desktop ros-dev-tools pip ros-humble-rosidl-typesupport-c ros-humble-joint-state-publisher-gui ros-humble-xacro "pytest<9"
+    ```
+3. Add to `~/humble_ws/pixi.toml`:
+    ```toml
+    [activation.env]
+    VIRTUAL_ENV = ""   # a virtual env active in your terminal (e.g. set by VS Code) would otherwise break the build
+
+    [target.unix.activation]
+    scripts = ["install/setup.bash"]
+    ```
+4. Follow steps 4 to 6 above in `~/rwr_humble_ws`.
+
 Run nodes with `ros2 run <package> <file>` and launch files with `ros2 launch <package> <launch file>`.
 
 ## The hand
