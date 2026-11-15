@@ -94,9 +94,12 @@ def sample_and_sync_h5(keys_and_topics, topics_and_types, input_h5_path, output_
                     end_time = timestamps[-1]
         if start_time is None or end_time <= start_time:
             raise ValueError("Recorded streams have no shared time interval")
-        desired_timestamps = np.arange(
-            start_time, end_time, 1e9 / sampling_frequency
-        ).astype(int)
+        # Generate offsets before adding the epoch timestamp to avoid float
+        # rounding moving the first sample outside the shared interval.
+        sample_offsets = np.arange(
+            0, end_time - start_time, 1e9 / sampling_frequency
+        ).astype(np.int64)
+        desired_timestamps = start_time + sample_offsets
         output_h5.create_dataset("timestamps", data=desired_timestamps)
         output_h5.attrs["sampling_frequency"] = sampling_frequency
 
