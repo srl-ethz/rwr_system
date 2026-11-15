@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 
 # Record imitation learning demonstrations: cameras, ORCA v2 hand + retargeter, Rokoko glove,
 # Franka arm teleop, logger, and the keyboard_runner terminal to start/stop the recordings.
-# Select the cameras and the dataset name in generate_launch_description().
+# Override oakd_config, logger_config, or dataset_name for other setups.
 
 
 def _orcahand_v2_robot_description(hand_chirality):
@@ -165,11 +165,11 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     share = get_package_share_directory("experiments")
     defaults = {
-        "oakd_config": os.path.join(share, "cfgs", "cams", "oakd_scissors_task.yaml"),
+        "oakd_config": os.path.join(share, "cfgs", "cams", "cube_sorting_task.yaml"),
         "zed_config": "",
-        "logger_config": os.path.join(share, "cfgs", "logger", "datacollection_default.yaml"),
+        "logger_config": os.path.join(share, "cfgs", "logger", "datacollection_right.yaml"),
         "storage_base_path": "tmp",
-        "dataset_name": "demo",
+        "dataset_name": "cube_sorting",
         "enable_hand_controller": "true",
         "enable_keyboard_runner": "true",
     }

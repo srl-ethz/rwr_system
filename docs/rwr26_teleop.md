@@ -53,18 +53,12 @@ cd "$RWR_WS"
    tracking to the Ubuntu host's reachable LAN address, UDP port 14043. Tailscale
    SSH connectivity alone does not establish that the Windows laptop can stream
    to that address.
-4. Put camera serials in `$RWR_WS/local/cameras.yaml`, using names `front_view`
-   and `wrist_view`. Confirm the names against the actual images, then keep the
-   cameras fixed. The right-hand recording config records both RGB streams and
-   their intrinsic matrices.
-
-```yaml
-# local/cameras.yaml -- replace with actual serial numbers
-WORKSPACE_CAMERA_SERIAL:
-  name: front_view
-WRIST_CAMERA_SERIAL:
-  name: wrist_view
-```
+4. Check the MXIDs in [`cube_sorting_task.yaml`](../experiments/cfgs/cams/cube_sorting_task.yaml)
+   against the live images, then keep the cameras fixed. The task uses
+   `front_view` for the workspace and `wrist_view` for the wrist. If your station
+   has different MXIDs, copy the preset to `$RWR_WS/local/cube_sorting_task.yaml`,
+   update the MXIDs, and pass the copy as `oakd_config` at launch.
+   The right-hand recording config records both RGB streams and their intrinsics.
 
 With two people present, first test teleoperation without the recorder:
 
@@ -131,8 +125,6 @@ synchronizing these files.
 
 ```bash
 ros2 launch experiments record_demonstration.launch.py \
-  oakd_config:="$RWR_WS/local/cameras.yaml" \
-  logger_config:="$RWR_WS/src/rwr_system/experiments/cfgs/logger/datacollection_right.yaml" \
   storage_base_path:="$RWR_WS/data/raw" \
   dataset_name:=single_color_session_01 \
   enable_keyboard_runner:=false
