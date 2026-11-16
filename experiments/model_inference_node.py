@@ -7,24 +7,24 @@ This node is data-driven from the inference config yaml (see
 experiments/cfgs/inference_config_*.yaml). The config declares:
   - camera_topics / camera_names   : the camera streams to subscribe to
   - observations                   : model obs key -> ros topic to read it from
-  - actions                        : model action key -> {topic, init}
+  - actions                        : model action key -> {topic} (hardware destination)
 Keys containing "arm" are treated as a 7-dim arm pose (PoseStamped:
 position + quaternion); keys containing "hand" as a Float32MultiArray of
 joint angles. Single- vs dual-arm is just how many entries the dicts have,
 so the same node handles both unimanual and bimanual policies.
 """
-from time import sleep
 import time
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray, MultiArrayDimension
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
+from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import String as ROSString
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
 from copy import deepcopy
-from cv_bridge import CvBridge, CvBridgeError
-import tf2_ros
+from cv_bridge import CvBridge
 from threading import Lock
 from functools import partial
 import cv2
@@ -34,15 +34,11 @@ import torch
 import yaml
 
 from faive_system.src.common.ros_utils import numpy_to_float32_multiarray, float32_multiarray_to_numpy
-from faive_system.src.common.transformation_utils import rigid_transform, complete_rotation_matrix
 from srl_il.export.policy import get_policy_from_ckpt
 from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy, HistoryPolicy
 
 import h5py
 import os
-import threading
-import sys
-import select
 
 class CameraListener(Node):
     def __init__(self, camera_topic, name, node):
@@ -53,7 +49,8 @@ class CameraListener(Node):
         self.name = name
         self.im_subscriber = node.create_subscription(
             Image, self.camera_topic, self.recv_im,
-            QoSProfile(depth=2, reliability=ReliabilityPolicy.BEST_EFFORT, history=HistoryPolicy.KEEP_LAST, durability=DurabilityPolicy.VOLATILE)
+            QoSProfile(depth=2, reliability=ReliabilityPolicy.BEST_EFFORT, history=HistoryPolicy.KEEP_LAST, durability=DurabilityPolicy.VOLATILE),
+            callback_group=node.observation_callbacks,
         )
 
     def recv_im(self, msg: Image):
@@ -77,7 +74,21 @@ class PolicyPlayerAgent(Node):
 
         # --- Declare and get parameters ---
         self.declare_parameter("policy_ckpt_path", "")   # assume the policy ckpt is saved with its config
-        self.declare_parameter("hand_qpos_dim", 17) # The dimension of the hand_qpos, we need this because we need to broadcast an all zero command to the hand at the beginning
+        self.declare_parameter("hand_qpos_dim", 17)
+        self.declare_parameter("preview", False)
+        self.declare_parameter("allow_arm_init", False)
+        self.declare_parameter("arm_init_pose", "")
+        self.preview = self.get_parameter("preview").value
+        self.allow_arm_init = self.get_parameter("allow_arm_init").value and not self.preview
+        arm_init_pose = self.get_parameter("arm_init_pose").value
+        self.arm_init_target = None
+        if self.allow_arm_init and arm_init_pose:
+            target = np.asarray(yaml.safe_load(arm_init_pose), dtype=np.float64)
+            if target.shape != (7,) or not np.isfinite(target).all() or not np.isclose(
+                np.linalg.norm(target[3:]), 1.0, atol=0.001
+            ):
+                raise ValueError("arm_init_pose must be [x, y, z, qx, qy, qz, qw] with a unit quaternion")
+            self.arm_init_target = target
         self.declare_parameter("logfile_root", "")      # root directory for logging
 
         self.declare_parameter("inference_cfg_file", "")
@@ -85,7 +96,8 @@ class PolicyPlayerAgent(Node):
         self.hand_qpos_dim = self.get_parameter("hand_qpos_dim").value
         self.logfile_root = self.get_parameter("logfile_root").value
 
-        self.control_freq_hz = 10 #hz
+        self.control_freq_hz = 10
+        self.max_observation_age = 2.0 / self.control_freq_hz
 
         # --- Load the inference config (cameras / observation / action mapping) ---
         self.inference_cfg_file = self.get_parameter("inference_cfg_file").value
@@ -99,28 +111,37 @@ class PolicyPlayerAgent(Node):
         camera_topics = inference_config["camera_topics"]
         camera_names = inference_config["camera_names"]
         self.observations_cfg = inference_config["observations"]  # obs_key -> ros topic
-        self.actions_cfg = inference_config["actions"]            # action_key -> {topic, init}
+        self.actions_cfg = inference_config["actions"]
+        self.arm_command_frame = inference_config.get("arm_command_frame")
 
         self.lock = Lock()
+        self.observation_callbacks = MutuallyExclusiveCallbackGroup()
 
-        # --- Action publishers (one per action key) ---
+        # Relay only messages generated by this node. External messages sent
+        # to the observable policy topics cannot pass through to the robot.
         self.action_pubs = {}
+        self.control_pubs = {}
         for key, spec in self.actions_cfg.items():
             msg_type = PoseStamped if self._is_arm_key(key) else Float32MultiArray
-            self.action_pubs[key] = self.create_publisher(msg_type, spec["topic"], 10)
+            self.action_pubs[key] = self.create_publisher(msg_type, f"/policy_inference/{key}", 10)
+            if not self.preview:
+                self.control_pubs[key] = self.create_publisher(msg_type, spec["topic"], 1)
 
         # --- Observation subscribers + latest-value buffers (one per obs key) ---
         self.obs_values = {key: None for key in self.observations_cfg}
         self.obs_stamps = {key: None for key in self.observations_cfg}
+        self.arm_observation_frames = {}
         self.obs_subs = {}
         for key, topic in self.observations_cfg.items():
             if self._is_arm_key(key):
                 self.obs_subs[key] = self.create_subscription(
-                    PoseStamped, topic, partial(self.arm_obs_callback, key=key), 10
+                    PoseStamped, topic, partial(self.arm_obs_callback, key=key), 10,
+                    callback_group=self.observation_callbacks,
                 )
             else:
                 self.obs_subs[key] = self.create_subscription(
-                    Float32MultiArray, topic, partial(self.hand_obs_callback, key=key), 10
+                    Float32MultiArray, topic, partial(self.hand_obs_callback, key=key), 10,
+                    callback_group=self.observation_callbacks,
                 )
 
         # --- Camera listeners ---
@@ -143,46 +164,52 @@ class PolicyPlayerAgent(Node):
         self.log_filename = None
         self.step_idx = 0
         self.policy_stamp = None
+        self.arm_init_deadline = None
+        self.arm_init_settled_at = None
+        self.arm_init_failed = False
 
         # --- Command Subscriber ---
         self.command_sub = self.create_subscription(
             ROSString, "/model_inference_command", self.command_callback, 10
         )
 
-        print("About to go_to_default_init_state")
-        # --- Initialize to default state ---
-        self.go_to_default_init_state()
-
         # --- Timer for policy execution ---
         self.policy_timer = self.create_timer(1 / self.control_freq_hz, self.run_policy_cb)
         # Maintain a step counter to name groups incrementally
 
     def command_callback(self, msg: ROSString):
-        """Handle commands received via the /policy_command topic."""
-        print("received command", msg)
+        """Handle commands received via /model_inference_command."""
         command = msg.data.strip().lower()
         if command == "start":
+            if self.arm_init_deadline is not None or self.arm_init_failed:
+                self.get_logger().warn("Arm initialization is pending or failed. Finish it, retry init_arm, or reset.")
+                return
             if not self.running_policy:
                 self.start_logging()
                 self.policy.reset_policy()
+                self.policy_stamp = None
                 self.running_policy = True
                 self.get_logger().info("Policy started.")
         elif command == "stop":
+            if self.arm_init_deadline is not None:
+                self.abort_arm_init("stopped by operator")
             if self.running_policy:
                 self.running_policy = False
                 self.stop_logging()
                 self.get_logger().info("Policy stopped.")
         elif command == "reset":
-            if self.running_policy:
-                self.get_logger().info("Cannot reset when policy is running")
+            if self.running_policy or self.arm_init_deadline is not None:
+                self.get_logger().warn("Stop policy execution or arm initialization before resetting.")
                 return
-            self.get_logger().info("Resetting to default state.")
-            self.go_to_default_init_state()
+            self.policy.reset_policy()
+            self.policy_stamp = None
+            self.arm_init_failed = False
+            self.get_logger().info("Policy state reset.")
+        elif command == "init_arm":
+            self.start_arm_init()
         elif command == "quit":
             self.get_logger().info("Exiting.")
-            self.stop_logging()
-            rclpy.shutdown()
-            sys.exit(0)
+            rclpy.try_shutdown()
         else:
             self.get_logger().warn(f"Unknown command: {command}")
 
@@ -255,60 +282,111 @@ class PolicyPlayerAgent(Node):
             self.log_file.close()
             print(f"HDF5 file {self.log_filename} closed.")
 
-    def default_init_actions(self):
-        """Build the default init action dict from the config `init` fields.
+    def start_arm_init(self):
+        if not self.allow_arm_init or self.running_policy or self.arm_init_deadline is not None:
+            self.get_logger().warn("init_arm requires live mode, allow_arm_init, and an idle policy.")
+            return
+        output = self.control_pubs.get("actions_arm")
+        if (
+            self.arm_init_target is None
+            or not self.arm_command_frame
+            or self.actions_cfg.get("actions_arm", {}).get("topic") != "/right/arm/end_effector_pose_cmd"
+            or self.observations_cfg.get("qpos_arm") != "/right/arm/end_effector_pose"
+            or output is None
+            or output.get_subscription_count() == 0
+        ):
+            self.abort_arm_init("set a verified arm_init_pose and frame and check the right-arm controller connection")
+            return
+        self.arm_init_failed = False
+        self.arm_init_settled_at = None
+        self.arm_init_deadline = time.monotonic() + 90.0
+        self.get_logger().info("Arm initialization started.")
 
-        Arm actions store a 3-vec position in the config; the orientation uses
-        the fixed default rotation. Hand actions default to zeros(hand_qpos_dim)
-        when `init` is null.
-        """
-        action_dict = {}
-        start_wrist_rot = complete_rotation_matrix(x=[1, 0, 0], z=[0, 0, -1])
-        start_wrist_quat = np.array(Rotation.from_matrix(start_wrist_rot).as_quat())
-        for key, spec in self.actions_cfg.items():
-            init = spec.get("init", None)
-            if self._is_arm_key(key):
-                pos = np.array(init, dtype=np.float64)
-                action_dict[key] = np.concatenate([pos, start_wrist_quat])
-            else:
-                if init is None:
-                    action_dict[key] = np.zeros(self.hand_qpos_dim)
-                else:
-                    action_dict[key] = np.array(init, dtype=np.float64)
-        return action_dict
+    def abort_arm_init(self, reason):
+        self.arm_init_deadline = None
+        self.arm_init_failed = True
+        self.get_logger().error(f"Arm initialization stopped: {reason}.")
 
-    def go_to_default_init_state(self):
-        """Initialize the arm(s) and hand(s) to the config-defined default state."""
-        # Forget stale observations so we don't act on pre-reset state.
+    def run_arm_init(self):
+        now = time.monotonic()
+        if now >= self.arm_init_deadline:
+            self.abort_arm_init("target not reached within 90 s")
+            return
         with self.lock:
-            for key in self.obs_values:
-                self.obs_values[key] = None
+            current = self.obs_values["qpos_arm"]
+            stamp = self.obs_stamps["qpos_arm"]
+            frame = self.arm_observation_frames.get("qpos_arm")
+        if (
+            current is None or not np.isfinite(current).all()
+            or not np.isclose(np.linalg.norm(current[3:]), 1.0, atol=0.001)
+            or self.observation_problems({"qpos_arm": stamp})
+            or frame != self.arm_command_frame
+        ):
+            self.abort_arm_init("right-arm feedback is missing, stale, or in a different frame")
+            return
 
-        self.publish(self.default_init_actions())
-        time.sleep(15)
+        target = self.arm_init_target
+        offset = target[:3] - current[:3]
+        distance = np.linalg.norm(offset)
+        rotation = Rotation.from_quat(current[3:])
+        correction = (Rotation.from_quat(target[3:]) * rotation.inv()).as_rotvec()
+        angle = np.linalg.norm(correction)
+        if distance <= 0.005 and angle <= np.deg2rad(3.0):
+            if self.arm_init_settled_at is None:
+                self.arm_init_settled_at = now
+            elif now - self.arm_init_settled_at >= 0.3:
+                self.arm_init_deadline = None
+                self.get_logger().info("Arm reached init pose. Ready for start.")
+            return
+
+        self.arm_init_settled_at = None
+        # Limit each requested displacement relative to the measured pose.
+        # A stalled arm cannot accumulate commands further along the path.
+        if distance > 0.002:
+            offset *= 0.002 / distance
+        if angle > 0.015:
+            correction *= 0.015 / angle
+        quaternion = (Rotation.from_rotvec(correction) * rotation).as_quat()
+        next_pose = np.concatenate([current[:3] + offset, quaternion])
+        self.control_pubs["actions_arm"].publish(
+            self.pose_message(next_pose, self.get_clock().now().to_msg())
+        )
+
+    def pose_message(self, action, stamp):
+        msg = PoseStamped()
+        msg.pose.position.x, msg.pose.position.y, msg.pose.position.z = action[:3].astype(np.float64)
+        (
+            msg.pose.orientation.x,
+            msg.pose.orientation.y,
+            msg.pose.orientation.z,
+            msg.pose.orientation.w,
+        ) = action[3:7].astype(np.float64)
+        msg.header.stamp = stamp
+        msg.header.frame_id = self.arm_command_frame or "panda_link0"
+        return msg
 
     def publish(self, action_dict: dict):
-        """Publish each action in `action_dict` to its configured ros topic."""
-        self.policy_stamp = self.get_clock().now().to_msg()
+        """Publish each generated action and, in live mode, relay it to the controller."""
+        stamp = self.get_clock().now().to_msg()
+        messages = {}
         for key, action in action_dict.items():
-            pub = self.action_pubs[key]
+            if not np.isfinite(action).all():
+                self.discard_actions(f"invalid {key} action")
+                return False
             if self._is_arm_key(key):
-                # Skip invalid (effectively zero) arm poses.
-                if (np.abs(action) < 0.01).all():
-                    continue
-                wrist_msg = PoseStamped()
-                wrist_msg.pose.position.x, wrist_msg.pose.position.y, wrist_msg.pose.position.z = action[:3].astype(np.float64)
-                (
-                    wrist_msg.pose.orientation.x,
-                    wrist_msg.pose.orientation.y,
-                    wrist_msg.pose.orientation.z,
-                    wrist_msg.pose.orientation.w,
-                ) = action[3:7].astype(np.float64)
-                wrist_msg.header.stamp = self.policy_stamp
-                wrist_msg.header.frame_id = "panda_link0"
-                pub.publish(wrist_msg)
+                if action.shape != (7,) or not np.isclose(np.linalg.norm(action[3:]), 1.0, atol=0.001):
+                    self.discard_actions(f"invalid {key} pose")
+                    return False
+                messages[key] = self.pose_message(action, stamp)
             else:
-                pub.publish(numpy_to_float32_multiarray(action))
+                messages[key] = numpy_to_float32_multiarray(action)
+
+        self.policy_stamp = stamp
+        for key, msg in messages.items():
+            self.action_pubs[key].publish(msg)
+            if key in self.control_pubs:
+                self.control_pubs[key].publish(msg)
+        return True
 
     def arm_obs_callback(self, msg: PoseStamped, key: str):
         """Callback to record the current pose for an arm observation key."""
@@ -320,9 +398,20 @@ class PolicyPlayerAgent(Node):
             pose.orientation.z,
             pose.orientation.w,
         ]
+        frame = msg.header.frame_id
+        if self.arm_command_frame and frame != self.arm_command_frame:
+            with self.lock:
+                self.obs_values[key] = None
+                self.obs_stamps[key] = None
+            self.get_logger().warn(
+                f"{key} frame {frame!r} differs from {self.arm_command_frame!r}",
+                throttle_duration_sec=2.0,
+            )
+            return
         with self.lock:
             self.obs_values[key] = np.concatenate([position, quaternion])
             self.obs_stamps[key] = msg.header.stamp
+            self.arm_observation_frames[key] = frame
 
     def hand_obs_callback(self, msg: Float32MultiArray, key: str):
         """Callback to record the current joint state for a hand observation key."""
@@ -335,20 +424,18 @@ class PolicyPlayerAgent(Node):
 
     def get_current_observations(self):
         """Gather current observations from cameras, arm(s), and hand(s)."""
-        obs_dict = {}
-        stamp_dict = {}
-        get_data_success = True
-
-        # 1) Retrieve images
         images_and_stamps = {cam.name: cam.get_im() for cam in self.camera_listeners}
-        if any([im is None for im, _ in images_and_stamps.values()]):
-            get_data_success = False
-            self.get_logger().error("Missing camera images "+ str([im is not None for im in images_and_stamps.values()]))
-            return get_data_success, obs_dict, stamp_dict
+        with self.lock:
+            state_obs = dict(self.obs_values)
+            stamp_dict = dict(self.obs_stamps)
+        images = {key: value[0] for key, value in images_and_stamps.items()}
+        stamp_dict.update({key: value[1] for key, value in images_and_stamps.items()})
+        observations = {**images, **state_obs}
+        missing = [key for key, value in observations.items() if value is None]
+        if missing or self.observation_problems(stamp_dict):
+            return None, stamp_dict
 
-        # Convert ROS images to numpy arrays
-        images = {k: v[0] for k, v in images_and_stamps.items()}
-        img_stamps = {k: v[1] for k, v in images_and_stamps.items()}
+        # Convert ROS images to numpy arrays only after all inputs are available.
         if missing_keys:=(set(self.rgb_process_dict.keys()) - set(images.keys())):
             self.get_logger().warning(f"image keys {missing_keys} are defined in rgb_process_dict but not used. \nCheck if the match {images.keys()}" )
         for k,v in images.items():
@@ -369,43 +456,38 @@ class PolicyPlayerAgent(Node):
                         K, D = operations["K"], operations["D"]
             images[k] = self.rosimg_to_numpy_resized(v, crop, K, D, rot90_k)
 
-        # 2) Retrieve arm/hand state observations
-        with self.lock:
-            state_obs = {key: self.obs_values[key] for key in self.observations_cfg}
-            state_stamps = {key: self.obs_stamps[key] for key in self.observations_cfg}
-        for key, value in state_obs.items():
-            if value is None:
-                print(f"missing observation {key}")
-                return False, obs_dict, stamp_dict
+        return {**images, **state_obs}, stamp_dict
 
-        # 3) Populate obs_dict
-        obs_dict.update(images)
-        obs_dict.update(state_obs)
+    def observation_problems(self, stamp_dict):
+        now = self.get_clock().now()
+        problems = []
+        for key, stamp in stamp_dict.items():
+            if stamp is None:
+                problems.append(f"{key} missing")
+                continue
+            age = (now - rclpy.time.Time.from_msg(stamp)).nanoseconds / 1e9
+            if not 0.0 <= age <= self.max_observation_age:
+                problems.append(f"{key} age {age:.3f} s")
+        return problems
 
-        stamp_dict.update(state_stamps)
-        stamp_dict.update(img_stamps)
-
-        return get_data_success, obs_dict, stamp_dict
+    def discard_actions(self, reason):
+        self.policy.reset_policy()
+        self.policy_stamp = None
+        self.get_logger().warn(f"Policy output paused: {reason}", throttle_duration_sec=2.0)
 
     def run_policy_cb(self):
-        """Main callback to fetch observations, run policy, and publish commands."""
+        """Compute an action only when every observation is fresh."""
+        if self.arm_init_deadline is not None:
+            self.run_arm_init()
+            return
         if not self.running_policy:
             return
 
-        get_data_success, obs_dict, stamp_dict = self.get_current_observations()
-        if not get_data_success:
-            self.get_logger().info("No observations available. Sleeping for 1 second.")
-            sleep(1)
+        obs_dict, stamp_dict = self.get_current_observations()
+        problems = self.observation_problems(stamp_dict)
+        if obs_dict is None or problems:
+            self.discard_actions(", ".join(problems) or "missing observation")
             return
-
-        # Check the observation timestamps are up to date (2x control period)
-        current_time = self.get_clock().now().to_msg()
-        control_period_sec = 1.0 / self.control_freq_hz
-        max_age_sec = 2 * control_period_sec
-        for k, stamp in stamp_dict.items():
-            time_diff = rclpy.time.Time.from_msg(current_time) - rclpy.time.Time.from_msg(stamp)
-            if time_diff.nanoseconds / 1e9 > max_age_sec:
-                self.get_logger().warn(f"Observation {k} is too old ({time_diff.nanoseconds / 1e9:.3f} s). ")
 
         dbg_info = {} if self.logfile_root != "" else None
         # Convert to torch tensors, run policy
@@ -414,12 +496,18 @@ class PolicyPlayerAgent(Node):
             actions = self.policy.predict_action(obs_torch, dbg_info)
             action_dict = {key: actions[key][0].cpu().numpy() for key in self.actions_cfg}
 
-        # check if the policy calculation took too long
+        problems = self.observation_problems(stamp_dict)
+        if problems:
+            self.discard_actions(", ".join(problems))
+            return
+
+        # Warn about the gap between action publications.
         if self.policy_stamp is not None:
             time_diff = rclpy.time.Time.from_msg(self.get_clock().now().to_msg()) - rclpy.time.Time.from_msg(self.policy_stamp)
-            if time_diff.nanoseconds / 1e9 > max_age_sec:
+            if time_diff.nanoseconds / 1e9 > self.max_observation_age:
                 self.get_logger().warn(f"Policy execution is too slow ({time_diff.nanoseconds / 1e9:.3f} s).")
-        self.publish(action_dict)
+        if not self.publish(action_dict):
+            return
 
         # Log the actions if logging is enabled
         if self.log_file is not None:
@@ -447,18 +535,17 @@ class PolicyPlayerAgent(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = PolicyPlayerAgent()
-    import threading
-
-    executor = rclpy.executors.MultiThreadedExecutor()
+    executor = MultiThreadedExecutor(num_threads=2)
     executor.add_node(node)
-
-    spin_thread = threading.Thread(target=executor.spin, daemon=True)
-    spin_thread.start()
-
-    node.command_callback(ROSString(data = "start") )
-
-    spin_thread.join()
-    rclpy.shutdown()
+    try:
+        executor.spin()
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        executor.shutdown()
+        node.stop_logging()
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":

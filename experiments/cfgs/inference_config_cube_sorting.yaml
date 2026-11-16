@@ -1,0 +1,18 @@
+rgb_process_dict: {}
+rgb_resize_size: [224, 224]
+hand_qpos_dim: 17
+arm_command_frame: world
+
+camera_topics: [/oakd_front_view/color, /oakd_wrist_view/color]
+camera_names: [side_view_images, wrist_view_images]
+
+observations:
+  qpos_arm: /right/arm/end_effector_pose
+  qpos_hand: /right/hand/joint_position_from_motor
+
+# Live destinations. Both modes publish the policy actions under /policy_inference.
+actions:
+  actions_arm:
+    topic: /right/arm/end_effector_pose_cmd
+  actions_hand:
+    topic: /right/hand/policy_output

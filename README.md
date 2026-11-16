@@ -119,12 +119,24 @@ The hand follows the Rokoko glove through the retargeter, and the Franka arm fol
     ```
     Check the demonstrations with `experiments/scripts/plot_trajectories.py` and `experiments/scripts/visualize_videos.py`.
 6. **Train** a policy, e.g. with [srl_il](https://github.com/srl-ethz/srl_il).
-7. **Run the policy.** Start the cameras and the hand, then the policy:
+7. **Run the RWR26 cube sorting policy.** Bring up the Franka feedback and
+    controller separately. The launch starts the cameras and the ORCA v2 driver.
+    The ORCA v2 driver moves the hand to neutral on startup.
     ```bash
-    ros2 launch experiments controllers_and_cameras.launch.py
-    ros2 launch experiments run_policy_inference.launch.py policy_ckpt_path:=/path/to/policy.ckpt
+    ros2 launch experiments run_policy_inference.launch.py policy_ckpt_path:=/path/to/best_model.pth
     ```
-    The inference config (`experiments/cfgs/inference_config_*.yaml`, set with `inference_cfg_file:=`) maps the camera and joint topics to the policy's inputs and outputs; it must match your training data.
+    Send `start` on `/model_inference_command` to begin policy execution. All
+    policy outputs are published on `/policy_inference/actions_arm` and
+    `/policy_inference/actions_hand`. Live mode relays them to the robot
+    controllers. Use `preview:=true` to keep only the policy outputs.
+
+    For optional Franka initialization, set `allow_arm_init:=true` and pass an
+    operator-confirmed pose to `arm_init_pose:=` as a list of seven numbers
+    `[x, y, z, qx, qy, qz, qw]` in the configured arm command frame.
+    Send `init_arm` while the policy is idle. Wait for
+    `Arm reached init pose. Ready for start.` before sending `start`.
+    Use `stop` to stop policy output or abort initialization.
+    The `reset` command clears policy state.
 
 ## Other tools
 
