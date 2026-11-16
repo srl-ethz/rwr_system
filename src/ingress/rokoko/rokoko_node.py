@@ -59,13 +59,8 @@ class RokokoNode(Node):
     def timer_publish_cb(self):
 
         key_points, timestamp = self.tracker.get_keypoint_positions()
-        wait_cnt = 1
-        while (key_points is None):
-            if wait_cnt % 100000 == 0:
-                print("waiting for hand tracker", wait_cnt//100000)
-            wait_cnt+=1
-            key_points, timestamp = self.tracker.get_keypoint_positions()
-            # print(f"\n\n\nkey_points: {key_points}, timestamp: {timestamp}\n\n\n")
+        if key_points is None:
+            return
         left_keypoint_positions, right_keypoint_positions = key_points
 
         if self.enable_left:
@@ -79,6 +74,8 @@ class RokokoNode(Node):
         if self.use_coil:
             wrist_poses = self.tracker.get_wrist_poses()
             forearm_poses = self.tracker.get_arm_poses()
+            if wrist_poses is None or forearm_poses is None:
+                return
 
             # concatenate: [left wrist, right wrist, left forearm, right forearm]
             both_poses = wrist_poses + forearm_poses
@@ -116,9 +113,14 @@ class RokokoNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = RokokoNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.tracker.stop()
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":

@@ -16,10 +16,6 @@ from typing import Optional, Tuple, Dict
 import numpy as np
 import depthai as dai
 import cv2
-import open3d as o3d
-
-from oakd_utils import PointCloudVisualizer
-
 
 # ---------- Stereo / camera config ----------
 COLOR = True           # Color RGB stream; when False, "colorize" = rectified right # Chenyu: GPT wrote this, TODO check if it is necessary.
@@ -171,10 +167,11 @@ class OakDDriver:
 
         with device:
             serial_no = device.getMxId()
-            try:
-                device.setIrLaserDotProjectorIntensity(self.ir_brightness)
-            except Exception as e:
-                print(f"[{self.camera_name}] Warning: couldn't set IR projector: {e}")
+            if self.use_depth:
+                try:
+                    device.setIrLaserDotProjectorIntensity(self.ir_brightness)
+                except Exception as e:
+                    print(f"[{self.camera_name}] Warning: couldn't set IR projector: {e}")
 
 
             # Prepare output queues

@@ -61,6 +61,26 @@ The Python package is called `faive_system` (e.g. `from faive_system.src.common.
     ./src/rwr_system/experiments/rl_inference/pose_estimation/download_models.sh
     ```
 
+### Installation for Task 2
+Task 2 uses ROS 2 Humble. You can set it up in your Task 1 workspace, which replaces its Jazzy environment: remove `pixi.toml`, `pixi.lock`, `.pixi/`, `build/`, `install/` and `log/` there, then start at step 2. Or keep Jazzy and use a separate workspace (e.g. `~/rwr_humble_ws`), starting at step 1:
+
+1. Clone the repository into `~/rwr_humble_ws/src` as in step 1 above.
+2. Set up the Humble environment. Python is pinned to 3.12: pixi would otherwise install Python 3.14, which some of our dependencies do not support yet.
+    ```bash
+    cd ~/rwr_humble_ws
+    pixi init -c https://prefix.dev/robostack-humble -c https://prefix.dev/conda-forge
+    pixi add "python=3.12" ros-humble-desktop ros-dev-tools pip ros-humble-rosidl-typesupport-c ros-humble-joint-state-publisher-gui ros-humble-xacro "pytest<9"
+    ```
+3. Add to `~/humble_ws/pixi.toml`:
+    ```toml
+    [activation.env]
+    VIRTUAL_ENV = ""   # a virtual env active in your terminal (e.g. set by VS Code) would otherwise break the build
+
+    [target.unix.activation]
+    scripts = ["install/setup.bash"]
+    ```
+4. Follow steps 4 to 6 above in `~/rwr_humble_ws`.
+
 Run nodes with `ros2 run <package> <file>` and launch files with `ros2 launch <package> <launch file>`.
 
 ## The hand
@@ -75,32 +95,48 @@ Run a policy trained in faive_lab on the hand, detect the cube, and calibrate th
 
 ## Imitation learning
 
+For an isolated Linux setup, SSH-friendly launch arguments and raw/processed
+data validation, see [the RWR 2026 collection guide](docs/rwr26_teleop.md).
+
 The hand follows the Rokoko glove through the retargeter, and the Franka arm follows the glove's wrist. The Franka arm controller is not part of this repository: it subscribes to `/right/arm/end_effector_pose_cmd` and publishes `/right/arm/end_effector_pose`.
 
-1. **Cameras.** Set the ID printed on each OAK-D camera in a file in `experiments/cfgs/cams/` and select it with `OAKD_CAMERA_CFG_NAME` in `record_demonstration.launch.py` and `controllers_and_cameras.launch.py` (default: `oakd_scissors_task.yaml`). For a ZED camera, set `ZED_CAMERA_CFG_NAME`. The camera extrinsics can be measured with `experiments/calibrate_camera_pose.py`.
+1. **Cameras.** Recording uses [`cube_sorting_task.yaml`](experiments/cfgs/cams/cube_sorting_task.yaml) by default. Check that each OAK-D MXID matches its physical view. For a different camera mapping, pass its full path as `oakd_config:=/path/to/cameras.yaml`. Pass `zed_config:=/path/to/zed.yaml` for a ZED camera. In `controllers_and_cameras.launch.py`, select the files using `OAKD_CAMERA_CFG_NAME` and `ZED_CAMERA_CFG_NAME`. Measure camera extrinsics with `experiments/calibrate_camera_pose.py`.
 2. **Retargeter.** Tune the mapping from your hand to the robot hand, see [src/retargeter/README.md](src/retargeter/README.md). The ORCA v2 settings are in `experiments/cfgs/retargeter/`.
 3. **Test the teleop** (no recording):
     ```bash
     ros2 launch experiments teleop_rokoko.launch.py
     ```
     A `keyboard_runner` terminal opens: press Enter to start, pause and resume the teleop. Foot pedals that type keys work the same way.
-4. **Record demonstrations.** Set `DATASET_NAME` in `record_demonstration.launch.py`, then:
+4. **Record demonstrations.** The dataset name defaults to `cube_sorting`. Pass `dataset_name:=NAME` to choose another name.
     ```bash
     ros2 launch experiments record_demonstration.launch.py
     ```
-    In the `keyboard_runner` terminal, Enter starts the teleop, starts the recording and stops it. Each demonstration is saved as an `.h5` file in `tmp/<DATASET_NAME>/` (relative to where you launched). The recorded topics are listed in `experiments/cfgs/logger/datacollection_default.yaml`.
+    In the `keyboard_runner` terminal, Enter starts the teleop, starts the recording and stops it. Each demonstration is saved as an `.h5` file in `tmp/<DATASET_NAME>/` (relative to where you launched). The default recorded topics are listed in `experiments/cfgs/logger/datacollection_right.yaml`. Pass `logger_config:=/path/to/logger.yaml` to record a different set of topics.
 5. **Process the data.** Resample all topics of the recordings in a folder to a common rate:
     ```bash
-    ros2 run logger syncronize_data.py tmp/<DATASET_NAME> --sampling_freq 10
+    ros2 run logger syncronize_data.py tmp/<DATASET_NAME> --sampling_freq 10 \
+      --cfg_file "$(ros2 pkg prefix --share experiments)/cfgs/logger/datacollection_right.yaml"
     ```
     Check the demonstrations with `experiments/scripts/plot_trajectories.py` and `experiments/scripts/visualize_videos.py`.
 6. **Train** a policy, e.g. with [srl_il](https://github.com/srl-ethz/srl_il).
-7. **Run the policy.** Start the cameras and the hand, then the policy:
+7. **Run the RWR26 cube sorting policy.** Bring up the Franka feedback and
+    controller separately. The launch starts the cameras and the ORCA v2 driver.
+    The ORCA v2 driver moves the hand to neutral on startup.
     ```bash
-    ros2 launch experiments controllers_and_cameras.launch.py
-    ros2 launch experiments run_policy_inference.launch.py policy_ckpt_path:=/path/to/policy.ckpt
+    ros2 launch experiments run_policy_inference.launch.py policy_ckpt_path:=/path/to/best_model.pth
     ```
-    The inference config (`experiments/cfgs/inference_config_*.yaml`, set with `inference_cfg_file:=`) maps the camera and joint topics to the policy's inputs and outputs; it must match your training data.
+    Send `start` on `/model_inference_command` to begin policy execution. All
+    policy outputs are published on `/policy_inference/actions_arm` and
+    `/policy_inference/actions_hand`. Live mode relays them to the robot
+    controllers. Use `preview:=true` to keep only the policy outputs.
+
+    For optional Franka initialization, set `allow_arm_init:=true` and pass an
+    operator-confirmed pose to `arm_init_pose:=` as a list of seven numbers
+    `[x, y, z, qx, qy, qz, qw]` in the configured arm command frame.
+    Send `init_arm` while the policy is idle. Wait for
+    `Arm reached init pose. Ready for start.` before sending `start`.
+    Use `stop` to stop policy output or abort initialization.
+    The `reset` command clears policy state.
 
 ## Other tools
 

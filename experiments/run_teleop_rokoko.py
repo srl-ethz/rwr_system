@@ -6,6 +6,7 @@ from copy import deepcopy
 
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import ExternalShutdownException
 from geometry_msgs.msg import Point, TransformStamped, Vector3, Quaternion, PoseStamped
 from tf2_ros import TransformBroadcaster
 
@@ -13,10 +14,6 @@ from scipy.spatial.transform import Rotation
 from std_srvs.srv import Trigger
 from faive_system.src.common.transformation_utils import rigid_transform, complete_rotation_matrix
 from faive_system.src.common.enums import TeleopState, HandChirality
-
-# Deprecated flags. Can be useful for running the node without launch file (toggle flow and fast mode)
-LEFT_HAND=True
-RIGHT_HAND=True
 
 class RokokoCoilDemo(Node):
     def __init__(self, chirality=HandChirality.RIGHT):
@@ -38,6 +35,7 @@ class RokokoCoilDemo(Node):
             enabled = True
         elif chirality=="right" and self.enable_right:
             enabled = True
+        self.enabled = enabled
         if not enabled:
             return
 
@@ -329,49 +327,61 @@ class RokokoCoilDemo(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    left_rcd = RokokoCoilDemo(chirality=HandChirality.LEFT) if LEFT_HAND else None
-    right_rcd = RokokoCoilDemo(chirality=HandChirality.RIGHT) if RIGHT_HAND else None
+    nodes = [RokokoCoilDemo(chirality=side) for side in HandChirality]
+    active_nodes = []
+    for node in nodes:
+        if node.enabled:
+            active_nodes.append(node)
+        else:
+            node.destroy_node()
+    if not active_nodes:
+        rclpy.shutdown()
+        return
 
     import threading
 
     executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(left_rcd) if LEFT_HAND else None
-    executor.add_node(right_rcd) if RIGHT_HAND else None
+    for node in active_nodes:
+        executor.add_node(node)
 
-    spin_thread = threading.Thread(target=executor.spin, daemon=True)
+    def spin():
+        try:
+            executor.spin()
+        except (ExternalShutdownException, KeyboardInterrupt):
+            pass
+
+    spin_thread = threading.Thread(target=spin, daemon=True)
     spin_thread.start()
 
-    while left_rcd and left_rcd.X_W_fEE is None:
-        print("Waiting for left robot pose...")
-        time.sleep(1)
-
-    while right_rcd and right_rcd.X_W_fEE is None:
-        print("Waiting for right robot pose...")
-        time.sleep(1)
-
-    interactive = next((rcd.interactive for rcd in [left_rcd, right_rcd] if rcd is not None), True)
+    interactive = any(node.interactive for node in active_nodes)
     if not interactive:
         # Service driven mode (HIL): the robot is initialized by whoever owns it, and
         # pause/resume come from /franka_teleop/<chirality>/{pause,resume}. Just serve.
         print("Teleop running in non-interactive mode, waiting for pause/resume service calls")
-        spin_thread.join()
-        rclpy.shutdown()
+        try:
+            spin_thread.join()
+        except KeyboardInterrupt:
+            pass
+        executor.shutdown()
+        for node in active_nodes:
+            node.destroy_node()
+        rclpy.try_shutdown()
         return
 
+    for node in active_nodes:
+        while rclpy.ok() and node.X_W_fEE is None:
+            print(f"Waiting for {node.chirality} robot pose...")
+            time.sleep(1)
+
     input("Press enter to move the robot to init pose")
-    result = left_rcd.move2init_callback(Trigger.Request(), Trigger.Response()) if LEFT_HAND else None
-    result = right_rcd.move2init_callback(Trigger.Request(), Trigger.Response()) if RIGHT_HAND else None
+    for node in active_nodes:
+        node.move2init_callback(Trigger.Request(), Trigger.Response())
 
     input("Press enter to calibrate the gloves")
-    X_bCP_lG_init, X_bCP_rG_init = None, None
-
-    for rcd, X_bCP_G_init in zip([left_rcd, right_rcd], [X_bCP_lG_init, X_bCP_rG_init]):
-        if rcd is None:
-            continue
-        while X_bCP_G_init is None:
+    for rcd in active_nodes:
+        while rcd.get_hand_pose() is None:
             print(f"Waiting for {rcd.chirality} glove pose...")
             time.sleep(0.2)
-            X_bCP_G_init = rcd.get_hand_pose()
         result = rcd.resume_callback(Trigger.Request(), Trigger.Response())
 
     keep_running = True
@@ -379,13 +389,11 @@ def main(args=None):
         while keep_running:
             input("Press enter to pause")
 
-            result = left_rcd.pause_callback(Trigger.Request(), Trigger.Response()) if LEFT_HAND else None
-            result = right_rcd.pause_callback(Trigger.Request(), Trigger.Response()) if RIGHT_HAND else None
+            for rcd in active_nodes:
+                rcd.pause_callback(Trigger.Request(), Trigger.Response())
 
             input("Press enter to resume to accurate mode")
-            for rcd in [left_rcd, right_rcd]:
-                if rcd is None:
-                    continue   
+            for rcd in active_nodes:
                 # # use the v joy stick
                 # rcd._calc_translation_func = rcd.calc_translation_VJoyStick
         
@@ -394,29 +402,30 @@ def main(args=None):
                 rcd._calc_translation_func = rcd.calc_translation_ScaledPosMapping 
                 rcd._pos_mapping_scale = 0.6
         
-            result = left_rcd.resume_callback(Trigger.Request(), Trigger.Response()) if LEFT_HAND else None
-            result = right_rcd.resume_callback(Trigger.Request(), Trigger.Response())  if RIGHT_HAND else None
+            for rcd in active_nodes:
+                rcd.resume_callback(Trigger.Request(), Trigger.Response())
 
             input("Press enter to pause")
-            result = left_rcd.pause_callback(Trigger.Request(), Trigger.Response()) if LEFT_HAND else None
-            result = right_rcd.pause_callback(Trigger.Request(), Trigger.Response()) if RIGHT_HAND else None
+            for rcd in active_nodes:
+                rcd.pause_callback(Trigger.Request(), Trigger.Response())
 
             input("Press enter to resume to normal mode")
-            for rcd in [left_rcd, right_rcd]:
-                if rcd is None:
-                    continue   
+            for rcd in active_nodes:
                 rcd._calc_translation_func = rcd.calc_translation_ScaledPosMapping
                 rcd._pos_mapping_scale = 1.0
 
-            result = left_rcd.resume_callback(Trigger.Request(), Trigger.Response()) if LEFT_HAND else None
-            result = right_rcd.resume_callback(Trigger.Request(), Trigger.Response())  if RIGHT_HAND else None
+            for rcd in active_nodes:
+                rcd.resume_callback(Trigger.Request(), Trigger.Response())
 
 
     except KeyboardInterrupt:
         keep_running = False
 
+    executor.shutdown()
     spin_thread.join()
-    rclpy.shutdown()
+    for node in active_nodes:
+        node.destroy_node()
+    rclpy.try_shutdown()
 
 if __name__ == "__main__":
     main()

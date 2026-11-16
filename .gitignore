@@ -1,4 +1,10 @@
 __pycache__/
+.pytest_cache/
+*.h5
+*.hdf5
+*.db3
+*.mcap
+local/
 *.npz
 *.egg-info
 .venv.chirp/

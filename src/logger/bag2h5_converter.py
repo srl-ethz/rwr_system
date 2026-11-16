@@ -1,12 +1,14 @@
 #!/bin/env python3
 
 import h5py
+import numpy as np
 from pathlib import Path
 import rosbag2_py
 from rclpy.serialization import deserialize_message
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
+from ingress.msg import CameraIntrinsics
 from cv_bridge import CvBridge  
 bridge = CvBridge()
 
@@ -36,8 +38,10 @@ def convert_to_h5(input_bag_path: str, output_h5_path: str):
 
             # Get the message type based on the topic
             msg_type_str = topic_type_map[topic_name]
-            print(f"Processing message for topic '{topic_name}' with type '{msg_type_str}'")
-            msg_class = Image if msg_type_str == 'Image' else PoseStamped if msg_type_str == 'PoseStamped' else Float32MultiArray if msg_type_str == 'Float32MultiArray' else String if msg_type_str == 'String' else None
+            # Accept standard ROS type names and legacy bags containing only class names.
+            msg_class = {cls.__name__: cls for cls in (
+                Image, PoseStamped, Float32MultiArray, String, CameraIntrinsics
+            )}.get(msg_type_str.rsplit("/", 1)[-1])
 
             if msg_class is None:
                 print(f"Unsupported message type for topic '{topic_name}': {msg_type_str}")
@@ -52,7 +56,12 @@ def convert_to_h5(input_bag_path: str, output_h5_path: str):
                 print(f"Creating group for topic '{topic_name}'")
 
             # Save message data to HDF5 based on the message type
-            if isinstance(msg, Float32MultiArray):
+            if isinstance(msg, CameraIntrinsics):
+                matrix = np.array([[msg.fx, 0, msg.cx], [0, msg.fy, msg.cy], [0, 0, 1]])
+                h5_file[topic_name].create_dataset(f"{timestamp}", data=matrix)
+                h5_file[topic_name].attrs["distortion"] = msg.disto
+
+            elif isinstance(msg, Float32MultiArray):
                 # For Float32MultiArray, save the data array
                 h5_file[topic_name].create_dataset(f"{timestamp}", data=msg.data)
 

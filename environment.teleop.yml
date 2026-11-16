@@ -1,0 +1,31 @@
+channels:
+  - robostack-jazzy
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy=1.26.4
+  - scipy>=1.14
+  - ros-jazzy-ros-base
+  - ros-jazzy-rosidl-typesupport-c
+  - ros-jazzy-xacro
+  - ros-jazzy-cv-bridge
+  - ros-jazzy-visualization-msgs
+  - ros-jazzy-tf2-ros-py
+  - ros-jazzy-tf2-eigen
+  - ros-jazzy-joint-state-publisher-gui
+  - ros-jazzy-rviz2
+  - colcon-common-extensions
+  - compilers
+  - cmake
+  - ninja
+  - pkg-config
+  - pip
+  - matplotlib
+  - pandas
+  - h5py
+  - opencv
+  - pyyaml
+  - pyserial
+  - strenum
+  - tqdm
+  - pytest

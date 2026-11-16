@@ -1,0 +1,20 @@
+# Diagnostic hand recordings; no arm poses or images are recorded.
+topics_and_types:
+  /right/hand/joint_position_from_motor: std_msgs.msg.Float32MultiArray
+  /right/hand/policy_output: std_msgs.msg.Float32MultiArray
+  /ingress/right/mano: std_msgs.msg.Float32MultiArray
+  /ingress/right/wrist: geometry_msgs.msg.PoseStamped
+
+keys_and_topics:
+  observations/right/qpos_hand:
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: /right/hand/joint_position_from_motor
+  right/actions_hand:
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: /right/hand/policy_output
+  observations/right/mano_keypoints:
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: /ingress/right/mano
+  observations/right/glove_wrist_pose:
+    dtype: geometry_msgs.msg.PoseStamped
+    topic: /ingress/right/wrist

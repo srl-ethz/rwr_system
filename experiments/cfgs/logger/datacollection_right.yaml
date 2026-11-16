@@ -1,0 +1,29 @@
+topics_and_types:
+  /right/arm/end_effector_pose: geometry_msgs.msg.PoseStamped
+  /right/arm/end_effector_pose_cmd: geometry_msgs.msg.PoseStamped
+  /right/hand/joint_position_from_motor: std_msgs.msg.Float32MultiArray
+  /right/hand/policy_output: std_msgs.msg.Float32MultiArray
+  /oakd_front_view/color: sensor_msgs.msg.Image
+  /oakd_wrist_view/color: sensor_msgs.msg.Image
+  /oakd_front_view/intrinsics: ingress.msg.CameraIntrinsics
+  /oakd_wrist_view/intrinsics: ingress.msg.CameraIntrinsics
+
+keys_and_topics:
+  observations/images/{0}/color:
+    dtype: sensor_msgs.msg.Image
+    topic: /(.*)/color
+  observations/images/{0}/intrinsics:
+    dtype: ingress.msg.CameraIntrinsics
+    topic: /(.*)/intrinsics
+  observations/{0}/qpos_arm:
+    dtype: geometry_msgs.msg.PoseStamped
+    topic: /(.*)/arm/end_effector_pose
+  '{0}/actions_arm':
+    dtype: geometry_msgs.msg.PoseStamped
+    topic: /(.*)/arm/end_effector_pose_cmd
+  observations/{0}/qpos_hand:
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: /(.*)/hand/joint_position_from_motor
+  '{0}/actions_hand':
+    dtype: std_msgs.msg.Float32MultiArray
+    topic: /(.*)/hand/policy_output

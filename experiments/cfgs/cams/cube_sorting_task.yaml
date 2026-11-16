@@ -1,0 +1,6 @@
+# OAK-D MXIDs for the RWR26 Cube Sorting station.
+# Confirm each role from the live image when setting up the station.
+"19443010914B9A2E00":
+  name: front_view
+"1844301011D6E4F400":
+  name: wrist_view

@@ -64,6 +64,7 @@ def spawn_hand_nodes(hand_chirality, enable_hand_controller=True):
             "retarget/hand_chirality": hand_chirality,
             "retarget/mano_adjustments": mano_adjustments_filepath,
             "retarget/retargeter_cfg": retargeter_cfg_filepath,
+            "enable_at_start": False,
             "robot_description": _orcahand_v2_robot_description(hand_chirality),
         }],
     )
@@ -75,7 +76,7 @@ def launch_setup(context, *args, **kwargs):
     # the ORCA v2 hand is right-handed only (src/hand_control/orca/configs/orcahand_v2/right)
     LEFT_SIDE = False
     RIGHT_SIDE = True
-    TELEOP_ARM = True
+    TELEOP_ARM = LaunchConfiguration("teleop_arm").perform(context).lower() == "true"
 
     enable_hand_controller = LaunchConfiguration("enable_hand_controller").perform(context).lower() == "true"
     enable_keyboard_runner = LaunchConfiguration("enable_keyboard_runner").perform(context).lower() == "true"
@@ -88,7 +89,9 @@ def launch_setup(context, *args, **kwargs):
                 parameters=[
                     {"rokoko_tracker/ip": "0.0.0.0"},
                     {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": True}
+                    {"rokoko_tracker/use_coil": True},
+                    {"rokoko_tracker/enable_left": LEFT_SIDE},
+                    {"rokoko_tracker/enable_right": RIGHT_SIDE},
                 ],
             )
 
@@ -99,6 +102,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             {"enable_left": LEFT_SIDE},
             {"enable_right": RIGHT_SIDE},
+            {"interactive": False},
         ],
         output="screen",
     )
@@ -121,7 +125,7 @@ def launch_setup(context, *args, **kwargs):
 
     return (
         [rokoko_ingress]
-        + ([keyboard_ctrl] if enable_keyboard_runner else [])
+        + ([keyboard_ctrl] if enable_keyboard_runner and TELEOP_ARM else [])
         + (spawn_hand_nodes("right", enable_hand_controller) if RIGHT_SIDE else [])
         + (spawn_hand_nodes("left", enable_hand_controller) if LEFT_SIDE else [])
         + ([arm_teleop_node] if TELEOP_ARM else [])
@@ -130,6 +134,10 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
+        DeclareLaunchArgument(
+            "teleop_arm", default_value="true",
+            description="false for hand-only teleop; use /right/retargeter/set_enabled to start/stop it.",
+        ),
         DeclareLaunchArgument(
             "enable_hand_controller", default_value="true",
             description="false when the hand controller is already running elsewhere.",

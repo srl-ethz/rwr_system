@@ -1,0 +1,9 @@
+# ROS, cv_bridge, OpenCV and NumPy are supplied by environment.teleop.yml.
+numpy==1.26.4
+torch==2.10.0
+pytorch-kinematics==0.9.1
+depthai==2.32.0.0
+dynamixel-sdk==3.8.4
+fastapi==0.162.2
+uvicorn==0.34.3
+# Install orca_core==0.5.2 separately with --no-deps, as documented upstream.

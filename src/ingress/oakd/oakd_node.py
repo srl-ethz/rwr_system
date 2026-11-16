@@ -48,6 +48,7 @@ class OakDPublisher(Node):
             self.camera_dict[values.get("name", f"cam_{serial_str}")] = serial_str
         
         self.init_cameras()
+        self.camera_info_timer = self.create_timer(1.0, self.publish_cam_info)
 
     def init_cameras(self):
 
@@ -134,13 +135,15 @@ def main():
     rclpy.init()
     print("Starting oakd_publisher")
     oakd_publisher = OakDPublisher()
-    import threading
-
-    spin_thread = threading.Thread(target=rclpy.spin, args=(oakd_publisher,))
-    while rclpy.ok():
-        oakd_publisher.publish_cam_info()
-        time.sleep(1)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(oakd_publisher)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        for camera in oakd_publisher.camera_dict.values():
+            camera["driver"].stop()
+        oakd_publisher.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":
