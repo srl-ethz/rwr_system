@@ -115,7 +115,7 @@ class RokokoCoilDemo(Node):
             start_target_pos = np.array([0.40, 0.36, 0.2])
             start_target_rot = complete_rotation_matrix(x=[1, 0, 0], z=[0, 0, -1])
         else:
-            start_target_pos = np.array([0.45, -0.36, 0.2])
+            start_target_pos = np.array([0.45, 0.0, 0.2])
             start_target_rot = complete_rotation_matrix(x=[1, 0, 0], z=[0, 0, -1])
 
         start_target = rigid_transform(start_target_pos, Rotation.from_matrix(start_target_rot).as_quat())
